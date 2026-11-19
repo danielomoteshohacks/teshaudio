@@ -7,10 +7,10 @@
  */
 export const site = {
   name: 'Tesh',
-  // TODO: replace with the real Cloudflare Pages URL after the first deploy.
-  // example.com is reserved for documentation (RFC 2606), so it can never
-  // collide with a real site if this placeholder ships by accident.
-  url: 'https://example.com',
+  // Production origin on Cloudflare Pages. Used by astro.config.mjs as `site`,
+  // so canonical tags and the sitemap point here. Update if a custom domain
+  // is added, otherwise search engines index the pages.dev address.
+  url: 'https://teshaudio.pages.dev',
   title: 'TODO: site title',
   description: 'TODO: one-sentence site description supplied by Tesh.',
   lang: 'en',
