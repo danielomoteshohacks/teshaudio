@@ -1,22 +1,60 @@
 ---
-// Variable fonts: one file per family covers every weight, which is smaller
-// than shipping a file per weight. Fontsource bundles them with the build, so
-// no request ever goes to a third-party font CDN.
-import '@fontsource-variable/inter';
+/**
+ * BaseLayout: the shell every page renders inside.
+ *
+ * Owns the <head> (title, description, canonical, Open Graph, JSON-LD), the
+ * fonts and global CSS, the skip link, header, footer and the persistent
+ * audio player. Page-to-page navigation goes through Astro's ClientRouter so
+ * the player keeps playing across pages (see AudioPlayer.astro).
+ */
+// Variable fonts: one file per family covers every weight. Fontsource bundles
+// them with the build, so no request ever goes to a third-party font CDN.
+// Inter's opsz build adds the optical-size axis (display-tuned letterforms at
+// headline sizes). It costs about 24 KB more than the weight-only build.
+import '@fontsource-variable/inter/opsz.css';
 import '@fontsource-variable/jetbrains-mono';
+// Order matters: tokens define the custom properties global.css consumes.
 import '../styles/tokens.css';
+import '../styles/global.css';
+// Preloading the Latin Inter file lets the browser fetch it in parallel with
+// the CSS instead of discovering it afterwards, so headlines render sooner.
+import interLatin from '@fontsource-variable/inter/files/inter-latin-opsz-normal.woff2?url';
+import { ClientRouter } from 'astro:transitions';
+import SiteHeader from '../components/SiteHeader.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import AudioPlayer from '../components/AudioPlayer.astro';
 import { site } from '../lib/site';
 
 interface Props {
+  /** Page title. Omit on Home to use the full site title. */
   title?: string;
   description?: string;
+  /** Keeps a page out of search results (unlisted articles). */
+  noindex?: boolean;
+  /** Which Open Graph card to use; defaults to one derived from the URL. */
+  ogKey?: string;
+  ogType?: 'website' | 'article';
+  /** Structured data (schema.org) emitted as JSON-LD. */
+  jsonLd?: Record<string, unknown>;
 }
 
-const { title = site.title, description = site.description } = Astro.props;
+const {
+  title,
+  description = site.description,
+  noindex = false,
+  ogType = 'website',
+  jsonLd,
+} = Astro.props;
+
+const fullTitle = title ? `${title} · ${site.name}` : site.title;
 
 // Canonical URL tells search engines which address is the real one, avoiding
 // duplicate-content issues (for example trailing slash vs none).
 const canonical = new URL(Astro.url.pathname, Astro.site);
+
+// "/projects/acoustimorph/" -> "projects/acoustimorph"; "/" -> "home".
+const ogKey = Astro.props.ogKey ?? (Astro.url.pathname.replace(/^\/|\/$/g, '') || 'home');
+const ogImage = new URL(`/og/${ogKey}.png`, Astro.site);
 ---
 
 <!doctype html>
@@ -24,18 +62,44 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
+    <title>{fullTitle}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    {/* Lets the browser render native UI (scrollbars, form controls) in the
-        matching scheme before any CSS loads, avoiding a flash. Written as an
-        expression comment so it is stripped from the shipped HTML. */}
-    <meta name="color-scheme" content="light dark" />
+    {noindex && <meta name="robots" content="noindex" />}
+    {/* Light only: dark sections opt in explicitly through data-theme, so the
+        page must not follow the OS dark mode. */}
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f6f6f3" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="alternate" type="application/rss+xml" title={`${site.name}: Writing`} href="/rss.xml" />
+    <link rel="preload" href={interLatin} as="font" type="font/woff2" crossorigin />
+
+    {/* Open Graph and Twitter cards: what WhatsApp, LinkedIn and X show when a
+        link is shared. The image is generated at build time per page. */}
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={title ?? site.title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
+    <slot name="head" />
     <meta name="generator" content={Astro.generator} />
+    <ClientRouter />
   </head>
   <body>
-    <slot />
+    <a class="skip-link" href="#main">Skip to content</a>
+    <SiteHeader />
+    <main id="main" tabindex="-1">
+      <slot />
+    </main>
+    <SiteFooter />
+    <AudioPlayer />
   </body>
 </html>

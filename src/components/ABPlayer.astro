@@ -1,0 +1,655 @@
+---
+/**
+ * ABPlayer: loudness-matched, sample-synced A/B comparison.
+ *
+ * Used on /music for mix and master before/afters, and inside MDX articles
+ * as <ABPlayer comparison="entry-id" />.
+ *
+ * Why loudness matching is the whole point: when two versions differ in
+ * level, almost everyone prefers the louder one, even by a fraction of a dB,
+ * because louder playback sounds fuller, brighter and more detailed (equal-
+ * loudness contours: the ear is more sensitive to lows and highs at higher
+ * levels). A master is usually louder than its mix, so an unmatched
+ * before/after flatters the after for the wrong reason. Matching both to the
+ * same integrated loudness (LUFS, ITU-R BS.1770) removes that bias, so the
+ * listener judges tone, balance, depth and dynamics instead of volume.
+ *
+ * Why Web Audio instead of two <audio> elements: two media elements drift
+ * apart and cannot be switched without a gap. Here both versions are decoded
+ * into memory and started on the same AudioContext clock at the same offset,
+ * so they stay locked sample for sample; switching only moves two gains.
+ */
+import type { CollectionEntry } from 'astro:content';
+import Badge from './Badge.astro';
+import { getComparison } from '../lib/content';
+interface Props {
+  /** A comparisons entry, or its id (the form used inside MDX). */
+  comparison: CollectionEntry<'comparisons'> | string;
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { headingLevel: Heading = 'h3' } = Astro.props;
+const entry =
+  typeof Astro.props.comparison === 'string'
+    ? await getComparison(Astro.props.comparison)
+    : Astro.props.comparison;
+
+if (!entry) throw new Error(`ABPlayer: comparison "${Astro.props.comparison}" not found`);
+
+const { title, description, stage, a, b, testAudio } = entry.data;
+// Matching attenuates the louder version down to the quieter one (see the
+// script for why we never boost). This is the gain the louder one receives.
+const louder = a.lufs >= b.lufs ? 'A' : 'B';
+const attenuationDb = Math.abs(a.lufs - b.lufs);
+const id = `ab-${entry.id}`;
+---
+
+<tesh-ab
+  class="ab"
+  data-theme="dark"
+  data-a-src={a.audioUrl}
+  data-a-lufs={a.lufs}
+  data-b-src={b.audioUrl}
+  data-b-lufs={b.lufs}
+  data-title={title}
+>
+  <div class="ab__head">
+    <div class="ab__badges">
+      <Badge tone="accent">{stage === 'mix' ? 'Mix' : 'Master'}</Badge>
+      {testAudio && <Badge>Test audio</Badge>}
+    </div>
+    <Heading class="ab__title" id={`${id}-title`}>{title}</Heading>
+    <p class="ab__description">{description}</p>
+  </div>
+
+  <div class="ab__controls" role="group" aria-labelledby={`${id}-title`}>
+    <div class="ab__versions" role="group" aria-label="Version">
+      <button type="button" class="ab__version" data-version="a" aria-pressed="true" aria-keyshortcuts="A">
+        <span class="ab__key" aria-hidden="true">A</span>
+        <span class="ab__label"><span class="visually-hidden">Version A: </span>{a.label}</span>
+      </button>
+      <button type="button" class="ab__version" data-version="b" aria-pressed="false" aria-keyshortcuts="B">
+        <span class="ab__key" aria-hidden="true">B</span>
+        <span class="ab__label"><span class="visually-hidden">Version B: </span>{b.label}</span>
+      </button>
+    </div>
+
+    <div class="ab__transport">
+      <button type="button" class="ab__toggle" data-action="toggle" aria-label="Play comparison">
+        <svg class="icon-play" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+          <path d="M5 3.5v11l9-5.5z" fill="currentColor"></path>
+        </svg>
+        <svg class="icon-pause" width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+          <path d="M5 3.5h2.75v11H5zM10.25 3.5H13v11h-2.75z" fill="currentColor"></path>
+        </svg>
+      </button>
+      <input
+        class="ab__scrubber"
+        type="range"
+        min="0"
+        max="0"
+        step="0.01"
+        value="0"
+        aria-label="Position"
+        data-scrubber
+      />
+      {/* Duration is unknown until the files are decoded on first play, so
+          it shows a neutral placeholder rather than a misleading 0:00. */}
+      <p class="ab__time"><span data-current>0:00</span> / <span data-duration>-:--</span></p>
+    </div>
+
+    <div class="ab__footer">
+      <label class="ab__match">
+        <input type="checkbox" data-match checked />
+        <span class="ab__switch" aria-hidden="true"></span>
+        Match loudness
+      </label>
+      <dl class="ab__readout">
+        <div><dt>A</dt><dd>{a.lufs.toFixed(1)} LUFS</dd></div>
+        <div><dt>B</dt><dd>{b.lufs.toFixed(1)} LUFS</dd></div>
+        <div>
+          <dt>Gain</dt>
+          <dd data-gain-readout data-louder={louder} data-attenuation={attenuationDb.toFixed(1)}>
+            {attenuationDb > 0 ? `${louder} −${attenuationDb.toFixed(1)} dB` : 'None needed'}
+          </dd>
+        </div>
+      </dl>
+    </div>
+    <p class="ab__hint">Press A or B to switch while the player has focus.</p>
+  </div>
+  <p class="visually-hidden" aria-live="polite" data-announce></p>
+</tesh-ab>
+
+<script>
+  import { formatDuration } from '../lib/format';
+
+  type Version = 'a' | 'b';
+
+  // A 5 ms crossfade when switching. A hard cut lands mid-waveform and
+  // clicks; 5 ms is far too short to hear as a fade, but long enough to
+  // remove the discontinuity. Both sources keep running, so sync is untouched.
+  const SWITCH_RAMP = 0.005;
+  // Start slightly in the future so both sources are scheduled before the
+  // clock reaches their start time and begin on exactly the same sample.
+  const START_DELAY = 0.05;
+
+  const dbToGain = (db: number) => 10 ** (db / 20);
+
+  class TeshAB extends HTMLElement {
+    private ctx: AudioContext | null = null;
+    private buffers: Record<Version, AudioBuffer> | null = null;
+    private sources: AudioBufferSourceNode[] = [];
+    private gains: Record<Version, GainNode> | null = null;
+    private active: Version = 'a';
+    private playing = false;
+    private loading = false;
+    private offset = 0; // position in seconds while paused
+    private startedAt = 0; // context time that corresponds to position 0
+    private loopLength = 0;
+    private frame = 0;
+    private scrubbing = false;
+
+    connectedCallback() {
+      this.querySelectorAll<HTMLButtonElement>('[data-version]').forEach((button) =>
+        button.addEventListener('click', () => this.select(button.dataset.version as Version)),
+      );
+      this.query('[data-action="toggle"]').addEventListener('click', () => this.toggle());
+      this.query<HTMLInputElement>('[data-match]').addEventListener('change', () => {
+        this.applyGains();
+        this.renderGainReadout();
+      });
+
+      const scrubber = this.query<HTMLInputElement>('[data-scrubber]');
+      scrubber.addEventListener('input', () => {
+        this.scrubbing = true;
+        this.renderTime(Number(scrubber.value));
+      });
+      scrubber.addEventListener('change', () => {
+        this.scrubbing = false;
+        this.seek(Number(scrubber.value));
+      });
+
+      // Shortcuts are scoped to this player (focus inside it), so they never
+      // collide with typing or screen-reader commands elsewhere.
+      this.addEventListener('keydown', (event) => {
+        if (event.metaKey || event.ctrlKey || event.altKey) return;
+        const key = event.key.toLowerCase();
+        if (key !== 'a' && key !== 'b') return;
+        event.preventDefault();
+        this.select(key);
+      });
+
+      window.addEventListener('tesh:audio-start', this.onOtherAudio);
+    }
+
+    disconnectedCallback() {
+      // Leaving the page: stop sound and release the audio hardware.
+      window.removeEventListener('tesh:audio-start', this.onOtherAudio);
+      this.stopSources();
+      cancelAnimationFrame(this.frame);
+      this.ctx?.close();
+      this.ctx = null;
+    }
+
+    private onOtherAudio = (event: Event) => {
+      if ((event as CustomEvent).detail !== this && this.playing) this.pause();
+    };
+
+    private query<T extends HTMLElement = HTMLElement>(selector: string) {
+      return this.querySelector<T>(selector)!;
+    }
+
+    /* ----- Loudness matching -------------------------------------------- */
+
+    /**
+     * Gain for one version, in linear terms.
+     *
+     * Both files carry a measured integrated loudness in LUFS. The target is
+     * the QUIETER of the two: the louder version is turned down by the
+     * difference, and nothing is ever turned up. Boosting the quieter one
+     * instead would push its peaks above 0 dBFS and clip, adding distortion
+     * that is not in the file and making it sound worse for the wrong reason.
+     *
+     * Example: A = -24 LUFS, B = -16 LUFS. Target -24, so A gets 0 dB and
+     * B gets -8 dB (a linear gain of about 0.40). Both now play at -24 LUFS.
+     */
+    private matchedGain(version: Version) {
+      if (!this.query<HTMLInputElement>('[data-match]').checked) return 1;
+      const lufsA = Number(this.dataset.aLufs);
+      const lufsB = Number(this.dataset.bLufs);
+      const target = Math.min(lufsA, lufsB);
+      const own = version === 'a' ? lufsA : lufsB;
+      return dbToGain(target - own);
+    }
+
+    /** Ramp each version's gain: the active one to its matched level, the other to silence. */
+    private applyGains() {
+      if (!this.ctx || !this.gains) return;
+      const now = this.ctx.currentTime;
+      (['a', 'b'] as const).forEach((version) => {
+        const param = this.gains![version].gain;
+        const target = version === this.active ? this.matchedGain(version) : 0;
+        param.cancelScheduledValues(now);
+        param.setValueAtTime(param.value, now);
+        param.linearRampToValueAtTime(target, now + SWITCH_RAMP);
+      });
+    }
+
+    /* ----- Loading -------------------------------------------------------- */
+
+    private async ensureReady() {
+      if (this.buffers) return true;
+      if (this.loading) return false;
+      this.loading = true;
+      this.dataset.state = 'loading';
+      this.announce('Loading comparison');
+
+      // iOS plays Web Audio on the "ambient" channel by default, which the
+      // ring/silent switch mutes. Declaring playback makes it behave like
+      // music, the same as the <audio> mini-player.
+      const nav = navigator as Navigator & { audioSession?: { type: string } };
+      if (nav.audioSession) nav.audioSession.type = 'playback';
+
+      this.ctx ??= new AudioContext();
+      try {
+        // Files are fetched only on first play, never on page load, so the
+        // page stays fast. Files on another origin (e.g. R2) need CORS.
+        const decode = async (src: string) =>
+          this.ctx!.decodeAudioData(await (await fetch(src)).arrayBuffer());
+        const [a, b] = await Promise.all([decode(this.dataset.aSrc!), decode(this.dataset.bSrc!)]);
+        this.buffers = { a, b };
+        // Loop over the shorter file so both versions wrap at the same point
+        // and stay aligned forever.
+        this.loopLength = Math.min(a.duration, b.duration);
+        const scrubber = this.query<HTMLInputElement>('[data-scrubber]');
+        scrubber.max = String(this.loopLength);
+        this.query('[data-duration]').textContent = formatDuration(this.loopLength, { total: true });
+
+        this.gains = { a: this.ctx.createGain(), b: this.ctx.createGain() };
+        this.gains.a.connect(this.ctx.destination);
+        this.gains.b.connect(this.ctx.destination);
+        this.gains.a.gain.value = 0;
+        this.gains.b.gain.value = 0;
+        return true;
+      } catch {
+        this.announce('The comparison audio could not be loaded.');
+        this.dataset.state = 'error';
+        return false;
+      } finally {
+        this.loading = false;
+        if (this.dataset.state === 'loading') delete this.dataset.state;
+      }
+    }
+
+    /* ----- Transport ------------------------------------------------------ */
+
+    private async toggle() {
+      if (this.playing) this.pause();
+      else await this.play();
+    }
+
+    private async play() {
+      if (!(await this.ensureReady())) return;
+      const ctx = this.ctx!;
+      if (ctx.state === 'suspended') await ctx.resume();
+      window.dispatchEvent(new CustomEvent('tesh:audio-start', { detail: this }));
+
+      // Both sources start at the same context time and the same offset, so
+      // they stay sample-aligned; only their gains differ.
+      const when = ctx.currentTime + START_DELAY;
+      this.sources = (['a', 'b'] as const).map((version) => {
+        const source = ctx.createBufferSource();
+        source.buffer = this.buffers![version];
+        source.loop = true;
+        source.loopStart = 0;
+        source.loopEnd = this.loopLength;
+        source.connect(this.gains![version]);
+        source.start(when, this.offset);
+        return source;
+      });
+      this.startedAt = when - this.offset;
+      this.playing = true;
+      this.applyGains();
+      this.renderState();
+      this.tick();
+    }
+
+    private pause() {
+      this.offset = this.position();
+      this.stopSources();
+      this.playing = false;
+      cancelAnimationFrame(this.frame);
+      this.renderState();
+      this.renderTime(this.offset);
+    }
+
+    private stopSources() {
+      this.sources.forEach((source) => {
+        try {
+          source.stop();
+        } catch {
+          // Already stopped.
+        }
+        source.disconnect();
+      });
+      this.sources = [];
+    }
+
+    private async seek(seconds: number) {
+      this.offset = Math.min(Math.max(0, seconds), this.loopLength);
+      if (this.playing) {
+        this.stopSources();
+        this.playing = false;
+        await this.play();
+      } else {
+        this.renderTime(this.offset);
+      }
+    }
+
+    private select(version: Version) {
+      this.active = version;
+      this.querySelectorAll<HTMLButtonElement>('[data-version]').forEach((button) =>
+        button.setAttribute('aria-pressed', String(button.dataset.version === version)),
+      );
+      this.applyGains();
+      this.announce(`Version ${version.toUpperCase()}`);
+    }
+
+    /** Current position in the loop, derived from the shared audio clock. */
+    private position() {
+      if (!this.playing || !this.ctx || !this.loopLength) return this.offset;
+      const elapsed = Math.max(0, this.ctx.currentTime - this.startedAt);
+      return elapsed % this.loopLength;
+    }
+
+    private tick = () => {
+      if (!this.scrubbing) this.renderTime(this.position());
+      this.frame = requestAnimationFrame(this.tick);
+    };
+
+    /* ----- Rendering ------------------------------------------------------ */
+
+    private renderState() {
+      this.dataset.playing = String(this.playing);
+      this.query('[data-action="toggle"]').setAttribute(
+        'aria-label',
+        this.playing ? 'Pause comparison' : 'Play comparison',
+      );
+    }
+
+    private renderTime(position: number) {
+      const scrubber = this.query<HTMLInputElement>('[data-scrubber]');
+      if (!this.scrubbing) scrubber.value = String(position);
+      const percent = this.loopLength ? (position / this.loopLength) * 100 : 0;
+      scrubber.style.setProperty('--progress', `${percent}%`);
+      scrubber.setAttribute(
+        'aria-valuetext',
+        `${formatDuration(position)} of ${formatDuration(this.loopLength, { total: true })}`,
+      );
+      this.query('[data-current]').textContent = formatDuration(position);
+    }
+
+    private renderGainReadout() {
+      const readout = this.query('[data-gain-readout]');
+      const matched = this.query<HTMLInputElement>('[data-match]').checked;
+      const attenuation = Number(readout.dataset.attenuation);
+      readout.textContent = !matched
+        ? 'Off'
+        : attenuation > 0
+          ? `${readout.dataset.louder} −${attenuation.toFixed(1)} dB`
+          : 'None needed';
+      this.announce(matched ? 'Loudness matching on' : 'Loudness matching off');
+    }
+
+    private announce(message: string) {
+      this.query('[data-announce]').textContent = message;
+    }
+  }
+
+  customElements.define('tesh-ab', TeshAB);
+</script>
+
+<style>
+  .ab {
+    display: grid;
+    gap: var(--space-6);
+    padding: clamp(var(--space-5), 4vw, var(--space-10));
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface-raised);
+    box-shadow: var(--shadow-1);
+  }
+
+  .ab__head {
+    display: grid;
+    gap: var(--space-3);
+    max-width: var(--measure);
+  }
+
+  .ab__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .ab__title {
+    font-size: var(--step-2);
+  }
+
+  .ab__description {
+    color: var(--color-text-muted);
+  }
+
+  /* Capped so the controls stay a compact instrument on wide screens rather
+     than stretching across the whole card. */
+  .ab__controls {
+    display: grid;
+    gap: var(--space-5);
+    max-width: 48rem;
+  }
+
+  /* Segmented control: two equal halves of a pill. */
+  .ab__versions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-surface);
+  }
+
+  .ab__version {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    min-height: 52px;
+    min-width: 0;
+    padding-inline: var(--space-4);
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition:
+      background-color var(--duration-base) var(--ease-out),
+      color var(--duration-base) var(--ease-out);
+  }
+
+  .ab__version[aria-pressed='true'] {
+    background-color: var(--color-accent);
+    color: var(--color-accent-contrast);
+  }
+
+  .ab__key {
+    font-size: var(--step-1);
+    font-weight: var(--weight-bold);
+  }
+
+  .ab__label {
+    text-wrap: balance;
+    font-size: var(--step--1);
+    font-weight: var(--weight-medium);
+    line-height: var(--leading-snug);
+  }
+
+  /* Phones: letter above label, so full labels fit instead of truncating. */
+  @media (max-width: 29.99rem) {
+    .ab__versions {
+      border-radius: var(--radius-lg);
+    }
+
+    .ab__version {
+      flex-direction: column;
+      gap: var(--space-1);
+      padding: var(--space-3);
+      border-radius: var(--radius-md);
+      text-align: center;
+    }
+  }
+
+  .ab__transport {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .ab__toggle {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--color-text);
+    cursor: pointer;
+  }
+
+  .ab__toggle:hover {
+    background-color: color-mix(in oklab, var(--color-text) 8%, transparent);
+  }
+
+  .icon-pause,
+  .ab[data-playing='true'] .icon-play {
+    display: none;
+  }
+
+  .ab[data-playing='true'] .icon-pause {
+    display: block;
+  }
+
+  .ab[data-state='loading'] .ab__toggle {
+    opacity: 0.6;
+    cursor: progress;
+  }
+
+  .ab__time {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-muted);
+  }
+
+  .ab__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-6);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* Switch styling over a real checkbox: native semantics and keyboard. */
+  .ab__match {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 44px;
+    font-size: var(--step--1);
+    font-weight: var(--weight-medium);
+    cursor: pointer;
+  }
+
+  .ab__match input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .ab__switch {
+    position: relative;
+    width: 40px;
+    height: 24px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-border-strong);
+    transition: background-color var(--duration-base) var(--ease-out);
+  }
+
+  .ab__switch::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-surface);
+    transition: transform var(--duration-base) var(--ease-out);
+  }
+
+  .ab__match input:checked + .ab__switch {
+    background-color: var(--color-accent);
+  }
+
+  .ab__match input:checked + .ab__switch::after {
+    transform: translateX(16px);
+  }
+
+  .ab__match input:focus-visible + .ab__switch {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+
+  .ab__readout {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-5);
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ab__readout div {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .ab__readout dt {
+    color: var(--color-text-muted);
+  }
+
+  .ab__readout dd {
+    margin: 0;
+  }
+
+  .ab__hint {
+    font-size: var(--step--1);
+    color: var(--color-text-muted);
+  }
+
+  /* On touch screens there is no keyboard, so the shortcut hint is noise. */
+  @media (hover: none) {
+    .ab__hint {
+      display: none;
+    }
+  }
+</style>

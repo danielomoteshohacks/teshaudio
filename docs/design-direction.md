@@ -43,7 +43,32 @@ Inspired by apple.com and cloud.google.com.
 - Every choice must still meet the quality bar in `docs/guidelines.md`: WCAG AA
   contrast, keyboard access, reduced motion, Lighthouse 95+.
 
-## Current font choices (may change in the design PR)
+## Fonts
 
-- Sans: Inter (variable), via `@fontsource-variable/inter`.
+Kept after the design-system PR review; no alternative made a strong enough case.
+
+- Sans: Inter (variable, with the optical-size axis), via
+  `@fontsource-variable/inter/opsz.css`.
 - Mono: JetBrains Mono (variable), via `@fontsource-variable/jetbrains-mono`.
+
+## Implemented tokens
+
+The design-system work turned this direction into tokens and base components;
+"Personal site v1" built every page on them.
+
+- Tokens: `src/styles/tokens.css` (values, with contrast ratios in comments).
+- Base element rules, grid paper and the reduced-motion safety net:
+  `src/styles/global.css`.
+- Components: `src/components/` (Container, Section, Eyebrow, Button, Card,
+  Stat).
+- Contexts: set `data-theme="light"` or `data-theme="dark"` on any element.
+  The site default is light.
+- Accent: Signal (cobalt), chosen from three candidates. A deeper shade in
+  light contexts (`#2f4fe0`) and a brighter one in dark contexts (`#8ea2ff`).
+- Grid paper: used once, as a very faint, masked texture behind the Lab
+  section (the Home lab teaser and the `/lab` header). It must not define the
+  look anywhere else.
+- Motion: Astro view transitions between pages and a CSS scroll-driven
+  fade-up as sections enter. Both are off under `prefers-reduced-motion`.
+- Mono type only for small labels and metadata (dates, tags, status,
+  durations).

@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ProjectsView from '../../components/ProjectsView.astro';
+import { getPublishedProjects } from '../../lib/content';
+import { copy } from '../../lib/site';
+
+const all = await getPublishedProjects();
+---
+
+<BaseLayout title="Projects" description={copy.projects.description}>
+  <ProjectsView all={all} />
+</BaseLayout>

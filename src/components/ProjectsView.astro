@@ -1,0 +1,90 @@
+---
+/**
+ * ProjectsView
+ *
+ * The projects index, shared by /projects/ (all) and
+ * /projects/status/[status]/ (filtered), so both render identically and the
+ * filter is a plain link rather than client-side JavaScript.
+ */
+import type { CollectionEntry } from 'astro:content';
+import PageHeader from './PageHeader.astro';
+import Section from './Section.astro';
+import Container from './Container.astro';
+import FilterNav from './FilterNav.astro';
+import ProjectCard from './ProjectCard.astro';
+import EmptyState from './EmptyState.astro';
+import { statusLabel } from '../lib/format';
+import { copy } from '../lib/site';
+
+type Status = CollectionEntry<'projects'>['data']['status'];
+
+interface Props {
+  all: CollectionEntry<'projects'>[];
+  status?: Status;
+}
+
+const { all, status } = Astro.props;
+const statuses: Status[] = ['active', 'paused', 'shipped', 'concept'];
+const shown = status ? all.filter((p) => p.data.status === status) : all;
+
+const filters = [
+  { label: 'All', href: '/projects/', count: all.length },
+  ...statuses.map((s) => ({
+    label: statusLabel[s],
+    href: `/projects/status/${s}/`,
+    count: all.filter((p) => p.data.status === s).length,
+  })),
+];
+---
+
+<PageHeader eyebrow="Work" title={copy.projects.title} lead={copy.projects.lead}>
+  <div class="filters">
+    <FilterNav label="Filter projects by status" items={filters} />
+  </div>
+</PageHeader>
+
+<Section spacing="flush-top" aria-label={status ? `${statusLabel[status]} projects` : 'All projects'}>
+  <Container>
+    {
+      shown.length > 0 ? (
+        <ul class="grid">
+          {shown.map((project) => (
+            <li>
+              <ProjectCard project={project} headingLevel="h2" />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <EmptyState
+          title={`No ${status ? statusLabel[status].toLowerCase() : ''} projects yet`}
+          body="Projects with this status will appear here."
+        />
+      )
+    }
+  </Container>
+</Section>
+
+<style>
+  .filters {
+    margin-top: var(--space-4);
+  }
+
+  .grid {
+    display: grid;
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 48rem) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (min-width: 75rem) {
+    .grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+</style>
