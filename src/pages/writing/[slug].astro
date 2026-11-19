@@ -135,10 +135,15 @@ const articleSchema = {
                   fetchpriority="high"
                 />
               ) : (
-                <CoverArt id="article-cover" />
+                <>
+                  <CoverArt id="article-cover" />
+                  {/* Marks the slot while the cover photo is on its way;
+                      decorative, so hidden from screen readers. */}
+                  <span class="cover__slot-label" aria-hidden="true">Photo coming soon</span>
+                </>
               )}
             </div>
-            {coverImage && (
+            {coverImage && cover.credit && (
               <figcaption class="cover__credit">
                 Photo:{' '}
                 {cover.creditUrl ? (
@@ -330,6 +335,27 @@ const articleSchema = {
     .cover__media {
       aspect-ratio: 21 / 9;
     }
+  }
+
+  .cover__media {
+    position: relative;
+  }
+
+  /* Same pill as the in-article photo slots (Photo.astro): light on the
+     always-dark cover art. */
+  .cover__slot-label {
+    position: absolute;
+    left: var(--space-5);
+    bottom: var(--space-5);
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid color-mix(in srgb, var(--neutral-text-dark) 22%, transparent);
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--neutral-950) 45%, transparent);
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--neutral-text-dark);
   }
 
   .cover__media :global(img) {

@@ -144,7 +144,7 @@ the lead story on Home automatically.
 Inside the body, without imports: `<Sidenote>...</Sidenote>` (inside a
 paragraph), `<Figure caption="...">...</Figure>`, `<PullQuote>A line from
 the text</PullQuote>` (use it in place of that paragraph, not as a repeat),
-`<Photo file="name.jpg" alt="..." credit="Name / Unsplash" wide />`,
+`<Photo file="name.jpg" alt="..." credit="Name / Unsplash" creditUrl="https://..." wide />`,
 `<TrackPlayer track="slug" />`, `<ABPlayer comparison="slug" />`, `$inline$`
 and `$$display$$` math, and fenced code blocks. Diagrams in
 `src/components/diagrams/` are imported at the top of the article that uses
@@ -155,9 +155,11 @@ three or more of them.
 
 Royalty-free only (Unsplash or Pexels licence), no visible brand logos, never
 AI-generated. Put the file in `src/assets/photos/` and reference it by name
-as a `cover` or a `<Photo>`. A name with no file yet renders nothing (or the
-site's own cover art, for covers), so an article can be published before its
-photos arrive. Always fill in `credit`; it prints as "Photo: Name / Unsplash".
+as a `cover` or a `<Photo>`. A name with no file yet renders a gradient
+placeholder marked "Photo coming soon" (the site's own cover art, for
+covers), so an article can be published before its photos arrive. When the
+file is added, rewrite the alt text to describe it and fill in `credit` and
+`creditUrl`; the credit prints as "Photo: Name / Unsplash".
 
 ### Finding
 

@@ -75,12 +75,13 @@ const writing = defineCollection({
     // A name rather than an image() import, so an entry can name a photo that
     // has not been added yet: until the file exists the page shows the
     // site's own cover art instead of failing the build. `credit` is printed
-    // under the photo ("Photo: Name / Unsplash").
+    // under the photo ("Photo: Name / Unsplash"); it is optional only so a
+    // slot can exist before its photo is chosen. Always add it with the file.
     cover: z
       .object({
         file: z.string(),
         alt: z.string(),
-        credit: z.string(),
+        credit: z.string().optional(),
         creditUrl: z.url().optional(),
       })
       .optional(),

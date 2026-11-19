@@ -5,14 +5,13 @@ pubDate: 2026-11-19
 kind: essay
 tags: ['spatial-audio', 'soundstage', 'android']
 relatedProject: soundstage
-# The cover photo appears once the file is in src/assets/photos/. Until then
-# the page shows the site's own cover art. Check the alt text and credit
-# against the photo you actually add.
+# Photo slots: each photo appears once its file is in src/assets/photos/.
+# Until then the cover shows the site's own cover art and each in-article
+# slot a gradient placeholder. When a file is added, update its alt text to
+# describe the actual photo and add credit and creditUrl.
 cover:
-  file: listener-headphones.jpg
-  alt: A man in a dark room wearing headphones, lost in the music
-  credit: Mahyar Yeganeh / Unsplash
-  creditUrl: https://unsplash.com/photos/a-man-in-a-dark-room-wearing-headphones-j2-xZ84-FQo
+  file: cover-listener.jpg
+  alt: A listener wearing headphones, immersed in music
 ---
 
 import StereoVsSpatial from '../../components/diagrams/StereoVsSpatial.astro';
@@ -67,6 +66,8 @@ That question became SoundStage.
 
 SoundStage is a spatial audio engine I’m building that can take a finished stereo song, the exact file you already stream, and create an immersive spatial version that plays on any phone, through any headphones.
 
+<Photo file="headphones.jpg" alt="A pair of over-ear headphones" />
+
 No special mix required. No particular hardware required. Spatial audio becomes part of the service you pay for, not a feature of the phone you happened to buy.
 
 There are a few promises I’m holding myself to:
@@ -103,13 +104,7 @@ Once the stems are clean, the next question is the creative one: where should ea
 
 This is where SoundStage stops being just a tool and starts thinking like a mix engineer. I call this part the intelligent mixer.
 
-<Photo
-  file="studio-console.jpg"
-  alt="Hands on a sound mixing console in a studio at night, lit by coloured lights"
-  credit="Rob Wingate / Unsplash"
-  creditUrl="https://unsplash.com/photos/someone-is-operating-a-sound-mixing-console-oQVkFSG9ezU"
-  wide
-/>
+<Photo file="studio-mixing-desk.jpg" alt="A mixing desk in a recording studio" wide />
 
 The mixer looks at what each stem is and what it’s doing. Then it places it using three simple ideas: direction (left, right, front, behind), height (above or level with you), and distance (close and intimate, or further back in the room).
 
@@ -137,13 +132,7 @@ Engineers capture all these clues in a set of measurements called HRTFs (head-re
 
 Rooms add the final layer. In a real room, sound bounces off walls, floors and ceilings, and those reflections tell your brain how big the space is and how far away things are. SoundStage adds carefully modelled room reflections so the music doesn’t just surround you, it sits in a believable place.
 
-<Photo
-  file="concert-blue-light.jpg"
-  alt="A crowd at a concert under blue stage lights"
-  credit="Marcel Strauß / Unsplash"
-  creditUrl="https://unsplash.com/photos/crowd-enjoying-a-concert-with-blue-stage-lights-ubwn8GI9-2o"
-  wide
-/>
+<Photo file="room-atmosphere.jpg" alt="An audience in a concert hall, the room full of light and sound" wide />
 
 That’s also how the listening modes work. The same song can feel like it’s playing in a treated studio, inside a car, or in a cinema-sized space, just by changing the room the music is placed in.
 

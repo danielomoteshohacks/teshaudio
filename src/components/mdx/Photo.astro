@@ -2,11 +2,15 @@
 /**
  * Photo (MDX): a royalty-free photo with a credit line.
  *
- *   <Photo file="studio-desk.jpg" alt="..." credit="Name / Unsplash" />
+ *   <Photo file="studio-mixing-desk.jpg" alt="..." credit="Name / Unsplash" />
  *
- * Looked up by name in src/assets/photos/ (src/lib/photos.ts). If the file
- * is not there yet, nothing renders: an article can be published before its
- * photos arrive, and never shows a broken image or a stand-in picture.
+ * Looked up by name in src/assets/photos/ (src/lib/photos.ts). Until the
+ * file is added, the slot renders a placeholder at the photo's exact shape:
+ * a soft stage-light gradient with grain and a small "Photo coming soon"
+ * label, so the article's rhythm is already final and nothing looks broken.
+ * The placeholder is hidden from screen readers, which lose nothing: there
+ * is no picture yet to describe.
+ *
  * Photos are not numbered like figures, because the text never refers to
  * them; the credit is what the licence and good manners ask for.
  */
@@ -17,7 +21,7 @@ interface Props {
   file: string;
   alt: string;
   /** Printed as "Photo: {credit}", for example "Jane Doe / Unsplash". */
-  credit: string;
+  credit?: string;
   creditUrl?: string;
   /** Optional sentence shown before the credit. */
   caption?: string;
@@ -27,10 +31,16 @@ interface Props {
 
 const { file, alt, credit, creditUrl, caption, wide = false } = Astro.props;
 const src = getPhoto(file);
+
+// Each placeholder gets its own light positions, derived from the file name,
+// so several slots in one article do not look like copies of each other.
+const seed = [...file].reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+const lightX = 20 + (seed % 60);
+const warmX = 100 - lightX;
 ---
 
 {
-  src && (
+  src ? (
     <figure class:list={['photo', { 'photo--wide': wide }]}>
       <Image
         src={src}
@@ -39,13 +49,31 @@ const src = getPhoto(file);
         sizes={wide ? '(min-width: 75rem) 56rem, 100vw' : '(min-width: 48rem) 44rem, 100vw'}
         quality={76}
       />
-      <figcaption class="photo__caption">
-        {caption && <span>{caption} </span>}
-        <span class="photo__credit">
-          Photo: {creditUrl ? <a href={creditUrl} rel="noopener">{credit}</a> : credit}
-        </span>
-      </figcaption>
+      {(caption || credit) && (
+        <figcaption class="photo__caption">
+          {caption && <span>{caption} </span>}
+          {credit && (
+            <span class="photo__credit">
+              Photo: {creditUrl ? <a href={creditUrl} rel="noopener">{credit}</a> : credit}
+            </span>
+          )}
+        </figcaption>
+      )}
     </figure>
+  ) : (
+    <div
+      class:list={['photo', 'photo--slot', { 'photo--wide': wide }]}
+      style={`--light-x: ${lightX}%; --warm-x: ${warmX}%`}
+      aria-hidden="true"
+    >
+      <span class="photo__slot-label">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">
+          <path d="M2 5.5A1.5 1.5 0 0 1 3.5 4h1.6l1-1.5h3.8l1 1.5h1.6A1.5 1.5 0 0 1 14 5.5v6A1.5 1.5 0 0 1 12.5 13h-9A1.5 1.5 0 0 1 2 11.5z" />
+          <circle cx="8" cy="8.3" r="2.4" />
+        </svg>
+        Photo coming soon
+      </span>
+    </div>
   )
 }
 
@@ -76,5 +104,55 @@ const src = getPhoto(file);
 
   .photo__credit a {
     color: inherit;
+  }
+
+  /* ----- Placeholder slot -----
+   * The same 3:2 shape most photos have, so swapping in the real image does
+   * not move the text around it. Dark like a stage in both modes, matching
+   * the cover art, with the site's cobalt and amber light and grain. */
+  .photo--slot {
+    position: relative;
+    display: grid;
+    place-items: end start;
+    overflow: hidden;
+    aspect-ratio: 3 / 2;
+    padding: var(--space-5);
+    /* A hairline so the dark slot keeps its edge on the dark page too. */
+    border: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent);
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(ellipse 70% 90% at var(--light-x) 110%, color-mix(in srgb, var(--light-cobalt) 55%, transparent), transparent 70%),
+      radial-gradient(ellipse 55% 70% at var(--warm-x) -10%, color-mix(in srgb, var(--light-amber) 30%, transparent), transparent 70%),
+      var(--neutral-950);
+    box-shadow: var(--shadow-1);
+  }
+
+  .photo--slot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--grain-tile);
+    background-size: 160px 160px;
+    opacity: 0.12;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+  }
+
+  /* Always light-on-dark, because the slot is dark in both modes. */
+  .photo__slot-label {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid color-mix(in srgb, var(--neutral-text-dark) 22%, transparent);
+    border-radius: var(--radius-pill);
+    background-color: color-mix(in srgb, var(--neutral-950) 45%, transparent);
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--neutral-text-dark);
   }
 </style>
