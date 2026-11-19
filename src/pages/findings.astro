@@ -1,0 +1,103 @@
+---
+/**
+ * Findings: short-form discoveries (writing entries with kind "finding"),
+ * shown as a dated log. Each links to its full entry on the shared article
+ * template at /writing/[slug]/.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Section from '../components/Section.astro';
+import Container from '../components/Container.astro';
+import PageHeader from '../components/PageHeader.astro';
+import EmptyState from '../components/EmptyState.astro';
+import Button from '../components/Button.astro';
+import { getPublishedWriting } from '../lib/content';
+import { formatDate, isoDate } from '../lib/format';
+import { copy } from '../lib/site';
+
+const findings = (await getPublishedWriting()).filter((e) => e.data.kind === 'finding');
+---
+
+<BaseLayout title="Findings" description={copy.findings.description}>
+  <PageHeader eyebrow="Findings" title={copy.findings.title} lead={copy.findings.lead} />
+
+  <Section spacing="flush-top" aria-label="All findings">
+    <Container>
+      {
+        findings.length > 0 ? (
+          <ol class="log">
+            {findings.map((entry) => (
+              <li class="log__item">
+                <time class="meta log__date" datetime={isoDate(entry.data.pubDate)}>
+                  {formatDate(entry.data.pubDate)}
+                </time>
+                <div class="log__body">
+                  <h2 class="log__title">
+                    <a href={`/writing/${entry.id}/`}>{entry.data.title}</a>
+                  </h2>
+                  <p class="log__description">{entry.data.description}</p>
+                  {entry.data.tags.length > 0 && (
+                    <p class="meta">{entry.data.tags.map((tag) => `#${tag}`).join('  ')}</p>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <EmptyState title="Findings coming soon" body="Short discoveries will be logged here as they happen.">
+            <Button variant="secondary" href="/rss.xml">Follow via RSS</Button>
+          </EmptyState>
+        )
+      }
+    </Container>
+  </Section>
+</BaseLayout>
+
+<style>
+  .log {
+    max-width: 52rem;
+    padding: 0;
+    list-style: none;
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* Date in its own narrow column on wider screens, like a lab notebook. */
+  .log__item {
+    display: grid;
+    gap: var(--space-2) var(--space-8);
+    padding-block: var(--space-8);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  @media (min-width: 48rem) {
+    .log__item {
+      grid-template-columns: 8rem minmax(0, 1fr);
+    }
+
+    .log__date {
+      padding-top: 0.45em;
+    }
+  }
+
+  .log__body {
+    display: grid;
+    gap: var(--space-2);
+  }
+
+  .log__title {
+    font-size: var(--step-2);
+  }
+
+  .log__title a {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .log__title a:hover {
+    color: var(--color-accent);
+  }
+
+  .log__description {
+    max-width: var(--measure);
+    color: var(--color-text-muted);
+  }
+</style>

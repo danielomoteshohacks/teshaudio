@@ -1,0 +1,23 @@
+---
+/**
+ * /writing/kind/[kind]/: the writing index filtered by kind. One static page
+ * per kind, so filtering needs no JavaScript.
+ */
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import WritingView from '../../../components/WritingView.astro';
+import { getPublishedWriting } from '../../../lib/content';
+import { kindLabel } from '../../../lib/format';
+
+type Kind = 'essay' | 'research' | 'note' | 'finding';
+
+export function getStaticPaths() {
+  return (['essay', 'research', 'note', 'finding'] as const).map((kind) => ({ params: { kind } }));
+}
+
+const { kind } = Astro.params as { kind: Kind };
+const all = await getPublishedWriting();
+---
+
+<BaseLayout title={`${kindLabel[kind]} · Writing`} description={`${kindLabel[kind]} entries by Tesh.`} ogKey="writing">
+  <WritingView all={all} kind={kind} />
+</BaseLayout>

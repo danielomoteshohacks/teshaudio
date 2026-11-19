@@ -7,7 +7,7 @@
  *
  * Structure:
  *   1. Primitives on :root (raw values, never used directly by components).
- *   2. Accent candidates, switched by data-accent on <html>.
+ *   2. The accent (Signal).
  *   3. Semantic tokens per context, switched by data-theme on any element.
  *
  * Direction: docs/design-direction.md ("precision engineering, soft touch").
@@ -114,6 +114,13 @@
   --container-gutter: clamp(1rem, 0.5rem + 3vw, 3rem);
   --container-max: 75rem;     /* 1200px */
   --container-narrow: 46rem;  /*  736px: reading width plus gutters */
+  --container-wide: 84rem;    /* 1344px: articles, to fit contents and sidenote columns */
+
+  /* Sticky header height, also used to offset in-page anchor targets. */
+  --header-height: 4rem;
+
+  /* Article margin column for sidenotes on wide screens. */
+  --sidenote-width: 12rem;
 
   /* Grid-paper texture cells, both multiples of the 4px base. */
   --grid-minor: 24px;
@@ -140,39 +147,21 @@
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-/* ----- Accent candidates ------------------------------------------------
- * Three candidates, switched by data-accent on <html> so they can be compared
- * live on /design. Each has a deeper shade for light contexts and a brighter
- * shade for dark contexts, because one hue cannot pass AA on both surfaces.
- * Cobalt is the default until one is chosen.
+/* ----- Accent: Signal (cobalt) -------------------------------------------
+ * Chosen from three candidates on the design-system PR. Measurement and
+ * precision: oscilloscope blue. One hue cannot pass AA on both an off-white
+ * and a near-black surface, so there is a deeper shade for light contexts and
+ * a brighter one for dark contexts.
  *
  * Contrast (accent as text on surface / raised / darkest grid line, and
  * contrast text on an accent fill):
- *   cobalt  light #2f4fe0  5.85 / 6.17 / 4.87, fill 6.17
- *           dark  #8ea2ff  8.11 / 7.42 / 6.72, fill 8.11
- *   violet  light #6a3fd6  5.89 / 6.20 / 4.90, fill 6.20
- *           dark  #b9a0ff  8.82 / 8.07 / 7.31, fill 8.82
- *   amber   light #9e4309  5.95 / 6.27 / 4.95, fill 6.27
- *           dark  #ffa45c  9.92 / 9.07 / 8.22, fill 9.92
- * All pass AA for text (4.5) and easily pass 3:1 as a focus-ring colour.
+ *   light #2f4fe0  5.85 / 6.17 / 4.87, fill 6.17
+ *   dark  #8ea2ff  8.11 / 7.42 / 6.72, fill 8.11
+ * Both pass AA for text (4.5) and easily pass 3:1 as a focus-ring colour.
  */
-:root,
-[data-accent='cobalt'] {
-  /* "Signal": measurement and precision, oscilloscope blue. */
+:root {
   --accent-on-light: #2f4fe0;
   --accent-on-dark: #8ea2ff;
-}
-
-[data-accent='violet'] {
-  /* "Ultraviolet": spatial and immersive, the most futuristic. */
-  --accent-on-light: #6a3fd6;
-  --accent-on-dark: #b9a0ff;
-}
-
-[data-accent='amber'] {
-  /* "VU": meter needles and analogue warmth, the soft layer. */
-  --accent-on-light: #9e4309;
-  --accent-on-dark: #ffa45c;
 }
 
 /* ----- Semantic tokens per context --------------------------------------

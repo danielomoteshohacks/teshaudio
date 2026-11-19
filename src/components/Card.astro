@@ -36,6 +36,8 @@ const isInteractive = Boolean(href) || interactive;
 <style>
   .card {
     display: block;
+    /* Fill the grid cell so cards in one row share a height. */
+    height: 100%;
     padding: clamp(var(--space-6), 4vw, var(--space-10));
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);

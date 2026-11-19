@@ -8,7 +8,9 @@
  *
  * grid: adds the grid-paper texture (the engineering layer).
  * spacing: "default" uses the generous fluid section padding; "compact" is
- * for short bands such as toolbars, where full padding would waste a screen.
+ * for short bands such as toolbars, where full padding would waste a screen;
+ * "flush-top" drops the top padding when the block above (a page header or
+ * hero) already provides the space.
  *
  * Any other attribute (id, aria-labelledby) passes through to the element,
  * so sections can be anchor targets and named landmarks.
@@ -19,7 +21,7 @@ type Props = HTMLAttributes<'section'> & {
   as?: 'section' | 'div' | 'header' | 'footer';
   theme?: 'light' | 'dark';
   grid?: boolean;
-  spacing?: 'default' | 'compact';
+  spacing?: 'default' | 'compact' | 'flush-top';
 };
 
 const {
@@ -47,5 +49,9 @@ const {
 
   .section--compact {
     padding-block: var(--space-6);
+  }
+
+  .section--flush-top {
+    padding-block: 0 var(--section-pad);
   }
 </style>

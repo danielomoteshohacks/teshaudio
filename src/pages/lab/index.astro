@@ -1,0 +1,82 @@
+---
+/**
+ * Lab index: interactive experiments. The grid-paper texture appears here
+ * (and on the Home lab teaser) and nowhere else on the site.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Section from '../../components/Section.astro';
+import Container from '../../components/Container.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import Card from '../../components/Card.astro';
+import Badge from '../../components/Badge.astro';
+import EmptyState from '../../components/EmptyState.astro';
+import { getPublishedLab, getPublishedProjects } from '../../lib/content';
+import { statusLabel } from '../../lib/format';
+import { copy } from '../../lib/site';
+
+const entries = await getPublishedLab();
+const projectTitles = new Map((await getPublishedProjects()).map((p) => [p.id, p.data.title]));
+---
+
+<BaseLayout title="Lab" description={copy.lab.description}>
+  <PageHeader eyebrow="Lab" title={copy.lab.title} lead={copy.lab.lead} grid />
+
+  <Section spacing="flush-top" aria-label="Lab entries">
+    <Container>
+      {
+        entries.length > 0 ? (
+          <ul class="grid">
+            {entries.map((entry) => (
+              <li>
+                <Card href={`/lab/${entry.id}/`}>
+                  <div class="entry">
+                    <Badge tone={entry.data.status === 'live' ? 'accent' : 'neutral'} dot>
+                      {statusLabel[entry.data.status]}
+                    </Badge>
+                    <h2 class="entry__title">{entry.data.title}</h2>
+                    <p class="entry__summary">{entry.data.summary}</p>
+                    {entry.data.relatedProject && (
+                      <p class="meta">Project: {projectTitles.get(entry.data.relatedProject.id)}</p>
+                    )}
+                  </div>
+                </Card>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyState title="Experiments coming soon" body="Interactive demos will appear here." />
+        )
+      }
+    </Container>
+  </Section>
+</BaseLayout>
+
+<style>
+  .grid {
+    display: grid;
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 48rem) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .entry {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-3);
+  }
+
+  .entry__title {
+    margin-top: var(--space-2);
+    font-size: var(--step-2);
+  }
+
+  .entry__summary {
+    color: var(--color-text-muted);
+  }
+</style>

@@ -1,0 +1,66 @@
+---
+/**
+ * Sidenote (MDX): <Sidenote>Note text</Sidenote>, placed inside a paragraph.
+ *
+ * Wide screens: the note floats into the right margin beside the line that
+ * references it, the way Tufte-style books do, so readers never jump to the
+ * bottom of the page. Phones: there is no margin, so the note becomes an
+ * indented block right after the reference, still in reading order.
+ *
+ * Numbering comes from a CSS counter on the article, so authors never number
+ * notes by hand. Spans only (no divs), because it sits inside a <p>.
+ */
+---
+
+<span class="sidenote-ref" aria-hidden="true"></span><span class="sidenote" role="note"
+  ><span class="sidenote__number" aria-hidden="true"></span><span class="visually-hidden">Note: </span><slot
+  /></span
+>
+
+<style>
+  /* Each reference increments the counter; the note repeats the same number. */
+  .sidenote-ref {
+    counter-increment: sidenote;
+  }
+
+  .sidenote-ref::after {
+    content: counter(sidenote);
+    position: relative;
+    top: -0.5em;
+    margin-left: 0.1em;
+    font-family: var(--font-mono);
+    font-size: 0.7em;
+    font-weight: var(--weight-semibold);
+    color: var(--color-accent);
+  }
+
+  .sidenote__number::before {
+    content: counter(sidenote) '\2002';
+    font-family: var(--font-mono);
+    font-weight: var(--weight-semibold);
+    color: var(--color-accent);
+  }
+
+  /* Phones and tablets: an inline block after the reference. */
+  .sidenote {
+    display: block;
+    margin-block: var(--space-3);
+    padding-left: var(--space-4);
+    border-left: 2px solid var(--color-border);
+    font-size: var(--step--1);
+    line-height: var(--leading-body);
+    color: var(--color-text-muted);
+  }
+
+  /* Wide screens: float into the margin column reserved by the article grid. */
+  @media (min-width: 75rem) {
+    .sidenote {
+      float: right;
+      clear: right;
+      width: var(--sidenote-width);
+      margin: 0.3em calc((var(--sidenote-width) + var(--space-8)) * -1) var(--space-4) 0;
+      padding-left: 0;
+      border-left: 0;
+    }
+  }
+</style>

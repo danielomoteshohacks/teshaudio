@@ -1,0 +1,172 @@
+---
+/**
+ * Lab entry. The demo mount area below is the contract for future
+ * interactive demos:
+ *
+ *   <section id="lab-demo-mount" data-lab-demo="{entry id}">
+ *
+ * A demo is a client script (Web Audio, WASM, or both) that finds this
+ * element on astro:page-load, checks data-lab-demo, clears the placeholder
+ * and renders into it. Because navigation uses ClientRouter, the script must
+ * also clean up (stop audio, free WASM memory) on astro:before-swap.
+ * The area keeps a fixed aspect ratio, so mounting a demo never shifts layout.
+ */
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Container from '../../components/Container.astro';
+import Badge from '../../components/Badge.astro';
+import { getProject, getPublishedLab, isEmptyBody } from '../../lib/content';
+import { statusLabel } from '../../lib/format';
+import '../../styles/prose.css';
+
+export async function getStaticPaths() {
+  const entries = await getPublishedLab();
+  return entries.map((entry) => ({ params: { slug: entry.id }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { title, summary, status, relatedProject } = entry.data;
+const project = relatedProject ? await getProject(relatedProject.id) : undefined;
+const { Content } = await render(entry);
+---
+
+<BaseLayout title={title} description={summary}>
+  <article class="lab-entry">
+    <Container>
+      <a class="back" href="/lab/">
+        <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M11 7H3M6.5 3.5L3 7l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        Lab
+      </a>
+      <header class="lab-entry__header">
+        <Badge tone={status === 'live' ? 'accent' : 'neutral'} dot>{statusLabel[status]}</Badge>
+        <h1 class="lab-entry__title">{title}</h1>
+        <p class="lab-entry__lead">{summary}</p>
+        {
+          project && (
+            <p class="lab-entry__project">
+              <span class="meta">Related project</span>
+              <a href={`/projects/${project.id}/`}>{project.data.title}</a>
+            </p>
+          )
+        }
+      </header>
+
+      <section
+        id="lab-demo-mount"
+        class="mount"
+        data-theme="dark"
+        data-lab-demo={entry.id}
+        aria-label={`${title} demo`}
+      >
+        <div class="mount__placeholder">
+          <svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M4 24h6l4-10 6 20 6-28 6 24 4-6h8" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+          <p class="mount__title">Demo coming soon</p>
+          <p class="meta">This space will host an interactive demo that runs in your browser.</p>
+        </div>
+      </section>
+
+      {
+        !isEmptyBody(entry) && (
+          <div class="prose lab-entry__notes">
+            <Content />
+          </div>
+        )
+      }
+    </Container>
+  </article>
+</BaseLayout>
+
+<style>
+  .lab-entry {
+    padding-block: var(--space-10) var(--space-24);
+  }
+
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    margin-bottom: clamp(var(--space-8), 5vw, var(--space-16));
+    font-size: var(--step--1);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-muted);
+    text-decoration: none;
+  }
+
+  .back:hover {
+    color: var(--color-text);
+  }
+
+  .lab-entry__header {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-5);
+    max-width: 48rem;
+    margin-bottom: clamp(var(--space-10), 5vw, var(--space-16));
+  }
+
+  .lab-entry__title {
+    font-size: var(--step-5);
+    line-height: var(--leading-display);
+    letter-spacing: var(--tracking-display);
+  }
+
+  .lab-entry__lead {
+    font-size: var(--step-1);
+    line-height: var(--leading-snug);
+    color: var(--color-text-muted);
+  }
+
+  .lab-entry__project {
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .lab-entry__project a {
+    font-weight: var(--weight-semibold);
+  }
+
+  /* The mount area: a dark stage with a fixed shape, so a demo can replace
+     the placeholder without moving anything around it. Taller on phones,
+     where demos will stack their controls. */
+  .mount {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 4 / 5;
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-2);
+    background:
+      radial-gradient(ellipse at 50% 120%, color-mix(in oklab, var(--color-accent) 22%, transparent), transparent 60%),
+      var(--color-surface);
+  }
+
+  @media (min-width: 48rem) {
+    .mount {
+      aspect-ratio: 16 / 9;
+    }
+  }
+
+  .mount__placeholder {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-3);
+    max-width: 24rem;
+    text-align: center;
+  }
+
+  .mount__placeholder svg {
+    color: var(--color-accent);
+  }
+
+  .mount__title {
+    font-size: var(--step-2);
+    font-weight: var(--weight-semibold);
+  }
+
+  .lab-entry__notes {
+    margin-top: var(--space-16);
+  }
+</style>

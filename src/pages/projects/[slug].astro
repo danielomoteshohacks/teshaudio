@@ -1,0 +1,324 @@
+---
+/**
+ * Project detail: overview, facts (status, role, tech, dates, links), media
+ * gallery and the write-up. Facts that are not set are simply not shown;
+ * the gallery and write-up show calm "coming soon" panels until they exist.
+ */
+import { render } from 'astro:content';
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Section from '../../components/Section.astro';
+import Container from '../../components/Container.astro';
+import Button from '../../components/Button.astro';
+import Badge from '../../components/Badge.astro';
+import Card from '../../components/Card.astro';
+import EmptyState from '../../components/EmptyState.astro';
+import { getPublishedLab, getPublishedProjects, isEmptyBody } from '../../lib/content';
+import { formatDate, statusLabel } from '../../lib/format';
+import '../../styles/prose.css';
+
+export async function getStaticPaths() {
+  const projects = await getPublishedProjects();
+  return projects.map((project) => ({ params: { slug: project.id }, props: { project } }));
+}
+
+const { project } = Astro.props;
+const { title, summary, status, role, tech, repoUrl, liveUrl, startDate, gallery } = project.data;
+const { Content } = await render(project);
+const hasWriteUp = !isEmptyBody(project);
+const labEntries = (await getPublishedLab()).filter((e) => e.data.relatedProject?.id === project.id);
+
+// Status is already shown as the badge above the title, so it is not repeated here.
+const facts = [
+  role && { label: 'Role', value: role },
+  startDate && { label: 'Started', value: formatDate(startDate) },
+].filter(Boolean) as { label: string; value: string }[];
+---
+
+<BaseLayout title={title} description={summary}>
+  <article>
+    <header class="project-header">
+      <Container>
+        <a class="back" href="/projects/">
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M11 7H3M6.5 3.5L3 7l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+          All work
+        </a>
+        <div class="project-header__grid">
+          <div class="project-header__text">
+            <Badge tone={status === 'active' || status === 'shipped' ? 'accent' : 'neutral'} dot>
+              {statusLabel[status]}
+            </Badge>
+            <h1 class="project-header__title">{title}</h1>
+            <p class="project-header__lead">{summary}</p>
+            {
+              (repoUrl || liveUrl) && (
+                <div class="project-header__links">
+                  {liveUrl && <Button href={liveUrl} rel="noopener">Open live</Button>}
+                  {repoUrl && (
+                    <Button href={repoUrl} variant="secondary" rel="noopener">
+                      View on GitHub
+                    </Button>
+                  )}
+                </div>
+              )
+            }
+          </div>
+
+          <dl class="facts">
+            {
+              facts.map((fact) => (
+                <div class="facts__row">
+                  <dt class="meta">{fact.label}</dt>
+                  <dd>{fact.value}</dd>
+                </div>
+              ))
+            }
+            {
+              tech.length > 0 && (
+                <div class="facts__row">
+                  <dt class="meta">Tech</dt>
+                  <dd>
+                    <ul class="facts__tech">
+                      {tech.map((item) => (
+                        <li>{item}</li>
+                      ))}
+                    </ul>
+                  </dd>
+                </div>
+              )
+            }
+          </dl>
+        </div>
+      </Container>
+    </header>
+
+    <Section aria-labelledby="media-title" spacing="flush-top">
+      <Container>
+        <h2 id="media-title" class="section-label meta">Media</h2>
+        {
+          gallery.length > 0 ? (
+            <ul class="gallery">
+              {gallery.map((item) => (
+                <li>
+                  <figure>
+                    <Image
+                      src={item.src}
+                      alt={item.alt}
+                      widths={[480, 800, 1200]}
+                      sizes="(min-width: 48rem) 50vw, 100vw"
+                    />
+                    {item.caption && <figcaption class="meta">{item.caption}</figcaption>}
+                  </figure>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div class="media-placeholder">
+              <p class="meta">Media coming soon</p>
+            </div>
+          )
+        }
+      </Container>
+    </Section>
+
+    <Section aria-labelledby="writeup-title" spacing="flush-top">
+      <Container>
+        <div class="writeup">
+          <h2 id="writeup-title" class="section-label meta">Write-up</h2>
+          {
+            hasWriteUp ? (
+              <div class="prose">
+                <Content />
+              </div>
+            ) : (
+              <EmptyState title="Write-up coming soon" body="A full write-up of this project is being prepared." />
+            )
+          }
+        </div>
+      </Container>
+    </Section>
+
+    {
+      labEntries.length > 0 && (
+        <Section theme="dark" aria-labelledby="lab-title">
+          <Container>
+            <h2 id="lab-title" class="section-label meta">In the lab</h2>
+            <ul class="lab-links">
+              {labEntries.map((entry) => (
+                <li>
+                  <Card href={`/lab/${entry.id}/`}>
+                    <Badge dot>{statusLabel[entry.data.status]}</Badge>
+                    <h3 class="lab-links__title">{entry.data.title}</h3>
+                    <p class="lab-links__summary">{entry.data.summary}</p>
+                  </Card>
+                </li>
+              ))}
+            </ul>
+          </Container>
+        </Section>
+      )
+    }
+  </article>
+</BaseLayout>
+
+<style>
+  .project-header {
+    padding-block: var(--space-10) clamp(var(--space-12), 7vw, var(--space-20));
+  }
+
+  .back {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    margin-bottom: clamp(var(--space-8), 5vw, var(--space-16));
+    font-size: var(--step--1);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-muted);
+    text-decoration: none;
+  }
+
+  .back:hover {
+    color: var(--color-text);
+  }
+
+  .project-header__grid {
+    display: grid;
+    gap: var(--space-12);
+  }
+
+  @media (min-width: 64rem) {
+    .project-header__grid {
+      grid-template-columns: minmax(0, 1fr) 20rem;
+      align-items: end;
+      gap: var(--space-20);
+    }
+  }
+
+  .project-header__text {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-5);
+  }
+
+  .project-header__title {
+    font-size: var(--step-6);
+    line-height: var(--leading-display);
+    letter-spacing: var(--tracking-display);
+  }
+
+  .project-header__lead {
+    max-width: 38rem;
+    font-size: var(--step-1);
+    line-height: var(--leading-snug);
+    color: var(--color-text-muted);
+  }
+
+  .project-header__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-2);
+  }
+
+  .facts {
+    display: grid;
+    border-top: 1px solid var(--color-border);
+  }
+
+  .facts__row {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+    gap: var(--space-4);
+    padding-block: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .facts dt {
+    padding-top: 0.2em;
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .facts dd {
+    margin: 0;
+  }
+
+  .facts__tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-3);
+    padding: 0;
+    list-style: none;
+  }
+
+  .section-label {
+    margin-bottom: var(--space-5);
+    font-weight: var(--weight-regular);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+
+  .gallery {
+    display: grid;
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 48rem) {
+    .gallery {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .gallery :global(img) {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-lg);
+  }
+
+  .gallery figcaption {
+    margin-top: var(--space-2);
+  }
+
+  /* A wide 16:9 frame, so the page has the same shape before and after real
+     media arrives. */
+  .media-placeholder {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 9;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background:
+      radial-gradient(ellipse at 70% 80%, color-mix(in oklab, var(--color-accent) 14%, transparent), transparent 60%),
+      var(--color-surface-raised);
+  }
+
+  .writeup {
+    max-width: var(--measure);
+  }
+
+  .lab-links {
+    display: grid;
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 48rem) {
+    .lab-links {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  .lab-links__title {
+    margin-top: var(--space-4);
+    font-size: var(--step-2);
+  }
+
+  .lab-links__summary {
+    margin-top: var(--space-2);
+    color: var(--color-text-muted);
+  }
+</style>
