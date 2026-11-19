@@ -2,17 +2,23 @@
 // Variable fonts: one file per family covers every weight, which is smaller
 // than shipping a file per weight. Fontsource bundles them with the build, so
 // no request ever goes to a third-party font CDN.
-import '@fontsource-variable/inter';
+// Inter's opsz build adds the optical-size axis (display-tuned letterforms at
+// headline sizes). It costs about 24 KB more than the weight-only build.
+import '@fontsource-variable/inter/opsz.css';
 import '@fontsource-variable/jetbrains-mono';
+// Order matters: tokens define the custom properties global.css consumes.
 import '../styles/tokens.css';
+import '../styles/global.css';
 import { site } from '../lib/site';
 
 interface Props {
   title?: string;
   description?: string;
+  /** Keeps internal pages such as /design out of search results. */
+  noindex?: boolean;
 }
 
-const { title = site.title, description = site.description } = Astro.props;
+const { title = site.title, description = site.description, noindex = false } = Astro.props;
 
 // Canonical URL tells search engines which address is the real one, avoiding
 // duplicate-content issues (for example trailing slash vs none).
@@ -20,17 +26,22 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
 ---
 
 <!doctype html>
-<html lang={site.lang}>
+{/* data-accent selects the accent candidate defined in tokens.css. Cobalt is
+    the default until one is chosen on /design. */}
+<html lang={site.lang} data-accent="cobalt">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
+    {noindex && <meta name="robots" content="noindex" />}
     {/* Lets the browser render native UI (scrollbars, form controls) in the
-        matching scheme before any CSS loads, avoiding a flash. Written as an
-        expression comment so it is stripped from the shipped HTML. */}
-    <meta name="color-scheme" content="light dark" />
+        matching scheme before any CSS loads, avoiding a flash. Light only:
+        dark sections opt in explicitly through data-theme, so the page must
+        not follow the OS dark mode. Written as an expression comment so it is
+        stripped from the shipped HTML. */}
+    <meta name="color-scheme" content="light" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="sitemap" href="/sitemap-index.xml" />
     <meta name="generator" content={Astro.generator} />

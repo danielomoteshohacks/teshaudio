@@ -1,0 +1,118 @@
+---
+/**
+ * Button
+ *
+ * Pill-shaped action (the soft layer). Renders a link when given `href`
+ * (navigation) and a <button> otherwise (an action on the page), because
+ * screen readers announce the two differently and users expect different
+ * keyboard behaviour from each.
+ *
+ * variant:
+ *   primary    accent fill, for the single most important action in a view
+ *   secondary  outlined, for alternatives next to a primary
+ *   ghost      text only, for low-emphasis actions
+ * size: "md" (44px, the minimum comfortable touch target) or "lg" (52px).
+ */
+import type { HTMLAttributes } from 'astro/types';
+
+type Common = {
+  variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'md' | 'lg';
+};
+
+// A discriminated union: with href it accepts link attributes, without it
+// button attributes, so TypeScript rejects mixes like href plus type="submit".
+type Props =
+  | (Common & HTMLAttributes<'a'> & { href: string })
+  | (Common & HTMLAttributes<'button'> & { href?: undefined });
+
+const { variant = 'primary', size = 'md', class: className, ...rest } = Astro.props;
+
+const classes = ['button', `button--${variant}`, `button--${size}`, className];
+---
+
+{
+  'href' in rest && rest.href ? (
+    <a class:list={classes} {...(rest as HTMLAttributes<'a'>)}>
+      <slot />
+    </a>
+  ) : (
+    // type="button" comes first so a caller can still override it. Without
+    // it, a button inside a form defaults to "submit" and submits by accident.
+    <button type="button" class:list={classes} {...(rest as HTMLAttributes<'button'>)}>
+      <slot />
+    </button>
+  )
+}
+
+<style>
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding-inline: var(--space-6);
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-sans);
+    font-weight: var(--weight-semibold);
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition:
+      background-color var(--duration-fast) var(--ease-out),
+      border-color var(--duration-fast) var(--ease-out),
+      color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+  }
+
+  .button--md {
+    min-height: 44px;
+    font-size: var(--step--1);
+  }
+
+  .button--lg {
+    min-height: 52px;
+    padding-inline: var(--space-8);
+    font-size: var(--step-0);
+  }
+
+  /* A slight press gives tactile feedback; it stays a static state change
+     (no animation) under reduced motion via the global override. */
+  .button:active {
+    transform: scale(0.98);
+  }
+
+  .button:focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+
+  .button--primary {
+    background-color: var(--color-accent);
+    color: var(--color-accent-contrast);
+  }
+
+  /* Mixing toward the text colour darkens the accent in light contexts and
+     lightens it in dark ones, so hover always increases label contrast. */
+  .button--primary:hover {
+    background-color: color-mix(in oklab, var(--color-accent) 85%, var(--color-text));
+  }
+
+  .button--secondary {
+    background-color: transparent;
+    border-color: var(--color-border-strong);
+    color: var(--color-text);
+  }
+
+  .button--ghost {
+    background-color: transparent;
+    color: var(--color-text);
+  }
+
+  .button--secondary:hover,
+  .button--ghost:hover {
+    background-color: color-mix(in oklab, var(--color-text) 7%, transparent);
+  }
+</style>

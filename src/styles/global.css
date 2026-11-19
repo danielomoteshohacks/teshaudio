@@ -1,0 +1,210 @@
+/*
+ * Global base styles.
+ *
+ * tokens.css holds values only; this file holds the element-level rules that
+ * use them: a small reset, base typography, context surfaces, focus, the
+ * grid-paper texture and the reduced-motion safety net. Component-specific
+ * styling belongs in each component's scoped <style>, not here.
+ */
+
+/* ----- Reset ------------------------------------------------------------ */
+
+*,
+*::before,
+*::after {
+  /* Padding and borders count inside the declared width, so a 100% wide
+     element with padding never overflows its parent. */
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+}
+
+html {
+  font-family: var(--font-sans);
+  /* Inter's optical-size axis: display sizes get tighter, display-tuned
+     letterforms and body sizes keep open, text-tuned ones, automatically. */
+  font-optical-sizing: auto;
+  /* Stops iOS Safari inflating text in landscape. */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  min-height: 100vh;
+  font-size: var(--step-0);
+  line-height: var(--leading-body);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img,
+picture,
+svg,
+video,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+input,
+button,
+textarea,
+select {
+  /* Form controls do not inherit fonts by default. */
+  font: inherit;
+  color: inherit;
+}
+
+/* ----- Contexts ----------------------------------------------------------
+ * Any element that sets data-theme paints its own surface and text colour,
+ * which is what makes Apple-style alternating light and dark sections work.
+ */
+[data-theme] {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+}
+
+/* ----- Typography ------------------------------------------------------- */
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+  /* Balanced wrapping avoids a single orphaned word on the last line of a
+     large headline, which matters most on narrow phones. */
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--step-5);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-display);
+}
+
+h2 {
+  font-size: var(--step-4);
+}
+
+h3 {
+  font-size: var(--step-3);
+}
+
+h4 {
+  font-size: var(--step-2);
+}
+
+p,
+li {
+  text-wrap: pretty;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  /* Long words (URLs, technical terms) wrap instead of forcing a sideways
+     page scroll on a phone. */
+  overflow-wrap: break-word;
+}
+
+a {
+  color: var(--color-accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+code,
+kbd,
+samp,
+pre {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+::selection {
+  background-color: var(--color-accent);
+  color: var(--color-accent-contrast);
+}
+
+/* ----- Focus -------------------------------------------------------------
+ * :focus-visible shows the ring for keyboard users without flashing it on
+ * every mouse click. The accent passes 3:1 against every surface, and the
+ * offset keeps the ring clear of the element's own colour.
+ */
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+/* ----- Grid-paper texture ------------------------------------------------
+ * Pure CSS: four 1px gradient lines (major and minor, both axes) layered over
+ * the surface colour. Line colours mix the current text colour into
+ * transparent, so the grid follows light and dark contexts automatically.
+ * At 5% and 9% the darkest line still leaves text above 13:1 (see tokens.css).
+ */
+.grid-paper {
+  --grid-line-minor: color-mix(in oklab, var(--color-text) 5%, transparent);
+  --grid-line-major: color-mix(in oklab, var(--color-text) 9%, transparent);
+
+  background-image:
+    linear-gradient(to right, var(--grid-line-major) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line-major) 1px, transparent 1px),
+    linear-gradient(to right, var(--grid-line-minor) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line-minor) 1px, transparent 1px);
+  background-size:
+    var(--grid-major) var(--grid-major),
+    var(--grid-major) var(--grid-major),
+    var(--grid-minor) var(--grid-minor),
+    var(--grid-minor) var(--grid-minor);
+  /* Centring the pattern keeps it symmetrical at every viewport width. */
+  background-position: center top;
+}
+
+/* ----- Utilities -------------------------------------------------------- */
+
+/* Hidden visually but still read by screen readers. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ----- Motion ------------------------------------------------------------
+ * Smooth scrolling only for people who have not asked for reduced motion.
+ * The reduced-motion block is a safety net: even a component that forgets to
+ * use the duration tokens cannot animate for someone who opted out.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

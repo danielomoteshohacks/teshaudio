@@ -1,41 +1,254 @@
 /*
  * Design tokens.
  *
- * Every visual decision (colour, type, spacing, radius, motion) lives here as
- * a CSS custom property, so components reference names like --space-4 rather
- * than raw values. Changing the design then means editing one file.
+ * Every visual decision (colour, type, spacing, radius, elevation, motion)
+ * lives here as a CSS custom property, so components reference names like
+ * --space-4 rather than raw values. Changing the design means editing one file.
  *
- * Intentionally empty: the design PR fills these sections in, following
- * docs/design-direction.md.
+ * Structure:
+ *   1. Primitives on :root (raw values, never used directly by components).
+ *   2. Accent candidates, switched by data-accent on <html>.
+ *   3. Semantic tokens per context, switched by data-theme on any element.
+ *
+ * Direction: docs/design-direction.md ("precision engineering, soft touch").
  */
 
 :root {
-  /* ----- Color ------------------------------------------------------------
-   * Surface, text, border and accent roles for light and dark sections.
-   * All text/background pairs must meet WCAG AA contrast.
+  /* ----- Color: neutral primitives --------------------------------------
+   * A very slightly cool grey, which reads as "engineered" rather than warm
+   * paper. The ends are off-white and near-black on purpose: pure #fff and
+   * #000 produce harsh glare and halation, especially on OLED phones.
    */
+  --neutral-25: #fcfcfa;
+  --neutral-50: #f6f6f3;
+  --neutral-100: #ededea;
+  --neutral-200: #dcddde;
+  --neutral-300: #a3a6ad;
+  --neutral-400: #8a8d94;
+  --neutral-500: #686c74;
+  --neutral-600: #55585f;
+  --neutral-700: #2a2d33;
+  --neutral-800: #1f2125;
+  --neutral-850: #16181c;
+  --neutral-900: #121316;
+  --neutral-950: #0c0d10;
 
-  /* ----- Type -------------------------------------------------------------
-   * Font families (sans for prose, mono for technical labels), size scale,
-   * line heights, weights and letter spacing.
+  /* ----- Type -----------------------------------------------------------
+   * Inter for headings and body, JetBrains Mono for technical labels and
+   * metadata. System fallbacks keep metrics close while the fonts load
+   * (font-display: swap), which limits layout shift.
    */
+  --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
-  /* ----- Space ------------------------------------------------------------
-   * Spacing scale for padding, margins and gaps, plus layout widths.
+  /*
+   * Fluid type scale: each step grows linearly from a 360px phone to a
+   * 1440px desktop viewport, then stops. The ratio also grows (1.2 on phones,
+   * 1.333 on desktop), so headlines gain far more than body text: huge on a
+   * desktop, still fitting a phone. The rem part keeps user font-size
+   * preferences working; the vw part alone would ignore browser zoom.
+   *
+   * step   phone   desktop
+   *  -2    12px    13px    mono labels (kept near-fixed: small text must stay legible)
+   *  -1    14px    15px    small print, buttons
+   *   0    16px    18px    body
+   *   1    19px    24px    lead paragraph
+   *   2    23px    32px    h4
+   *   3    28px    43px    h3
+   *   4    33px    57px    h2
+   *   5    40px    76px    h1, stat numbers
+   *   6    48px    101px   display headline
    */
+  --step--2: clamp(0.75rem, 0.729rem + 0.093vw, 0.8125rem);
+  --step--1: clamp(0.875rem, 0.854rem + 0.093vw, 0.9375rem);
+  --step-0: clamp(1rem, 0.958rem + 0.185vw, 1.125rem);
+  --step-1: clamp(1.2rem, 1.1rem + 0.444vw, 1.5rem);
+  --step-2: clamp(1.44rem, 1.254rem + 0.828vw, 2rem);
+  --step-3: clamp(1.728rem, 1.416rem + 1.388vw, 2.665rem);
+  --step-4: clamp(2.074rem, 1.581rem + 2.19vw, 3.552rem);
+  --step-5: clamp(2.488rem, 1.739rem + 3.328vw, 4.735rem);
+  --step-6: clamp(2.986rem, 1.877rem + 4.927vw, 6.312rem);
 
-  /* ----- Radius -----------------------------------------------------------
-   * Corner radii for cards, inputs and pill buttons.
-   */
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
 
-  /* ----- Motion -----------------------------------------------------------
-   * Durations and easing curves. Must collapse to near-zero under
-   * prefers-reduced-motion (see the media query below).
+  /* Large text needs less leading and tighter tracking to look precise;
+     body text needs more leading to stay comfortable to read. */
+  --leading-display: 1.02;
+  --leading-tight: 1.12;
+  --leading-snug: 1.3;
+  --leading-body: 1.6;
+
+  --tracking-display: -0.035em;
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  /* Uppercase mono labels need extra space between letters to stay legible. */
+  --tracking-wide: 0.12em;
+
+  /* About 65 characters per line is the comfortable reading range. */
+  --measure: 65ch;
+
+  /* ----- Space ----------------------------------------------------------
+   * 4px base. Every margin, padding and gap comes from this list, which
+   * keeps vertical rhythm consistent and the grid-paper texture aligned.
    */
+  --space-1: 0.25rem;  /*   4px */
+  --space-2: 0.5rem;   /*   8px */
+  --space-3: 0.75rem;  /*  12px */
+  --space-4: 1rem;     /*  16px */
+  --space-5: 1.25rem;  /*  20px */
+  --space-6: 1.5rem;   /*  24px */
+  --space-8: 2rem;     /*  32px */
+  --space-10: 2.5rem;  /*  40px */
+  --space-12: 3rem;    /*  48px */
+  --space-16: 4rem;    /*  64px */
+  --space-20: 5rem;    /*  80px */
+  --space-24: 6rem;    /*  96px */
+  --space-32: 8rem;    /* 128px */
+
+  /* Layout. Generous section padding is the "soft" layer's whitespace;
+     it scales so phones do not waste a full screen on empty space. */
+  --section-pad: clamp(4rem, 2rem + 8vw, 10rem);
+  --container-gutter: clamp(1rem, 0.5rem + 3vw, 3rem);
+  --container-max: 75rem;     /* 1200px */
+  --container-narrow: 46rem;  /*  736px: reading width plus gutters */
+
+  /* Grid-paper texture cells, both multiples of the 4px base. */
+  --grid-minor: 24px;
+  --grid-major: 96px;
+
+  /* ----- Radius ---------------------------------------------------------
+   * Large radii are the "soft touch". Cards use lg; small controls use sm
+   * so a 44px element does not turn into a blob.
+   */
+  --radius-sm: 0.5rem;   /*  8px */
+  --radius-md: 0.875rem; /* 14px */
+  --radius-lg: 1.75rem;  /* 28px */
+  --radius-pill: 999px;  /* any value larger than half the height gives a pill */
+
+  /* ----- Motion ---------------------------------------------------------
+   * Short durations feel precise; a soft ease-out (fast start, long gentle
+   * settle) feels physical without bouncing. Collapsed under reduced motion
+   * at the bottom of this file.
+   */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 400ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
+/* ----- Accent candidates ------------------------------------------------
+ * Three candidates, switched by data-accent on <html> so they can be compared
+ * live on /design. Each has a deeper shade for light contexts and a brighter
+ * shade for dark contexts, because one hue cannot pass AA on both surfaces.
+ * Cobalt is the default until one is chosen.
+ *
+ * Contrast (accent as text on surface / raised / darkest grid line, and
+ * contrast text on an accent fill):
+ *   cobalt  light #2f4fe0  5.85 / 6.17 / 4.87, fill 6.17
+ *           dark  #8ea2ff  8.11 / 7.42 / 6.72, fill 8.11
+ *   violet  light #6a3fd6  5.89 / 6.20 / 4.90, fill 6.20
+ *           dark  #b9a0ff  8.82 / 8.07 / 7.31, fill 8.82
+ *   amber   light #9e4309  5.95 / 6.27 / 4.95, fill 6.27
+ *           dark  #ffa45c  9.92 / 9.07 / 8.22, fill 9.92
+ * All pass AA for text (4.5) and easily pass 3:1 as a focus-ring colour.
+ */
+:root,
+[data-accent='cobalt'] {
+  /* "Signal": measurement and precision, oscilloscope blue. */
+  --accent-on-light: #2f4fe0;
+  --accent-on-dark: #8ea2ff;
+}
+
+[data-accent='violet'] {
+  /* "Ultraviolet": spatial and immersive, the most futuristic. */
+  --accent-on-light: #6a3fd6;
+  --accent-on-dark: #b9a0ff;
+}
+
+[data-accent='amber'] {
+  /* "VU": meter needles and analogue warmth, the soft layer. */
+  --accent-on-light: #9e4309;
+  --accent-on-dark: #ffa45c;
+}
+
+/* ----- Semantic tokens per context --------------------------------------
+ * Components only use these. Any element with data-theme redefines them, and
+ * custom properties inherit, so everything inside a dark section adapts with
+ * no extra code. A light card can sit inside a dark section and vice versa.
+ * The site default (on :root) is light.
+ *
+ * Contrast, light context (on surface / on surface-raised):
+ *   text           17.16 / 18.08   AA and AAA
+ *   text-muted      6.58 /  6.94   AA
+ *   border-strong   3.07 /  3.24   meets 3:1 for control outlines (WCAG 1.4.11)
+ *   border          1.26 /  1.32   decorative hairline only, never the sole
+ *                                  boundary of a control
+ * Contrast, dark context:
+ *   text           16.57 / 15.15
+ *   text-muted      7.97 /  7.29
+ *   border-strong   3.69 /  3.37
+ *   border          1.41 /  1.29
+ * On the darkest grid-paper line: text 14.28 (light) / 13.72 (dark),
+ * text-muted 5.48 / 6.60, so the texture never drops text below AA.
+ */
+:root,
+[data-theme='light'] {
+  /* Native controls (scrollbars, radios) follow the context too. */
+  color-scheme: light;
+
+  --color-surface: var(--neutral-50);
+  --color-surface-raised: var(--neutral-25);
+  --color-text: var(--neutral-900);
+  --color-text-muted: var(--neutral-600);
+  --color-border: var(--neutral-200);
+  --color-border-strong: var(--neutral-400);
+  --color-accent: var(--accent-on-light);
+  --color-accent-contrast: var(--neutral-25);
+  --color-focus: var(--color-accent);
+
+  /* Elevation: two stacked shadows each, one tight for contact and one wide
+     and faint for ambient light. Low opacity keeps them soft, not harsh. */
+  --shadow-1: 0 1px 2px rgb(18 19 22 / 0.04), 0 8px 24px -8px rgb(18 19 22 / 0.08);
+  --shadow-2: 0 2px 4px rgb(18 19 22 / 0.04), 0 18px 40px -12px rgb(18 19 22 / 0.14);
+  --shadow-3: 0 4px 8px rgb(18 19 22 / 0.05), 0 32px 64px -16px rgb(18 19 22 / 0.18);
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-surface: var(--neutral-950);
+  --color-surface-raised: var(--neutral-850);
+  --color-text: var(--neutral-100);
+  --color-text-muted: var(--neutral-300);
+  --color-border: var(--neutral-700);
+  --color-border-strong: var(--neutral-500);
+  --color-accent: var(--accent-on-dark);
+  --color-accent-contrast: var(--neutral-950);
+  --color-focus: var(--color-accent);
+
+  /* Shadows barely show on near-black, so each level adds a faint inset
+     top-edge highlight. That is how raised surfaces read in a dark room. */
+  --shadow-1: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 1px 2px rgb(0 0 0 / 0.3),
+    0 8px 24px -8px rgb(0 0 0 / 0.5);
+  --shadow-2: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 2px 4px rgb(0 0 0 / 0.3),
+    0 18px 40px -12px rgb(0 0 0 / 0.6);
+  --shadow-3: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 4px 8px rgb(0 0 0 / 0.35),
+    0 32px 64px -16px rgb(0 0 0 / 0.7);
+}
+
+/* ----- Reduced motion ----------------------------------------------------
+ * Collapse durations to near zero rather than exactly zero, so transitionend
+ * events still fire for any script that waits on them. global.css adds a
+ * blanket override for anything that does not use these tokens.
+ */
 @media (prefers-reduced-motion: reduce) {
   :root {
-    /* Motion overrides go here. */
+    --duration-fast: 0.01ms;
+    --duration-base: 0.01ms;
+    --duration-slow: 0.01ms;
   }
 }
