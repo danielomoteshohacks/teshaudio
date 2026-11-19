@@ -1,0 +1,51 @@
+---
+/**
+ * Section
+ *
+ * A full-width band of the page. Setting `theme` switches every semantic
+ * token inside it (see tokens.css), which produces the alternating light and
+ * dark sections. Leaving `theme` out inherits the surrounding context.
+ *
+ * grid: adds the grid-paper texture (the engineering layer).
+ * spacing: "default" uses the generous fluid section padding; "compact" is
+ * for short bands such as toolbars, where full padding would waste a screen.
+ *
+ * Any other attribute (id, aria-labelledby) passes through to the element,
+ * so sections can be anchor targets and named landmarks.
+ */
+import type { HTMLAttributes } from 'astro/types';
+
+type Props = HTMLAttributes<'section'> & {
+  as?: 'section' | 'div' | 'header' | 'footer';
+  theme?: 'light' | 'dark';
+  grid?: boolean;
+  spacing?: 'default' | 'compact';
+};
+
+const {
+  as: Tag = 'section',
+  theme,
+  grid = false,
+  spacing = 'default',
+  class: className,
+  ...rest
+} = Astro.props;
+---
+
+<Tag
+  data-theme={theme}
+  class:list={['section', `section--${spacing}`, { 'grid-paper': grid }, className]}
+  {...rest}
+>
+  <slot />
+</Tag>
+
+<style>
+  .section--default {
+    padding-block: var(--section-pad);
+  }
+
+  .section--compact {
+    padding-block: var(--space-6);
+  }
+</style>

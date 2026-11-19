@@ -1,0 +1,78 @@
+---
+/**
+ * Card
+ *
+ * Large-radius raised surface with soft elevation (the soft layer).
+ *
+ * href: makes the whole card a single link. One focus stop and one large tap
+ * target are easier on a phone than a small link buried inside the card.
+ * interactive: adds the hover and focus lift. Implied by href, since a
+ * clickable card should look clickable.
+ * theme: puts the card in a different context from its section, for example
+ * a light card inside a dark section.
+ */
+interface Props {
+  as?: 'article' | 'div' | 'li';
+  href?: string;
+  interactive?: boolean;
+  theme?: 'light' | 'dark';
+  class?: string;
+}
+
+const { as = 'article', href, interactive = false, theme, class: className } = Astro.props;
+
+const Tag = href ? 'a' : as;
+const isInteractive = Boolean(href) || interactive;
+---
+
+<Tag
+  href={href}
+  data-theme={theme}
+  class:list={['card', { 'card--interactive': isInteractive }, className]}
+>
+  <slot />
+</Tag>
+
+<style>
+  .card {
+    display: block;
+    padding: clamp(var(--space-6), 4vw, var(--space-10));
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface-raised);
+    box-shadow: var(--shadow-1);
+    color: var(--color-text);
+    /* Link cards should not inherit link styling across their whole text. */
+    text-decoration: none;
+  }
+
+  .card--interactive {
+    transition:
+      transform var(--duration-base) var(--ease-out),
+      box-shadow var(--duration-base) var(--ease-out);
+  }
+
+  /* hover: hover avoids a lift that sticks after a tap on touch screens. */
+  @media (hover: hover) {
+    .card--interactive:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-2);
+    }
+  }
+
+  .card--interactive:focus-visible {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-2);
+    outline: 2px solid var(--color-focus);
+    outline-offset: 3px;
+  }
+
+  /* Movement is the part that can trouble people with vestibular disorders;
+     the deeper shadow alone still signals the hover. */
+  @media (prefers-reduced-motion: reduce) {
+    .card--interactive:hover,
+    .card--interactive:focus-visible {
+      transform: none;
+    }
+  }
+</style>
