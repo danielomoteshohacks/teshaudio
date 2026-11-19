@@ -129,3 +129,100 @@
 .prose > :is(tesh-ab, .embed) {
   margin-block: var(--space-10);
 }
+
+/* ----- Long-form reading (articles) ----------------------------------------
+ * The article body in the reading serif at a slightly larger size and a
+ * generous line height; headings, lists' markers, captions and UI stay in
+ * Inter, so the serif reads as "the writing" and everything else as "the
+ * site". Sizes: 17px on phones rising to 20px on desktop, the range where
+ * long serif text is most comfortable on screens.
+ */
+.prose--reading {
+  max-width: var(--measure-reading);
+  font-family: var(--font-serif);
+  font-optical-sizing: auto;
+  font-size: clamp(1.0625rem, 0.98rem + 0.37vw, 1.25rem);
+  line-height: var(--leading-reading);
+  counter-reset: section;
+}
+
+.prose--reading > * + * {
+  margin-top: 1.15em;
+}
+
+.prose--reading :is(h2, h3, h4) {
+  font-family: var(--font-sans);
+}
+
+/* Sections open with air above, a small mono number (matching the contents
+   list) and a confident heading. */
+.prose--reading h2 {
+  counter-increment: section;
+  margin-top: clamp(var(--space-16), 8vw, var(--space-24));
+  font-size: var(--step-3);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-display);
+}
+
+.prose--reading h2::before {
+  content: counter(section, decimal-leading-zero);
+  display: block;
+  margin-bottom: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  color: var(--color-accent);
+}
+
+.prose--reading h2 + * {
+  margin-top: var(--space-5);
+}
+
+.prose--reading strong {
+  font-weight: 650;
+}
+
+.prose--reading li + li {
+  margin-top: 0.6em;
+}
+
+.prose--reading li::marker {
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  color: var(--color-accent);
+}
+
+/* Links in running text: a soft underline that firms up on hover, so a
+   paragraph with a link still reads as one calm block. */
+.prose--reading a {
+  text-decoration-color: color-mix(in oklab, var(--color-accent) 45%, transparent);
+}
+
+/* Drop cap on the opening paragraph. A float rather than initial-letter,
+   because the essay opens with a one-line paragraph: the float lets the cap
+   settle into the lines that follow, where initial-letter would leave a
+   hole. Sized in em of the body text, so it scales with it. */
+.prose--dropcap > p:first-of-type::first-letter {
+  float: left;
+  margin: 0.06em 0.12em 0 -0.02em;
+  font-family: var(--font-serif);
+  font-size: 4.1em;
+  font-weight: 600;
+  line-height: 0.82;
+  color: var(--color-accent);
+}
+
+/* The opening line, set a little larger: it is the hook. */
+.prose--dropcap > p:first-of-type {
+  font-size: 1.12em;
+}
+
+/* Diagrams and photos marked wide break out to the right of the column on
+   large screens, where there is room beside the text, for a bigger image
+   without moving the left edge the eye is tracking. */
+@media (min-width: 80rem) {
+  .prose--reading > :is(.diagram--wide, .photo--wide) {
+    margin-right: -8rem;
+  }
+}

@@ -1,0 +1,182 @@
+---
+title: 'The Music Was There. I Just Couldn’t Hear It.'
+description: 'Why spatial audio should belong to every listener, and what I’m building to get us there'
+pubDate: 2026-11-19
+kind: essay
+tags: ['spatial-audio', 'soundstage', 'android']
+relatedProject: soundstage
+# The cover photo appears once the file is in src/assets/photos/. Until then
+# the page shows the site's own cover art. Check the alt text and credit
+# against the photo you actually add.
+cover:
+  file: listener-headphones.jpg
+  alt: A man in a dark room wearing headphones, lost in the music
+  credit: Mahyar Yeganeh / Unsplash
+  creditUrl: https://unsplash.com/photos/a-man-in-a-dark-room-wearing-headphones-j2-xZ84-FQo
+---
+
+import StereoVsSpatial from '../../components/diagrams/StereoVsSpatial.astro';
+import StemSplit from '../../components/diagrams/StemSplit.astro';
+import IntelligentMixer from '../../components/diagrams/IntelligentMixer.astro';
+import EarCues from '../../components/diagrams/EarCues.astro';
+import SongPipeline from '../../components/diagrams/SongPipeline.astro';
+
+I love Apple Music.
+
+I love the way it looks, the way it feels in my hand, and the fact that it has something for everyone. If you’re the kind of listener who hears the breath before a vocal line or the tail of a reverb fading out, it’s built for you. If you just want to press play and vibe, it’s built for you too. Lossless audio, beautiful editorial playlists, and spatial audio. It’s a lot of care in one app.
+
+So when I installed it on my phone, a Samsung Galaxy S21 FE, I wanted all of it. Spatial audio most of all.
+
+If you’ve never heard spatial audio done well, here’s the simplest way I can describe it. Normal stereo puts the music in a line between your two ears. Spatial audio takes that line and opens it into a room. The drums sit in front of you. The background vocals float around you. The reverb feels like it’s coming from the walls of a real space. Even on a pair of good-enough, mid-range headphones like mine, it’s the difference between listening to music and being inside it.
+
+<StereoVsSpatial />
+
+And I got it. But with a catch.
+
+## The switch
+
+A bit of reading taught me how it works in Apple Music on Android. Only songs that have a dedicated Dolby Atmos mix can play spatially; everything else plays in regular stereo. And your phone itself has to support Dolby Atmos, or you won’t get spatial playback at all.
+
+My phone does, so spatial songs played the way they should, with a little “Dolby Atmos” badge on the Now Playing screen.
+
+Then, one evening, mid-song, I pulled down my quick settings and switched Dolby Atmos off.
+
+The music collapsed back into plain stereo instantly. The room disappeared. But the badge stayed right there on the screen.
+
+To be fair, that badge is doing its job: it tells you a Dolby Atmos version of the song exists. But in that moment it showed me something bigger. The spatial version was available. I was paying for it. My phone was more than powerful enough to play it. And whether I actually heard it came down to one switch, connected to one company’s technology on one particular phone.
+
+## This isn’t about bad technology
+
+I want to be clear about something, because it matters to me.
+
+Dolby Atmos is brilliant. Some of my favourite listening experiences have been in Atmos. DTS has shaped how films sound for decades, and Sony’s 360 Reality Audio is a genuinely beautiful format. The engineers behind these technologies are the reason spatial music exists at all.
+
+The problem isn’t the technology. It’s access.
+
+Right now, whether you hear spatial audio depends on more than your subscription. It depends on whether your phone maker has partnered with the right company, and whether the song you love received a special mix. Two people can pay the same amount for the same premium plan and walk away with two very different experiences, decided by the logo on the phone each of them owns.
+
+Millions of listeners have phones that are perfectly capable of rendering spatial sound, and many of them will never hear it.
+
+So I kept coming back to one question:
+
+<PullQuote>Why should anyone have to change the phone they love just to hear something their plan already includes?</PullQuote>
+
+That question became SoundStage.
+
+## What SoundStage is
+
+SoundStage is a spatial audio engine I’m building that can take a finished stereo song, the exact file you already stream, and create an immersive spatial version that plays on any phone, through any headphones.
+
+No special mix required. No particular hardware required. Spatial audio becomes part of the service you pay for, not a feature of the phone you happened to buy.
+
+There are a few promises I’m holding myself to:
+
+- **Every device.** A budget Android phone should get the same spatial experience as a flagship.
+- **Every song,** as long as the artist says yes.
+- **Respect for the record.** SoundStage should never remix anyone’s music or turn it into a different song. The bass stays the bass. The vocal stays where the artist put it. The only thing that changes is depth.
+- **Control in the right hands.** Artists and labels decide whether their music gets a spatial version. Listeners decide whether to play it.
+
+That sounds simple. Building it is not. Here’s how it works, step by step.
+
+## Step one: taking the song apart
+
+A finished song is like a baked cake. The vocals, drums, bass, keys and guitars have all been mixed together into one piece of audio. To place each instrument somewhere in space, you first have to un-bake the cake and get the ingredients back. In audio, those ingredients are called stems.
+
+<StemSplit />
+
+This is called stem separation, and it’s done with machine learning. The model I’m starting from is Demucs, an open-source model that came out of Meta’s research team. In plain terms, it has listened to thousands of songs where it already knew what the separate instruments sounded like. Over time it learned the fingerprints of each one: the shape of a kick drum, the texture of a voice, the low, steady energy of a bassline. Give it a new song and it uses those fingerprints to pull each part back out.
+
+It’s impressive, but it isn’t perfect. Two problems show up again and again:
+
+- **Bleed:** a little of the hi-hat ends up in the vocal stem, or a little of the vocal stays in the keys.
+- **Artefacts:** a faint watery or metallic shimmer where the model had to guess.
+
+In normal stereo you’d never notice these. But once you place every stem in its own position around the listener’s head, every flaw has nowhere to hide. A ghost of a hi-hat floating behind the singer’s voice instantly makes the whole thing sound fake.
+
+So I’m building my own layer on top of the separation. It checks each stem for traces of the others and cleans them up, so every stem is as pure as possible before it goes anywhere near the spatial stage.
+
+And there’s one test I use that any mastering engineer will recognise: add all the separated stems back together and compare the result to the original song. If they match closely, nothing was lost or invented along the way. It’s a simple way to keep me honest about the first promise: never change the music.
+
+## Step two: deciding where everything lives
+
+Once the stems are clean, the next question is the creative one: where should each sound sit?
+
+This is where SoundStage stops being just a tool and starts thinking like a mix engineer. I call this part the intelligent mixer.
+
+<Photo
+  file="studio-console.jpg"
+  alt="Hands on a sound mixing console in a studio at night, lit by coloured lights"
+  credit="Rob Wingate / Unsplash"
+  creditUrl="https://unsplash.com/photos/someone-is-operating-a-sound-mixing-console-oQVkFSG9ezU"
+  wide
+/>
+
+The mixer looks at what each stem is and what it’s doing. Then it places it using three simple ideas: direction (left, right, front, behind), height (above or level with you), and distance (close and intimate, or further back in the room).
+
+<IntelligentMixer />
+
+But good placement depends on the music. Afrobeat lives on rhythm and groove, so the percussion needs space to dance around you without crowding the vocal. House is built on the kick and the bass, so the low end has to stay anchored and centred, exactly as the producer intended, while the pads and effects open up around it. Rap needs the voice locked firmly in front of you, because the words are the point.
+
+So the mixer is genre-aware, and it goes one step further: every song gets its own mix profile. Even two songs on the same album shouldn’t be treated the same way, because a good engineer would never do that either.
+
+Throughout all of this, a few rules never break. The bass stays centred. The lead vocal stays front and clear. The balance the artist and their engineer worked hard on stays intact. The mixer adds space; it never takes away intent.
+
+## Step three: making your headphones feel like a room
+
+Here’s the part that still amazes me.
+
+You only have two ears, yet you can tell when a sound is behind you, above you, or across the room. Your brain works this out from tiny clues:
+
+- **Timing:** a sound on your left reaches your left ear a fraction of a millisecond before your right.
+- **Loudness:** your head casts a kind of acoustic shadow, so the far ear hears the sound slightly quieter.
+- **Shape:** the folds of your outer ear subtly colour sounds depending on whether they come from the front, behind or above.
+
+<EarCues />
+
+Engineers capture all these clues in a set of measurements called HRTFs (head-related transfer functions). Think of an HRTF as a recipe for how a sound from any direction gets shaped on its way into your ears. Apply that recipe to a stem, and your brain hears it coming from that direction, even through ordinary headphones. This is called binaural rendering.
+
+Rooms add the final layer. In a real room, sound bounces off walls, floors and ceilings, and those reflections tell your brain how big the space is and how far away things are. SoundStage adds carefully modelled room reflections so the music doesn’t just surround you, it sits in a believable place.
+
+<Photo
+  file="concert-blue-light.jpg"
+  alt="A crowd at a concert under blue stage lights"
+  credit="Marcel Strauß / Unsplash"
+  creditUrl="https://unsplash.com/photos/crowd-enjoying-a-concert-with-blue-stage-lights-ubwn8GI9-2o"
+  wide
+/>
+
+That’s also how the listening modes work. The same song can feel like it’s playing in a treated studio, inside a car, or in a cinema-sized space, just by changing the room the music is placed in.
+
+The key detail is that all of this happens inside the app. Not in the phone’s settings, and not in special hardware. Rendering binaural audio is well within what a modern phone can do, so if the app can do it, every phone that runs the app can do it.
+
+## How it fits into a streaming service
+
+I didn’t want to build something that asks streaming services to tear down what already works. So SoundStage is designed to slot neatly into what they already do.
+
+Here’s the life of one song:
+
+1. The artist or label opts in through their existing agreement with the streaming service.
+2. When the song is released, SoundStage processes it once, on the service’s servers. It separates the stems, cleans them, builds the song’s mix profile and prepares the spatial version. My target is for this to be ready within about one to two hours of release.
+3. The spatial version is stored right next to the stereo and lossless files the service already keeps, packed efficiently while aiming to preserve lossless-level quality.
+4. You press play with spatial turned on. The app streams the prepared version, and the renderer inside the app plays it through whatever you’re listening on.
+5. You turn spatial off, and you’re back to the original stereo master, with the screen telling you exactly what you’re hearing.
+
+<SongPipeline />
+
+All the heavy lifting happens once per song, before anyone listens. Your phone just plays.
+
+For the service, nothing fundamental changes. There’s no new hardware for phone makers to build in, and no new partnership required for every device. Spatial audio simply becomes a format the service owns and delivers, shipped as an ordinary app update. And songs that already have a real Dolby Atmos mix can keep it. Those mixes are crafted by talented engineers and they deserve to be heard as made. SoundStage is there for everything, and everyone, currently left out.
+
+## Where I am right now
+
+SoundStage is in active development, and I’m building it in the open.
+
+The hardest problems are exactly the ones you’d expect: getting stems clean enough that nothing sounds artificial, and making automatic spatial mixes feel as natural as ones crafted by a human engineer. Those are the problems I’m working on every day, from Lagos, with free tools, a laptop and a lot of listening.
+
+I’ll share everything as it happens, including what works, what doesn’t yet, and what I learn along the way.
+
+Because I truly believe spatial audio is one of the most exciting things to happen to how we listen since stereo itself. It’s too good to be limited to some phones and some songs.
+
+<PullQuote>The music is already there. Everyone deserves to hear it.</PullQuote>
+
+[Follow the build on GitHub.](https://github.com/danielomoteshohacks/stage-spatial-audio)

@@ -21,7 +21,7 @@ Node 22.23.4 or newer. Cloudflare builds with the version in `.node-version`.
 | `npm run build`   | Run the type check, then build the site into `dist/`  |
 | `npm run preview` | Serve the production build locally                    |
 | `npm run generate:audio` | Regenerate the synthetic test tones and print their LUFS |
-| `npm run generate:portrait` | Regenerate the placeholder portrait            |
+| `npm run prepare:portrait` | Re-crop and grade the portrait from the original photo |
 
 ## Layout
 
@@ -32,9 +32,11 @@ Node 22.23.4 or newer. Cloudflare builds with the version in `.node-version`.
 - `src/data/ideas.ts` the "Ideas I'm exploring" notes
 - `src/lib/content.ts` the only way pages read collections (filters drafts)
 - `src/styles/tokens.css` design tokens, `global.css` base styles, `prose.css` long-form text
-- `src/assets/portrait.jpg` the portrait
+- `src/assets/portrait.jpg` the portrait (made from `src/assets/source/portrait-original.jpg`)
+- `src/assets/photos/` royalty-free article photos, looked up by file name
+- `src/components/diagrams/` hand-built article diagrams (SVG on design tokens)
 - `public/audio/` audio files served as-is (later: Cloudflare R2 URLs instead)
-- `scripts/` generators for the placeholder portrait and test audio
+- `scripts/` the portrait preparation script and the test-audio generator
 - `docs/design-direction.md` visual direction
 - `CLAUDE.md` rules for AI-assisted sessions
 
@@ -126,19 +128,50 @@ tags: ['spatial-audio']
 references:                     # optional, shown as a numbered list at the end
   - { title: Source title, authors: Name, publisher: Publisher, year: 2024, url: https://... }
 relatedProject: acoustimorph    # optional, a project slug
+cover:                          # optional cover photo (see "Article photos")
+  file: listener-headphones.jpg
+  alt: What the photo shows
+  credit: Name / Unsplash
+  creditUrl: https://unsplash.com/photos/...
 ---
 ```
 
+The `description` doubles as the subtitle under the title. Essays get a drop
+cap; every article gets a reading progress bar, reading time, byline and a
+share card with the title (`/og/writing/<slug>.png`). The newest essay is
+the lead story on Home automatically.
+
 Inside the body, without imports: `<Sidenote>...</Sidenote>` (inside a
-paragraph), `<Figure caption="...">...</Figure>`, `<TrackPlayer track="slug" />`,
-`<ABPlayer comparison="slug" />`, `$inline$` and `$$display$$` math, and fenced
-code blocks. A table of contents appears automatically with three or more `##`
-headings.
+paragraph), `<Figure caption="...">...</Figure>`, `<PullQuote>A line from
+the text</PullQuote>` (use it in place of that paragraph, not as a repeat),
+`<Photo file="name.jpg" alt="..." credit="Name / Unsplash" wide />`,
+`<TrackPlayer track="slug" />`, `<ABPlayer comparison="slug" />`, `$inline$`
+and `$$display$$` math, and fenced code blocks. Diagrams in
+`src/components/diagrams/` are imported at the top of the article that uses
+them. A table of contents of the `##` headings appears automatically with
+three or more of them.
+
+### Article photos
+
+Royalty-free only (Unsplash or Pexels licence), no visible brand logos, never
+AI-generated. Put the file in `src/assets/photos/` and reference it by name
+as a `cover` or a `<Photo>`. A name with no file yet renders nothing (or the
+site's own cover art, for covers), so an article can be published before its
+photos arrive. Always fill in `credit`; it prints as "Photo: Name / Unsplash".
 
 ### Finding
 
 Same as writing, with `kind: finding`. Keep it short. It appears on
 `/findings/` and in the writing list.
+
+### Hidden sections (Music, Findings, Lab)
+
+Music, Findings and Lab are out of the navigation while they have little or
+nothing published; their pages and collections still work. To bring one
+back, publish entries and add its line to `nav` in `src/lib/site.ts` (the
+lines are in the comment above it). On Home, Featured listening and the Lab
+teaser appear by themselves once a track is `featured` or a lab entry is
+published.
 
 ### Lab entry
 
@@ -175,7 +208,11 @@ heading, intro and search description.
 
 ### Portrait
 
-Replace `src/assets/portrait.jpg` with a JPEG of the same name (portrait
-orientation, at least 1200 x 1500). Astro generates the AVIF and WebP sizes
-automatically. `npm run generate:portrait` restores the placeholder.
+The original photo is `src/assets/source/portrait-original.jpg`, never edited.
+`npm run prepare:portrait` crops it to a 4:5 head-and-shoulders frame with a
+gentle contrast and warmth grade and writes `src/assets/portrait.jpg`; the
+crop and grade are numbers at the top of `scripts/prepare-portrait.mjs`. For a
+new photo, replace the original (same name) and run the script, or replace
+`portrait.jpg` directly with any 4:5 JPEG at least 1600 px wide. Astro
+generates the AVIF and WebP sizes automatically.
 

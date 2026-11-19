@@ -1,0 +1,108 @@
+---
+/**
+ * Diagram: the frame shared by the hand-built article diagrams.
+ *
+ * Provides the numbered caption (the same "figure" counter as Figure.astro,
+ * so photos-free numbering stays continuous) and a small palette of classes
+ * the SVGs use instead of raw colours. Every class maps to a design token,
+ * so the diagrams follow light and dark mode with no extra code:
+ *
+ *   .d-ink     main strokes and text       --color-text
+ *   .d-muted   secondary text and lines    --color-text-muted
+ *   .d-line    hairlines, rings            --color-border-strong
+ *   .d-accent  the subject (cobalt)        --color-accent
+ *   .d-warm    the second voice (amber)    --color-warm
+ *   .d-paper   fills that hide lines       --color-surface-raised
+ *
+ * Text inside the SVGs is real text (selectable, translatable) in the site's
+ * fonts. Each SVG carries its own <title> and <desc> for screen readers.
+ */
+interface Props {
+  caption: string;
+  /** Breaks out wider than the text column on large screens. */
+  wide?: boolean;
+}
+
+const { caption, wide = false } = Astro.props;
+---
+
+<figure class:list={['diagram', { 'diagram--wide': wide }]}>
+  <div class="diagram__media">
+    <slot />
+  </div>
+  <figcaption class="diagram__caption"><span class="diagram__label">Figure</span> {caption}</figcaption>
+</figure>
+
+<style>
+  .diagram {
+    counter-increment: figure;
+    margin-block: var(--space-12);
+  }
+
+  .diagram__media {
+    padding: clamp(var(--space-3), 3vw, var(--space-8));
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    /* A faint cobalt wash from the top, so diagrams feel lit rather than
+       printed, while staying calm next to body text. */
+    background:
+      radial-gradient(ellipse 90% 70% at 50% 0%, color-mix(in oklab, var(--color-accent) 7%, transparent), transparent 70%),
+      var(--color-surface-raised);
+  }
+
+  .diagram__media :global(svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    font-family: var(--font-sans);
+  }
+
+  .diagram__caption {
+    margin-top: var(--space-3);
+    font-family: var(--font-sans);
+    font-size: var(--step--1);
+    line-height: var(--leading-snug);
+    color: var(--color-text-muted);
+  }
+
+  .diagram__label {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text);
+  }
+
+  .diagram__label::after {
+    content: ' ' counter(figure) '.';
+  }
+
+  /* ----- Palette (see the header comment) ----- */
+  .diagram :global(.d-ink) { color: var(--color-text); }
+  .diagram :global(.d-muted) { color: var(--color-text-muted); }
+  .diagram :global(.d-line) { color: var(--color-border-strong); }
+  .diagram :global(.d-accent) { color: var(--color-accent); }
+  .diagram :global(.d-warm) { color: var(--color-warm); }
+  .diagram :global(.d-paper) { color: var(--color-surface-raised); }
+
+  .diagram :global(text) {
+    fill: currentColor;
+  }
+
+  .diagram :global(.d-label) {
+    font-size: 15px;
+    font-weight: var(--weight-semibold);
+  }
+
+  .diagram :global(.d-small) {
+    font-size: 13px;
+  }
+
+  .diagram :global(.d-mono) {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+</style>

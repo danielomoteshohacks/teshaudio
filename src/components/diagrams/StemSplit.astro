@@ -1,0 +1,74 @@
+---
+/**
+ * Diagram: un-baking the cake. One mixed waveform splits into four stems.
+ *
+ * The waveforms are generated here at build time from simple envelopes, so
+ * each stem has a recognisable character (vocal phrases, drum hits, a steady
+ * bass, a busy bed of everything else) and the mix is genuinely their sum.
+ * A tiny deterministic noise function keeps the output identical on every
+ * build, so the SVG never changes unless this file does.
+ */
+import Diagram from './Diagram.astro';
+
+const noise = (i: number, seed: number) => {
+  const v = Math.sin(i * 12.9898 + seed * 78.233) * 43758.5453;
+  return v - Math.floor(v);
+};
+
+// Envelopes over t in [0, 1): loudness of each stem at that moment.
+const env = {
+  vocals: (t: number, i: number) => Math.max(0, Math.sin(t * Math.PI * 3.2 + 0.3)) ** 0.7 * (0.55 + 0.45 * noise(i, 1)),
+  drums: (t: number, i: number) => Math.exp(-((t * 9) % 1) * 7) * (0.75 + 0.25 * noise(i, 2)) + 0.05,
+  bass: (t: number, i: number) => 0.5 + 0.12 * Math.sin(t * 40) + 0.08 * noise(i, 3),
+  other: (t: number, i: number) => 0.28 + 0.3 * noise(i, 4) * (0.6 + 0.4 * Math.sin(t * 9)),
+};
+type Stem = keyof typeof env;
+
+/** Waveform as one path of vertical bars, centred on y. */
+function bars(x0: number, width: number, y: number, amp: number, level: (t: number, i: number) => number) {
+  const step = 4;
+  const n = Math.floor(width / step);
+  let d = '';
+  for (let i = 0; i <= n; i++) {
+    const h = Math.max(0.6, level(i / n, i) * amp);
+    const x = (x0 + i * step).toFixed(1);
+    d += `M${x} ${(y - h).toFixed(1)}V${(y + h).toFixed(1)}`;
+  }
+  return d;
+}
+
+const mix = (t: number, i: number) =>
+  Math.min(1, 0.42 * env.vocals(t, i) + 0.42 * env.drums(t, i) + 0.32 * env.bass(t, i) + 0.38 * env.other(t, i));
+
+const lanes: { stem: Stem; label: string; y: number; tone: string }[] = [
+  { stem: 'vocals', label: 'Vocals', y: 62, tone: 'd-accent' },
+  { stem: 'drums', label: 'Drums', y: 142, tone: 'd-warm' },
+  { stem: 'bass', label: 'Bass', y: 222, tone: 'd-ink' },
+  { stem: 'other', label: 'Other', y: 302, tone: 'd-muted' },
+];
+---
+
+<Diagram caption="Stem separation: one finished song goes in, and four stems come out (vocals, drums, bass and everything else). Added back together, they should match the original.">
+  <svg viewBox="0 0 560 340" role="img" aria-labelledby="stems-title stems-desc">
+    <title id="stems-title">Un-baking the cake</title>
+    <desc id="stems-desc">On the left, a single dense waveform labelled "Finished song". It branches into four separate waveforms on the right: vocals in phrases, drums as sharp hits, a steady bass, and a busy layer of everything else.</desc>
+
+    <text class="d-mono d-muted" x="20" y="100">Finished song</text>
+    <path class="d-ink" d={bars(20, 172, 172, 56, mix)} stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path>
+
+    {/* The fork from the mix into four lanes. */}
+    <g class="d-line" fill="none" stroke="currentColor" stroke-width="1.5">
+      {lanes.map(({ y }) => <path d={`M204 172 C 248 172, 252 ${y}, 296 ${y}`} />)}
+    </g>
+    <circle class="d-accent" cx="204" cy="172" r="5" fill="currentColor"></circle>
+
+    {
+      lanes.map(({ stem, label, y, tone }) => (
+        <g class={tone}>
+          <text class="d-label" x="310" y={y - 26}>{label}</text>
+          <path d={bars(310, 228, y, 20, env[stem])} stroke="currentColor" stroke-width="2.2" stroke-linecap="round" />
+        </g>
+      ))
+    }
+  </svg>
+</Diagram>

@@ -2,10 +2,15 @@
 /**
  * Portrait
  *
- * Tesh's portrait from src/assets/portrait.jpg, optimised by Astro into AVIF
- * and WebP at several widths. Explicit width and height (via the aspect
- * ratio) reserve the space before the image loads, so nothing shifts.
- * Replacing the file is the only step needed to swap in a real photo.
+ * Tesh's portrait from src/assets/portrait.jpg (prepared from the original
+ * by scripts/prepare-portrait.mjs), optimised by Astro into AVIF and WebP.
+ * Explicit width and height (via the aspect ratio) reserve the space before
+ * the image loads, so nothing shifts.
+ *
+ * Presentation: a large rounded frame, a soft cobalt glow behind it that
+ * picks up the blue of the outfit, and a whisper of grain over the photo so
+ * it shares the texture of the page. The goal is a magazine feature, not an
+ * ID photo.
  */
 import { Picture } from 'astro:assets';
 import sharp from 'sharp';
@@ -34,36 +39,78 @@ interface Props {
 const { sizes, priority = false } = Astro.props;
 ---
 
-<div class="portrait" style={`--preview: ${previewUrl}`}>
-  <Picture
-    src={portrait}
-    alt={`Portrait of ${site.fullName} (${site.name})`}
-    formats={['avif', 'webp']}
-    widths={[400, 640, 880, 1200]}
-    sizes={sizes}
-    loading={priority ? 'eager' : 'lazy'}
-    fetchpriority={priority ? 'high' : 'auto'}
-  />
+<div class="portrait">
+  <div class="portrait__frame" style={`--preview: ${previewUrl}`}>
+    <Picture
+      src={portrait}
+      alt={`Portrait of ${site.fullName} (${site.name}) in a blue embroidered native outfit`}
+      formats={['avif', 'webp']}
+      // Up to 1600px wide: a 30rem frame on a 3x phone or a 2x laptop needs
+      // about 1400px to stay crisp. The source is 1664px, so nothing is upscaled.
+      widths={[480, 720, 960, 1280, 1600]}
+      quality={78}
+      sizes={sizes}
+      loading={priority ? 'eager' : 'lazy'}
+      fetchpriority={priority ? 'high' : 'auto'}
+    />
+  </div>
 </div>
 
 <style>
   .portrait {
     position: relative;
+    isolation: isolate;
+  }
+
+  /* The cobalt glow: a soft pool of light behind and below the frame, echoing
+     the outfit, with a faint warm edge so it reads as stage light rather than
+     a flat colour. A plain gradient, so it costs nothing to render. */
+  .portrait::before {
+    content: '';
+    position: absolute;
+    z-index: -1;
+    inset: -14% -18% -18%;
+    pointer-events: none;
+    background:
+      radial-gradient(closest-side at 50% 62%, color-mix(in oklab, var(--accent-glow) var(--portrait-glow), transparent), transparent),
+      radial-gradient(closest-side at 18% 18%, color-mix(in oklab, var(--color-warm) calc(var(--portrait-glow) * 0.45), transparent), transparent);
+  }
+
+  .portrait__frame {
+    position: relative;
     overflow: hidden;
     aspect-ratio: 4 / 5;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-xl);
     background-color: var(--color-surface-raised);
-    box-shadow: var(--shadow-2);
+    box-shadow: var(--shadow-3);
+    /* A hairline of light on the frame edge, like a print mounted in glass. */
+    outline: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent);
+    outline-offset: -1px;
   }
 
   /* The blurred preview, scaled up slightly so the blur has no soft edge. */
-  .portrait::before {
+  .portrait__frame::before {
     content: '';
     position: absolute;
     inset: 0;
     background: var(--preview) center / cover no-repeat;
     filter: blur(18px);
     transform: scale(1.1);
+  }
+
+  /* Grain over the photo, the same noise tile as the page (global.css), so
+     the portrait sits in the page rather than on it. Very low opacity: it
+     adds texture, never changes the face. */
+  .portrait__frame::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background-image: var(--grain-tile);
+    background-size: 160px 160px;
+    opacity: 0.07;
+    mix-blend-mode: overlay;
   }
 
   .portrait :global(img) {

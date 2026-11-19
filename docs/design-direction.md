@@ -50,6 +50,9 @@ Kept after the design-system PR review; no alternative made a strong enough case
 - Sans: Inter (variable, with the optical-size axis), via
   `@fontsource-variable/inter/opsz.css`.
 - Mono: JetBrains Mono (variable), via `@fontsource-variable/jetbrains-mono`.
+- Serif (article body only): Source Serif 4 (variable, with the optical-size
+  axis), via `@fontsource-variable/source-serif-4/opsz.css`, imported only by
+  the article template.
 
 ## Implemented tokens
 
@@ -76,3 +79,27 @@ The design-system work turned this direction into tokens and base components;
   fade-up as sections enter. Both are off under `prefers-reduced-motion`.
 - Mono type only for small labels and metadata (dates, tags, status,
   durations).
+
+## Third iteration: cinematic, editorial
+
+- **Hero.** Dark-first stage: deep near-black with two slow pools of light
+  (cobalt matched to the portrait's outfit, warm amber) drifting over about
+  40 s, a faint beam and film grain. CSS only, transform-only animation,
+  off under reduced motion. Light mode is the same scene in warm daylight.
+  The name is set at `--step-hero`, the site's one oversized moment.
+- **Portrait.** The real photo, cropped and gently graded by
+  `scripts/prepare-portrait.mjs`; shown in a `--radius-xl` frame with a
+  cobalt glow behind and a whisper of grain. Never retouched.
+- **Home rhythm.** Movements, not a stack of cards: hero, one large lead
+  story, a full-width "Now" statement, disciplines as a typographic list,
+  then the dark band for work and philosophy.
+- **Reading.** Article body in Source Serif 4 (self-hosted, loaded only on
+  articles) at 68ch with generous leading; Inter for headings and UI.
+  Numbered sections, a drop cap on essays, pull quotes, a CSS scroll-driven
+  progress bar and a sticky contents rail on desktop.
+- **Diagrams.** Hand-built SVG components in `src/components/diagrams/`,
+  coloured only through token-mapped classes, so they follow light and dark
+  mode. Each has a `<title>`, `<desc>` and a numbered caption.
+- **Covers.** Article photos are royalty-free and credited. Until a photo is
+  added, `CoverArt.astro` (an original illustration of a listener in a sound
+  field) stands in; never a stock or generated image.

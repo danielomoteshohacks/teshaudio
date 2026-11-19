@@ -71,6 +71,19 @@ const writing = defineCollection({
       )
       .default([]),
     relatedProject: reference('projects').optional(),
+    // Cover photo, by file name in src/assets/photos/ (see src/lib/photos.ts).
+    // A name rather than an image() import, so an entry can name a photo that
+    // has not been added yet: until the file exists the page shows the
+    // site's own cover art instead of failing the build. `credit` is printed
+    // under the photo ("Photo: Name / Unsplash").
+    cover: z
+      .object({
+        file: z.string(),
+        alt: z.string(),
+        credit: z.string(),
+        creditUrl: z.url().optional(),
+      })
+      .optional(),
     // Unlisted: built and reachable by URL, but kept out of every list, the
     // RSS feed and the sitemap, and marked noindex.
     unlisted: z.boolean().default(false),

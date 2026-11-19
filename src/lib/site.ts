@@ -49,11 +49,8 @@ export const site = {
   // optionally links the item. Update as things change.
   now: [
     {
-      text: 'Building Stage, a spatial audio engine for any song on any phone.',
-      href: '/projects/stage/',
-    },
-    {
-      text: 'Working through Kinsler’s Fundamentals of Acoustics and Li and Cox’s Digital Signal Processing in Audio and Acoustical Engineering.',
+      text: 'Building SoundStage, a spatial audio engine for any song, on any phone.',
+      href: '/projects/soundstage/',
     },
   ] as { text: string; href?: string }[],
 
@@ -77,6 +74,8 @@ export const site = {
 export const copy = {
   home: {
     now: { eyebrow: 'Now', title: 'What I’m doing now' },
+    // The lead story is the newest published essay; this only labels it.
+    lead: { eyebrow: 'Lead story', cta: 'Read the essay' },
     disciplines: { eyebrow: 'Disciplines', title: 'Five disciplines, one practice' },
     listening: {
       eyebrow: 'Listen',
@@ -84,7 +83,7 @@ export const copy = {
       lead: 'Playback continues in the player at the bottom of the screen while you browse.',
     },
     building: { eyebrow: 'Work', title: 'What I’m building' },
-    writing: { eyebrow: 'Writing', title: 'Latest writing' },
+    writing: { eyebrow: 'Writing', title: 'More writing' },
     ideas: { eyebrow: 'Ideas', title: 'Ideas I’m exploring' },
     lab: { eyebrow: 'Lab', title: 'From the lab', lead: 'Small tools and demos you can try in the browser.' },
     contact: { eyebrow: 'Contact', title: 'Get in touch' },
@@ -134,14 +133,20 @@ export const copy = {
   },
 } as const;
 
-/** Primary navigation, in display order. */
+/**
+ * Primary navigation, in display order.
+ *
+ * Music, Findings and Lab are left out while they have nothing published
+ * (their pages and collections still exist). To bring one back, publish an
+ * entry and add its line here:
+ *   { label: 'Music', href: '/music/' },
+ *   { label: 'Findings', href: '/findings/' },
+ *   { label: 'Lab', href: '/lab/' },
+ */
 export const nav = [
-  { label: 'Music', href: '/music/' },
   { label: 'Work', href: '/projects/' },
   { label: 'Writing', href: '/writing/' },
-  { label: 'Findings', href: '/findings/' },
   { label: 'Ideas', href: '/ideas/' },
   { label: 'Philosophy', href: '/philosophy/' },
-  { label: 'Lab', href: '/lab/' },
   { label: 'About', href: '/about/' },
-] as const;
+] as { label: string; href: string }[];

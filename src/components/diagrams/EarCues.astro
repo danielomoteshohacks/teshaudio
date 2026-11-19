@@ -1,0 +1,89 @@
+---
+/**
+ * Diagram: how your ears find direction. A sound on the listener's left, and
+ * the three cues the essay names: timing (the near ear hears it first),
+ * loudness (the head casts an acoustic shadow over the far ear) and shape
+ * (the folds of the outer ear colour the sound).
+ */
+import Diagram from './Diagram.astro';
+import ListenerHead from './ListenerHead.astro';
+
+const head = { x: 300, y: 196, r: 62 };
+const nearEar = head.x - head.r;
+const farEar = head.x + head.r;
+---
+
+<Diagram caption="Three clues your brain uses to place a sound: when it arrives at each ear, how loud it is at each ear, and how the outer ear shapes it. An HRTF captures all three.">
+  <svg viewBox="0 0 560 380" role="img" aria-labelledby="ears-title ears-desc">
+    <title id="ears-title">How your ears find direction</title>
+    <desc id="ears-desc">A listener seen from above with a sound source on their left. Cue 1, timing: the sound travels a short straight path to the near ear and a longer path around the head to the far ear, so it arrives at the near ear first. Cue 2, loudness: the head casts an acoustic shadow on the far side, so the far ear hears the sound slightly quieter. Cue 3, shape: a close-up of the outer ear shows how its folds colour the sound depending on whether it comes from the front, behind or above.</desc>
+
+    {/* Head shadow: the quieter zone on the far side, fading out with
+        distance as the sound bends back around the head. */}
+    <defs>
+      <linearGradient id="ears-shadow" x1="0" x2="1" y1="0" y2="0">
+        <stop offset="0" stop-color="currentColor" stop-opacity="0.14"></stop>
+        <stop offset="1" stop-color="currentColor" stop-opacity="0"></stop>
+      </linearGradient>
+    </defs>
+    <path
+      class="d-ink"
+      d={`M${head.x} ${head.y - head.r - 6} C ${head.x + 150} ${head.y - 120}, ${head.x + 230} ${head.y - 60}, 556 ${head.y - 50} L 556 ${head.y + 50} C ${head.x + 230} ${head.y + 60}, ${head.x + 150} ${head.y + 120}, ${head.x} ${head.y + head.r + 6} Z`}
+      fill="url(#ears-shadow)"
+    ></path>
+
+    {/* The source and its wavefronts. */}
+    <g class="d-accent">
+      <circle cx="56" cy={head.y} r="9" fill="currentColor"></circle>
+      <g fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <path d={`M80 ${head.y - 22} q10 22 0 44`} opacity="0.9"></path>
+        <path d={`M96 ${head.y - 34} q15 34 0 68`} opacity="0.6"></path>
+        <path d={`M112 ${head.y - 46} q20 46 0 92`} opacity="0.35"></path>
+      </g>
+      <text class="d-mono" x="56" y={head.y + 34} text-anchor="middle">Sound</text>
+    </g>
+
+    {/* Cue 1: two paths of different length. */}
+    <g class="d-accent" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <path d={`M128 ${head.y} H${nearEar - 16}`}></path>
+      <path
+        d={`M128 ${head.y - 10} C 190 ${head.y - 110}, ${head.x + 40} ${head.y - 128}, ${farEar + 4} ${head.y - 16}`}
+        stroke-dasharray="5 6"
+      ></path>
+    </g>
+
+    <ListenerHead x={head.x} y={head.y} r={head.r} />
+
+    {/* Cue 3: outer ear close-up, linked to the near ear. */}
+    <g class="d-line" fill="none" stroke="currentColor" stroke-width="1.2">
+      <path d={`M${nearEar - 6} ${head.y + 22} L 150 300`} stroke-dasharray="2 4"></path>
+      <circle cx="122" cy="320" r="44"></circle>
+    </g>
+    <g class="d-ink" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      {/* A side view of the pinna: the outer rim (helix), the inner fold and the canal. */}
+      <path d="M134 290 C 104 282, 92 306, 98 326 C 103 342, 114 352, 126 352 C 132 352, 133 344, 128 340"></path>
+      <path d="M126 304 C 112 304, 108 318, 114 328 C 118 334, 124 332, 124 326"></path>
+      <circle cx="124" cy="320" r="2.5" fill="currentColor"></circle>
+    </g>
+
+    {/* Labels: number badge, cue name, one line of explanation. */}
+    <g>
+      <circle class="d-accent" cx="188" cy="58" r="11" fill="currentColor"></circle>
+      <text class="d-mono d-paper" x="188" y="62" text-anchor="middle">1</text>
+      <text class="d-label d-ink" x="206" y="63">Timing</text>
+      <text class="d-small d-muted" x="206" y="82">The near ear hears it first</text>
+
+      <circle class="d-accent" cx="402" cy="290" r="11" fill="currentColor"></circle>
+      <text class="d-mono d-paper" x="402" y="294" text-anchor="middle">2</text>
+      <text class="d-label d-ink" x="420" y="295">Loudness</text>
+      <text class="d-small d-muted" x="420" y="314">Head shadow makes</text>
+      <text class="d-small d-muted" x="420" y="331">the far ear quieter</text>
+
+      <circle class="d-accent" cx="190" cy="318" r="11" fill="currentColor"></circle>
+      <text class="d-mono d-paper" x="190" y="322" text-anchor="middle">3</text>
+      <text class="d-label d-ink" x="208" y="323">Shape</text>
+      <text class="d-small d-muted" x="208" y="342">Outer-ear folds</text>
+      <text class="d-small d-muted" x="208" y="359">colour the sound</text>
+    </g>
+  </svg>
+</Diagram>

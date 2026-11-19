@@ -1,0 +1,171 @@
+---
+/**
+ * Diagram: the life of a song, from opt-in to playback, in five steps.
+ *
+ * Built as an ordered list with small hand-drawn SVG icons rather than one
+ * big SVG, because a flow that is horizontal on desktop and vertical on a
+ * phone is a layout change, not a scale change: SVG text would shrink to
+ * illegible on a phone. As a list it reflows naturally, screen readers
+ * announce "list, 5 items" with each step in order, and the text stays real
+ * text. The direction switches on the figure's own width (container query),
+ * so it is right wherever the figure sits.
+ *
+ * The step text paraphrases the essay's own numbered list, nothing more.
+ */
+import Diagram from './Diagram.astro';
+
+const steps = [
+  { title: 'Opt in', text: 'The artist or label says yes.', icon: 'check' },
+  { title: 'Process once', text: 'On the service’s servers: stems separated, cleaned, mix profile built.', icon: 'gear' },
+  { title: 'Store', text: 'Next to the stereo and lossless files.', icon: 'stack' },
+  { title: 'Play', text: 'The renderer inside the app plays it on any headphones.', icon: 'play' },
+  { title: 'Switch off', text: 'Back to the original stereo master.', icon: 'toggle' },
+] as const;
+---
+
+<Diagram caption="The life of a song. The heavy lifting happens once per song, on the service’s servers, before anyone listens. The phone just plays." wide>
+  <div class="flow">
+    <ol class="flow__list" aria-label="The life of a song, in five steps">
+      {
+        steps.map((step, i) => (
+          <li class="flow__step">
+            <span class="flow__node" aria-hidden="true">
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                {step.icon === 'check' && <path d="M8 14.5l4 4 8-9" />}
+                {step.icon === 'gear' && (
+                  <>
+                    <circle cx="14" cy="14" r="3.5" />
+                    <path d="M14 5v3M14 20v3M5 14h3M20 14h3M7.6 7.6l2.1 2.1M18.3 18.3l2.1 2.1M7.6 20.4l2.1-2.1M18.3 9.7l2.1-2.1" />
+                  </>
+                )}
+                {step.icon === 'stack' && (
+                  <>
+                    <path d="M14 6l9 4.5-9 4.5-9-4.5z" />
+                    <path d="M5 14.5l9 4.5 9-4.5M5 18.5l9 4.5 9-4.5" />
+                  </>
+                )}
+                {step.icon === 'play' && <path d="M11 8.5v11l9-5.5z" />}
+                {step.icon === 'toggle' && (
+                  <>
+                    <rect x="5" y="9.5" width="18" height="9" rx="4.5" />
+                    <circle cx="9.5" cy="14" r="2.5" />
+                  </>
+                )}
+              </svg>
+            </span>
+            <span class="flow__text">
+              <span class="flow__index">{String(i + 1).padStart(2, '0')}</span>
+              <strong class="flow__title">{step.title}</strong>
+              <span class="flow__body">{step.text}</span>
+            </span>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</Diagram>
+
+<style>
+  .flow {
+    container-type: inline-size;
+  }
+
+  .flow__list {
+    --node: 3.25rem;
+    display: grid;
+    gap: var(--space-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-sans);
+  }
+
+  /* Vertical (narrow): node on the left, text beside it, a line joining the
+     nodes down the left edge. */
+  .flow__step {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--node) 1fr;
+    gap: var(--space-4);
+    align-items: start;
+  }
+
+  .flow__step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: calc(var(--node) + var(--space-1));
+    bottom: calc(-1 * var(--space-6) + var(--space-1));
+    left: calc(var(--node) / 2);
+    width: 1.5px;
+    background: linear-gradient(var(--color-accent), color-mix(in oklab, var(--color-accent) 30%, transparent));
+  }
+
+  .flow__node {
+    display: grid;
+    place-items: center;
+    width: var(--node);
+    height: var(--node);
+    border: 1.5px solid color-mix(in oklab, var(--color-accent) 55%, transparent);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-surface);
+    color: var(--color-accent);
+  }
+
+  /* The last step returns to the original: the warm accent marks it. */
+  .flow__step:last-child .flow__node {
+    border-color: color-mix(in oklab, var(--color-warm) 60%, transparent);
+    color: var(--color-warm);
+  }
+
+  .flow__text {
+    display: grid;
+    gap: var(--space-1);
+    padding-top: var(--space-1);
+  }
+
+  .flow__index {
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: var(--tracking-wide);
+    color: var(--color-text-muted);
+  }
+
+  .flow__title {
+    font-size: var(--step-0);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+  }
+
+  .flow__body {
+    font-size: var(--step--1);
+    line-height: var(--leading-snug);
+    color: var(--color-text-muted);
+  }
+
+  /* Horizontal (wide): five columns, nodes in a row joined by a line. */
+  @container (min-width: 40rem) {
+    .flow__list {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: var(--space-4);
+    }
+
+    .flow__step {
+      grid-template-columns: 1fr;
+      gap: var(--space-4);
+    }
+
+    .flow__step:not(:last-child)::after {
+      top: calc(var(--node) / 2);
+      bottom: auto;
+      left: calc(var(--node) + var(--space-2));
+      right: calc(-1 * var(--space-4) + var(--space-2));
+      width: auto;
+      height: 1.5px;
+      background: linear-gradient(90deg, var(--color-accent), color-mix(in oklab, var(--color-accent) 30%, transparent));
+    }
+
+    .flow__text {
+      padding-top: 0;
+    }
+  }
+</style>

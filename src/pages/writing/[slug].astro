@@ -9,7 +9,14 @@
  * typesetting so notes sit beside the line they explain.
  *
  * MDX components available inside articles without importing them:
- * Sidenote, Figure, TrackPlayer, ABPlayer.
+ * Sidenote, Figure, TrackPlayer, ABPlayer, PullQuote, Photo. Diagrams are
+ * imported by the article that uses them.
+ *
+ * Reading furniture: a progress bar (CSS scroll-driven, no JavaScript), the
+ * reading time, a byline, an optional cover, and a contents list from the
+ * H2s, sticky beside the text on desktop and a collapsed disclosure on
+ * phones. Body text is set in a reading serif (Source Serif 4), loaded only
+ * on article pages so no other page pays for it.
  */
 import { render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
@@ -20,6 +27,13 @@ import ABPlayer from '../../components/ABPlayer.astro';
 import Sidenote from '../../components/mdx/Sidenote.astro';
 import Figure from '../../components/mdx/Figure.astro';
 import TrackPlayer from '../../components/mdx/TrackPlayer.astro';
+import PullQuote from '../../components/mdx/PullQuote.astro';
+import Photo from '../../components/mdx/Photo.astro';
+import CoverArt from '../../components/CoverArt.astro';
+import { Image } from 'astro:assets';
+import { getPhoto } from '../../lib/photos';
+import '@fontsource-variable/source-serif-4/opsz.css';
+import serifLatin from '@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-normal.woff2?url';
 import { getProject, getPublishedWriting } from '../../lib/content';
 import { formatDate, isoDate, kindLabel, readingTime } from '../../lib/format';
 import { site } from '../../lib/site';
@@ -34,14 +48,21 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const { title, description, pubDate, updatedDate, kind, tags, references, relatedProject, unlisted } =
+const { title, description, pubDate, updatedDate, kind, tags, references, relatedProject, unlisted, cover } =
   entry.data;
+// The cover photo if its file has been added; otherwise the site's own cover
+// art stands in (see CoverArt.astro), so a missing photo never breaks a page.
+const coverImage = cover ? getPhoto(cover.file) : undefined;
 const { Content, headings, remarkPluginFrontmatter } = await render(entry);
 const project = relatedProject ? await getProject(relatedProject.id) : undefined;
 
-// A table of contents only earns its space on longer pieces.
-const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
-const showToc = headings.filter((h) => h.depth === 2).length >= 3;
+// A table of contents only earns its space on longer pieces. H2s only: the
+// sections are the shape of the argument; H3s would turn it into an index.
+const tocHeadings = headings.filter((h) => h.depth === 2);
+const showToc = tocHeadings.length >= 3;
+// Findings are not in the navigation while that page is quiet, so every
+// article leads back to Writing, which lists all kinds.
+const backHref = '/writing/';
 
 const articleSchema = {
   '@context': 'https://schema.org',
@@ -56,13 +77,20 @@ const articleSchema = {
 
 <BaseLayout title={title} description={description} noindex={unlisted} ogType="article" jsonLd={articleSchema}>
   {remarkPluginFrontmatter.hasMath && <link slot="head" rel="stylesheet" href={katexCss} />}
+  {/* The serif is the article's body face: fetch it alongside the CSS rather
+      than after, so the first paragraph does not reflow when it arrives. */}
+  <link slot="head" rel="preload" href={serifLatin} as="font" type="font/woff2" crossorigin />
+
+  {/* Reading progress: a hairline across the top that fills as you scroll.
+      Purely decorative, so hidden from assistive tech. */}
+  <div class="progress" aria-hidden="true"></div>
 
   <article class="article">
     <Container>
       <header class="article__header">
-        <a class="back" href={kind === 'finding' ? '/findings/' : '/writing/'}>
+        <a class="back" href={backHref}>
           <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M11 7H3M6.5 3.5L3 7l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-          {kind === 'finding' ? 'All findings' : 'All writing'}
+          All writing
         </a>
         <div class="article__kicker">
           <Badge tone="accent">{kindLabel[kind]}</Badge>
@@ -80,6 +108,7 @@ const articleSchema = {
         </div>
         <h1 class="article__title">{title}</h1>
         <p class="article__lead">{description}</p>
+        <p class="article__byline">By {site.firstName} ({site.name})</p>
         {
           tags.length > 0 && (
             <ul class="article__tags" aria-label="Tags">
@@ -91,27 +120,81 @@ const articleSchema = {
         }
       </header>
 
+      {
+        cover && (
+          <figure class="cover">
+            <div class="cover__media">
+              {coverImage ? (
+                <Image
+                  src={coverImage}
+                  alt={cover.alt}
+                  widths={[640, 960, 1280, 1600, 2000]}
+                  sizes="(min-width: 75rem) 72rem, 100vw"
+                  quality={76}
+                  loading="eager"
+                  fetchpriority="high"
+                />
+              ) : (
+                <CoverArt id="article-cover" />
+              )}
+            </div>
+            {coverImage && (
+              <figcaption class="cover__credit">
+                Photo:{' '}
+                {cover.creditUrl ? (
+                  <a href={cover.creditUrl} rel="noopener">
+                    {cover.credit}
+                  </a>
+                ) : (
+                  cover.credit
+                )}
+              </figcaption>
+            )}
+          </figure>
+        )
+      }
+
       <div class:list={['article__layout', { 'article__layout--toc': showToc }]}>
         {
           showToc && (
-            <nav class="toc" aria-labelledby="toc-title">
-              <details class="toc__details" open>
-                <summary id="toc-title" class="toc__title meta">Contents</summary>
+            <>
+              {/* Two renderings of one list, swapped by CSS (display: none
+                  removes the hidden one from the accessibility tree too):
+                  a collapsed disclosure on phones, so the essay starts
+                  immediately, and an always-open sticky list on desktop.
+                  This avoids any script to open or close it by screen size. */}
+              <nav class="toc toc--compact" aria-label="Contents">
+                <details class="toc__details">
+                  <summary class="toc__title meta">
+                    Contents
+                    <span class="toc__count">{tocHeadings.length} sections</span>
+                  </summary>
+                  <ol class="toc__list">
+                    {tocHeadings.map((heading) => (
+                      <li>
+                        <a href={`#${heading.slug}`}>{heading.text}</a>
+                      </li>
+                    ))}
+                  </ol>
+                </details>
+              </nav>
+              <nav class="toc toc--rail" aria-labelledby="toc-title">
+                <p id="toc-title" class="toc__title meta">Contents</p>
                 <ol class="toc__list">
                   {tocHeadings.map((heading) => (
-                    <li class:list={[`toc__item--${heading.depth}`]}>
+                    <li>
                       <a href={`#${heading.slug}`}>{heading.text}</a>
                     </li>
                   ))}
                 </ol>
-              </details>
-            </nav>
+              </nav>
+            </>
           )
         }
 
         <div class="article__body">
-          <div class="prose">
-            <Content components={{ Sidenote, Figure, TrackPlayer, ABPlayer }} />
+          <div class:list={['prose', 'prose--reading', { 'prose--dropcap': kind === 'essay' }]}>
+            <Content components={{ Sidenote, Figure, TrackPlayer, ABPlayer, PullQuote, Photo }} />
           </div>
 
           {
@@ -148,8 +231,8 @@ const articleSchema = {
               )
             }
             <div class="article__actions">
-              <Button variant="secondary" href={kind === 'finding' ? '/findings/' : '/writing/'}>
-                {kind === 'finding' ? 'More findings' : 'More writing'}
+              <Button variant="secondary" href={backHref}>
+                More writing
               </Button>
               <Button variant="ghost" href="/rss.xml">RSS feed</Button>
             </div>
@@ -222,33 +305,97 @@ const articleSchema = {
     counter-reset: sidenote figure;
   }
 
+  /* ----- Byline and cover ----- */
+  .article__byline {
+    font-size: var(--step--1);
+    font-weight: var(--weight-medium);
+    color: var(--color-text);
+  }
+
+  .cover {
+    margin-bottom: clamp(var(--space-12), 6vw, var(--space-20));
+  }
+
+  .cover__media {
+    overflow: hidden;
+    /* Cinematic on wide screens, taller on phones so the subject still
+       fills the frame. */
+    aspect-ratio: 4 / 3;
+    border-radius: var(--radius-xl);
+    background-color: var(--neutral-950);
+    box-shadow: var(--shadow-2);
+  }
+
+  @media (min-width: 48rem) {
+    .cover__media {
+      aspect-ratio: 21 / 9;
+    }
+  }
+
+  .cover__media :global(img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cover__credit {
+    margin-top: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    color: var(--color-text-muted);
+  }
+
+  .cover__credit a {
+    color: inherit;
+  }
+
+  /* ----- Reading progress -----
+   * A scroll-driven animation on the root scroller: the bar's scale follows
+   * the scroll position with no JavaScript. Browsers without scroll timelines
+   * simply never show it. transform only, so it never triggers layout. */
+  .progress {
+    display: none;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .progress {
+      display: block;
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 60;
+      height: 3px;
+      background: linear-gradient(90deg, var(--color-accent), var(--color-warm));
+      transform-origin: 0 50%;
+      transform: scaleX(0);
+      pointer-events: none;
+      animation: progress linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+
+  @keyframes progress {
+    to {
+      transform: scaleX(1);
+    }
+  }
+
   /* ----- Table of contents ----- */
-  .toc {
-    margin-bottom: var(--space-12);
-    padding: var(--space-5) var(--space-6);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-  }
-
-  .toc__title {
-    display: flex;
-    align-items: center;
-    min-height: 44px;
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    cursor: pointer;
-  }
-
   .toc__list {
     display: grid;
     gap: var(--space-1);
-    margin-top: var(--space-2);
+    margin: var(--space-2) 0 0;
     padding: 0;
     list-style: none;
+    counter-reset: toc;
+  }
+
+  .toc__list li {
+    counter-increment: toc;
   }
 
   .toc__list a {
-    display: block;
+    display: grid;
+    grid-template-columns: 2rem 1fr;
     padding-block: var(--space-2);
     font-size: var(--step--1);
     line-height: var(--leading-snug);
@@ -256,53 +403,104 @@ const articleSchema = {
     text-decoration: none;
   }
 
+  /* Section numbers in mono, like the site's section indices. */
+  .toc__list a::before {
+    content: counter(toc, decimal-leading-zero);
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    line-height: 1.9;
+    color: var(--color-text-muted);
+    opacity: 0.8;
+  }
+
   .toc__list a:hover {
     color: var(--color-text);
   }
 
-  .toc__item--3 {
-    padding-left: var(--space-4);
+  .toc__title {
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
   }
 
-  /* ----- Wide layout: contents | text | sidenote margin -----
+  /* Phones and tablets: a collapsed disclosure above the text. */
+  .toc--compact {
+    margin-bottom: var(--space-10);
+    border-block: 1px solid var(--color-border);
+  }
+
+  .toc--compact .toc__title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    min-height: 52px;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .toc--compact .toc__title::-webkit-details-marker {
+    display: none;
+  }
+
+  /* A plus that turns into a minus when open. */
+  .toc--compact .toc__title::after {
+    content: '+';
+    font-size: var(--step-1);
+    line-height: 1;
+    color: var(--color-text);
+  }
+
+  .toc--compact details[open] .toc__title::after {
+    content: '\2212';
+  }
+
+  .toc__count {
+    margin-left: auto;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .toc--compact .toc__list {
+    padding-bottom: var(--space-4);
+  }
+
+  .toc--rail {
+    display: none;
+  }
+
+  /* ----- Wide layout: contents rail | reading column -----
    * Inside the standard container (so every left edge lines up with the
-   * header), the text column narrows slightly to 60ch, still well inside the
-   * comfortable range, to leave a full-width margin for sidenotes. */
+   * header). The rail is sticky and scrolls on its own if a piece has many
+   * sections. */
   @media (min-width: 75rem) {
-    .article__layout {
-      --measure: 60ch;
+    .article__layout--toc {
       display: grid;
-      grid-template-columns: 10rem var(--measure) minmax(0, 1fr);
-      column-gap: var(--space-8);
+      grid-template-columns: 13rem minmax(0, var(--measure-reading));
+      column-gap: clamp(var(--space-12), 5vw, var(--space-20));
     }
 
-    /* The text column stays in the same place with or without contents. */
-    .article__body {
-      grid-column: 2;
+    .toc--compact {
+      display: none;
     }
 
-    .toc {
-      grid-column: 1;
-      grid-row: 1;
+    .toc--rail {
+      display: block;
       position: sticky;
-      top: calc(var(--header-height) + var(--space-8));
+      top: calc(var(--header-height) + var(--space-10));
       align-self: start;
       max-height: calc(100vh - var(--header-height) - var(--space-16));
       overflow-y: auto;
-      margin: 0;
-      padding: 0;
-      border: 0;
     }
 
-    /* Header (which also contains the back link) aligns with the text column. */
-    .article__header {
-      margin-left: calc(10rem + var(--space-8));
+    /* Header aligns with the reading column when there is a rail. */
+    .article:has(.article__layout--toc) .article__header {
+      margin-left: calc(13rem + clamp(var(--space-12), 5vw, var(--space-20)));
     }
   }
 
   /* ----- References and footer ----- */
   .references {
-    max-width: var(--measure);
+    max-width: var(--measure-reading);
     margin-top: var(--space-16);
     padding-top: var(--space-8);
     border-top: 1px solid var(--color-border);
@@ -334,7 +532,7 @@ const articleSchema = {
   .article__footer {
     display: grid;
     gap: var(--space-8);
-    max-width: var(--measure);
+    max-width: var(--measure-reading);
     margin-top: var(--space-16);
     padding-top: var(--space-8);
     border-top: 1px solid var(--color-border);

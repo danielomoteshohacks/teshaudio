@@ -44,6 +44,8 @@ export function spokenDuration(totalSeconds: number) {
  */
 export function readingTime(body = '') {
   const text = body
+    // MDX import lines are code, not prose.
+    .replace(/^import .*$/gm, ' ')
     .replace(/```[\s\S]*?```/g, ' ')
     .replace(/<[^>]+>/g, ' ')
     .replace(/\{\/\*[\s\S]*?\*\/\}/g, ' ');

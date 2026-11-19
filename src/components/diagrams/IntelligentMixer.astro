@@ -1,0 +1,103 @@
+---
+/**
+ * Diagram: the intelligent mixer, a top-down "stage" around the listener.
+ *
+ * Direction is the angle around the head (front is up), distance is the
+ * ring, and height is marked by an outer halo on the dot. The bass and lead
+ * vocal stay centred, as the essay's fixed rules say; the rest open up
+ * around them. Positions are illustrative, not one song's real profile.
+ */
+import Diagram from './Diagram.astro';
+import ListenerHead from './ListenerHead.astro';
+
+const cx = 260;
+const cy = 262;
+const ring = { close: 82, room: 148, far: 200 };
+
+// Angle in degrees, 0 = straight ahead, clockwise.
+const at = (deg: number, r: number) => {
+  const a = (deg * Math.PI) / 180;
+  return { x: cx + r * Math.sin(a), y: cy - r * Math.cos(a) };
+};
+
+type Source = {
+  label: string;
+  deg: number;
+  r: number;
+  above?: boolean;
+  tone: 'd-accent' | 'd-warm' | 'd-ink';
+  /** Label offset from the dot. */
+  dy: number;
+};
+
+const sources = ([
+  { label: 'Lead vocal', deg: 0, r: ring.close, tone: 'd-accent', dy: -16 },
+  { label: 'Drums', deg: 0, r: ring.room, tone: 'd-warm', dy: -16 },
+  { label: 'Percussion', deg: -52, r: ring.room, tone: 'd-warm', dy: -16 },
+  { label: 'Percussion', deg: 52, r: ring.room, tone: 'd-warm', dy: -16 },
+  { label: 'Pads', deg: -96, r: 178, above: true, tone: 'd-ink', dy: 30 },
+  { label: 'Pads', deg: 96, r: 178, above: true, tone: 'd-ink', dy: 30 },
+  { label: 'Backing vocals', deg: -142, r: 122, above: true, tone: 'd-accent', dy: 30 },
+  { label: 'Backing vocals', deg: 142, r: 122, above: true, tone: 'd-accent', dy: 30 },
+  { label: 'Reverb and effects', deg: 180, r: ring.far, above: true, tone: 'd-ink', dy: -20 },
+] satisfies Source[]).map((s: Source) => ({ ...s, ...at(s.deg, s.r) }));
+---
+
+<Diagram caption="The intelligent mixer places each stem by direction, height and distance. The bass and lead vocal stay centred; percussion, pads and effects open up around them.">
+  <svg viewBox="0 0 520 500" role="img" aria-labelledby="mixer-title mixer-desc">
+    <title id="mixer-title">The intelligent mixer</title>
+    <desc id="mixer-desc">A listener seen from above at the centre of three distance rings: close, room and far. The bass glows at the centre around the listener and the lead vocal sits close, straight ahead. Drums sit further ahead, percussion to the front left and front right, pads raised above at either side, backing vocals raised behind to each side, and reverb and effects raised and far behind.</desc>
+
+    {/* Front marker. */}
+    <g class="d-muted">
+      <path d={`M${cx - 6} 34 L${cx} 24 L${cx + 6} 34`} fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path>
+      <text class="d-mono" x={cx} y="16" text-anchor="middle">Front</text>
+    </g>
+
+    {/* Distance rings, labelled on the lower right where nothing is placed. */}
+    <g class="d-line" fill="none" stroke="currentColor">
+      <circle cx={cx} cy={cy} r={ring.close}></circle>
+      <circle cx={cx} cy={cy} r={ring.room} stroke-dasharray="3 6"></circle>
+      <circle cx={cx} cy={cy} r={ring.far} stroke-dasharray="1 7"></circle>
+    </g>
+    <g class="d-muted d-mono">
+      {
+        Object.entries(ring).map(([name, r]) => {
+          const p = at(120, r);
+          return (
+            <text x={p.x + 6} y={p.y + 4}>
+              {name}
+            </text>
+          );
+        })
+      }
+    </g>
+
+    {/* The bass: a warm field around the listener, not a point. */}
+    <circle class="d-warm" cx={cx} cy={cy} r="52" fill="currentColor" fill-opacity="0.16"></circle>
+    <circle class="d-warm" cx={cx} cy={cy} r="52" fill="none" stroke="currentColor" stroke-opacity="0.6" stroke-dasharray="2 4"></circle>
+    <ListenerHead x={cx} y={cy} r={24} />
+    <text class="d-small d-warm" x={cx} y={cy + 72} text-anchor="middle">Bass, centred</text>
+
+    {
+      sources.map((s) => (
+        <g class={s.tone}>
+          {s.above && <circle cx={s.x} cy={s.y} r="14" fill="none" stroke="currentColor" stroke-width="1.5" />}
+          <circle cx={s.x} cy={s.y} r="7" fill="currentColor" />
+          <text class="d-small" x={s.x} y={s.y + s.dy} text-anchor="middle">
+            {s.label}
+          </text>
+        </g>
+      ))
+    }
+
+    {/* Legend. */}
+    <g class="d-ink">
+      <circle cx="22" cy="22" r="6" fill="currentColor"></circle>
+      <text class="d-small" x="36" y="27">Level with you</text>
+      <circle cx="22" cy="52" r="6" fill="currentColor"></circle>
+      <circle cx="22" cy="52" r="12" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+      <text class="d-small" x="40" y="57">Above you</text>
+    </g>
+  </svg>
+</Diagram>
