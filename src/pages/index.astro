@@ -1,0 +1,20 @@
+---
+// Placeholder home page. Its only job is to prove the build, layout and
+// content pipeline work end to end; the design PR replaces it.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { site } from '../lib/site';
+import { getPublishedProjects, getPublishedWriting } from '../lib/content';
+
+// Read through the helpers so the draft filter is exercised on every build.
+const projects = await getPublishedProjects();
+const writing = await getPublishedWriting();
+---
+
+<BaseLayout>
+  <main>
+    <h1>{site.name}</h1>
+    <p>{site.description}</p>
+    <p>Foundation build is working.</p>
+    <p>Published projects: {projects.length}. Published writing: {writing.length}.</p>
+  </main>
+</BaseLayout>
