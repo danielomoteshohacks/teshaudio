@@ -58,11 +58,12 @@ export const kindLabel = {
   finding: 'Finding',
 } as const;
 
+// Plain-language labels: "Live" reads better than "shipped" to a listener.
 export const statusLabel = {
-  active: 'Active',
+  active: 'In development',
   paused: 'Paused',
-  shipped: 'Shipped',
-  concept: 'Concept',
+  shipped: 'Live',
+  concept: 'In design',
   live: 'Live',
   'coming-soon': 'Coming soon',
 } as const;

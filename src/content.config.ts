@@ -28,7 +28,11 @@ const projects = defineCollection({
   schema: ({ image }) =>
     z.object({
       title: z.string(),
+      // One line for cards and the page lead; the summary is the overview.
+      tagline: z.string().optional(),
       summary: z.string(),
+      // A short caveat shown on the project page (e.g. "not a medical device").
+      note: z.string().optional(),
       status: z.enum(['active', 'paused', 'shipped', 'concept']),
       // Optional and hidden until supplied: these are facts, never guessed.
       role: z.string().optional(),
@@ -122,6 +126,8 @@ const philosophy = defineCollection({
   loader: markdown('philosophy'),
   schema: z.object({
     title: z.string(),
+    // The part's one-line position, set large above the essay text.
+    thesis: z.string().optional(),
     order: z.number(),
     draft: z.boolean().default(false),
   }),
@@ -134,6 +140,8 @@ const lab = defineCollection({
     summary: z.string(),
     status: z.enum(['live', 'coming-soon']),
     relatedProject: reference('projects').optional(),
+    // External place the demo runs (e.g. a Hugging Face Space), if any.
+    demoUrl: z.url().optional(),
     order: z.number().default(0),
     draft: z.boolean().default(false),
   }),

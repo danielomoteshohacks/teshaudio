@@ -15,23 +15,25 @@
 
 :root {
   /* ----- Color: neutral primitives --------------------------------------
-   * A very slightly cool grey, which reads as "engineered" rather than warm
-   * paper. The ends are off-white and near-black on purpose: pure #fff and
-   * #000 produce harsh glare and halation, especially on OLED phones.
+   * Slightly warm greys, like paper and wood in lamplight rather than a lab.
+   * The ends are off-white and near-black on purpose: pure #fff and #000
+   * produce harsh glare and halation, especially on OLED phones.
    */
-  --neutral-25: #fcfcfa;
-  --neutral-50: #f6f6f3;
-  --neutral-100: #ededea;
-  --neutral-200: #dcddde;
-  --neutral-300: #a3a6ad;
-  --neutral-400: #8a8d94;
-  --neutral-500: #686c74;
-  --neutral-600: #55585f;
-  --neutral-700: #2a2d33;
-  --neutral-800: #1f2125;
-  --neutral-850: #16181c;
-  --neutral-900: #121316;
-  --neutral-950: #0c0d10;
+  --neutral-25: #fdfbf8;
+  --neutral-50: #f6f2ec;
+  --neutral-200: #e2dbd1;
+  --neutral-300: #aaa298;
+  --neutral-400: #8e867c;
+  --neutral-500: #6f685f;
+  --neutral-600: #5c554d;
+  --neutral-700: #302b25;
+  --neutral-750: #2a2621;
+  --neutral-800: #1e1b17;
+  --neutral-850: #191612;
+  --neutral-900: #1a1714;
+  --neutral-925: #14120f;
+  --neutral-950: #0d0c0a;
+  --neutral-text-dark: #efe9e0;
 
   /* ----- Type -----------------------------------------------------------
    * Inter for headings and body, JetBrains Mono for technical labels and
@@ -122,10 +124,6 @@
   /* Article margin column for sidenotes on wide screens. */
   --sidenote-width: 12rem;
 
-  /* Grid-paper texture cells, both multiples of the 4px base. */
-  --grid-minor: 24px;
-  --grid-major: 96px;
-
   /* ----- Radius ---------------------------------------------------------
    * Large radii are the "soft touch". Cards use lg; small controls use sm
    * so a 44px element does not turn into a blob.
@@ -147,46 +145,42 @@
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
-/* ----- Accent: Signal (cobalt) -------------------------------------------
- * Chosen from three candidates on the design-system PR. Measurement and
- * precision: oscilloscope blue. One hue cannot pass AA on both an off-white
- * and a near-black surface, so there is a deeper shade for light contexts and
- * a brighter one for dark contexts.
+/* ----- Accents ----------------------------------------------------------
+ * Signal (cobalt) is the primary accent: links, buttons, focus, players.
+ * VU (amber) is a secondary warm accent for small highlights only: status
+ * dots, the Now section, hover underlines. One hue cannot pass AA on both
+ * light and dark surfaces, so each has a deeper and a brighter shade.
  *
- * Contrast (accent as text on surface / raised / darkest grid line, and
- * contrast text on an accent fill):
- *   light #2f4fe0  5.85 / 6.17 / 4.87, fill 6.17
- *   dark  #8ea2ff  8.11 / 7.42 / 6.72, fill 8.11
- * Both pass AA for text (4.5) and easily pass 3:1 as a focus-ring colour.
+ * Contrast as text (light surface / raised; dark base surface / raised;
+ * dark deep surface / raised):
+ *   cobalt  #2f4fe0 5.68 / 6.13   #8ea2ff 7.80 / 7.16, 8.16 / 7.52
+ *   amber   #9a4208 5.97 / 6.44   #ffa45c 9.54 / 8.75, 9.98 / 9.20
+ * Text on a cobalt fill: 6.13 (light), 7.80 or better (dark).
  */
 :root {
   --accent-on-light: #2f4fe0;
   --accent-on-dark: #8ea2ff;
+  --warm-on-light: #9a4208;
+  --warm-on-dark: #ffa45c;
 }
 
-/* ----- Semantic tokens per context --------------------------------------
- * Components only use these. Any element with data-theme redefines them, and
- * custom properties inherit, so everything inside a dark section adapts with
- * no extra code. A light card can sit inside a dark section and vice versa.
- * The site default (on :root) is light.
+/* ----- Semantic tokens per context and mode -----------------------------
+ * Components only use these. Two levels decide the values:
+ *   - Mode (data-mode on <html>): light or dark for the whole site, set
+ *     before first paint from the visitor's choice or their OS setting.
+ *   - Context (data-theme on any element): the light and dark sections.
+ * In dark mode "light" sections become warm charcoal and "dark" sections a
+ * deeper near-black, so the section rhythm survives without any glare.
  *
- * Contrast, light context (on surface / on surface-raised):
- *   text           17.16 / 18.08   AA and AAA
- *   text-muted      6.58 /  6.94   AA
- *   border-strong   3.07 /  3.24   meets 3:1 for control outlines (WCAG 1.4.11)
- *   border          1.26 /  1.32   decorative hairline only, never the sole
- *                                  boundary of a control
- * Contrast, dark context:
- *   text           16.57 / 15.15
- *   text-muted      7.97 /  7.29
- *   border-strong   3.69 /  3.37
- *   border          1.41 /  1.29
- * On the darkest grid-paper line: text 14.28 (light) / 13.72 (dark),
- * text-muted 5.48 / 6.60, so the texture never drops text below AA.
+ * Contrast (text / muted / border-strong, on surface then raised):
+ *   light       16.00 / 6.58 / 3.22    17.28 / 7.10 / 3.47
+ *   dark base   15.49 / 7.42 / 3.40    14.21 / 6.80 / 3.12
+ *   dark deep   16.20 / 7.76 / 3.56    14.94 / 7.15 / 3.28
+ * Text passes AA (most pass AAA); border-strong meets 3:1 for control
+ * outlines; --color-border is a decorative hairline only.
  */
 :root,
 [data-theme='light'] {
-  /* Native controls (scrollbars, radios) follow the context too. */
   color-scheme: light;
 
   --color-surface: var(--neutral-50);
@@ -197,35 +191,67 @@
   --color-border-strong: var(--neutral-400);
   --color-accent: var(--accent-on-light);
   --color-accent-contrast: var(--neutral-25);
+  --color-warm: var(--warm-on-light);
   --color-focus: var(--color-accent);
+  /* Strength of the soft accent glows behind heroes and headings: low, so
+     they read as ambient light rather than shapes. */
+  --glow-strength: 10%;
 
   /* Elevation: two stacked shadows each, one tight for contact and one wide
-     and faint for ambient light. Low opacity keeps them soft, not harsh. */
-  --shadow-1: 0 1px 2px rgb(18 19 22 / 0.04), 0 8px 24px -8px rgb(18 19 22 / 0.08);
-  --shadow-2: 0 2px 4px rgb(18 19 22 / 0.04), 0 18px 40px -12px rgb(18 19 22 / 0.14);
-  --shadow-3: 0 4px 8px rgb(18 19 22 / 0.05), 0 32px 64px -16px rgb(18 19 22 / 0.18);
+     and faint for ambient light, tinted warm so they read as soft shade. */
+  --shadow-1: 0 1px 2px rgb(40 30 20 / 0.05), 0 8px 24px -8px rgb(40 30 20 / 0.1);
+  --shadow-2: 0 2px 4px rgb(40 30 20 / 0.05), 0 18px 40px -12px rgb(40 30 20 / 0.16);
+  --shadow-3: 0 4px 8px rgb(40 30 20 / 0.06), 0 32px 64px -16px rgb(40 30 20 / 0.2);
 }
 
+/* Dark sections in light mode, and the deepest layer in dark mode. */
 [data-theme='dark'] {
   color-scheme: dark;
 
   --color-surface: var(--neutral-950);
   --color-surface-raised: var(--neutral-850);
-  --color-text: var(--neutral-100);
+  --color-text: var(--neutral-text-dark);
+  --color-text-muted: var(--neutral-300);
+  --color-border: var(--neutral-750);
+  --color-border-strong: var(--neutral-500);
+  --color-accent: var(--accent-on-dark);
+  --color-accent-contrast: var(--neutral-950);
+  --color-warm: var(--warm-on-dark);
+  --color-focus: var(--color-accent);
+  --glow-strength: 14%;
+
+  /* Shadows barely show on near-black, so each level adds a faint inset
+     top-edge highlight. That is how raised surfaces read in a dark room. */
+  --shadow-1: inset 0 1px 0 rgb(255 240 220 / 0.05), 0 1px 2px rgb(0 0 0 / 0.3),
+    0 8px 24px -8px rgb(0 0 0 / 0.5);
+  --shadow-2: inset 0 1px 0 rgb(255 240 220 / 0.07), 0 2px 4px rgb(0 0 0 / 0.3),
+    0 18px 40px -12px rgb(0 0 0 / 0.6);
+  --shadow-3: inset 0 1px 0 rgb(255 240 220 / 0.08), 0 4px 8px rgb(0 0 0 / 0.35),
+    0 32px 64px -16px rgb(0 0 0 / 0.7);
+}
+
+/* Dark mode: the page and its "light" sections become warm charcoal. */
+:root[data-mode='dark'],
+:root[data-mode='dark'] [data-theme='light'] {
+  color-scheme: dark;
+
+  --color-surface: var(--neutral-925);
+  --color-surface-raised: var(--neutral-800);
+  --color-text: var(--neutral-text-dark);
   --color-text-muted: var(--neutral-300);
   --color-border: var(--neutral-700);
   --color-border-strong: var(--neutral-500);
   --color-accent: var(--accent-on-dark);
   --color-accent-contrast: var(--neutral-950);
+  --color-warm: var(--warm-on-dark);
   --color-focus: var(--color-accent);
+  --glow-strength: 14%;
 
-  /* Shadows barely show on near-black, so each level adds a faint inset
-     top-edge highlight. That is how raised surfaces read in a dark room. */
-  --shadow-1: inset 0 1px 0 rgb(255 255 255 / 0.05), 0 1px 2px rgb(0 0 0 / 0.3),
+  --shadow-1: inset 0 1px 0 rgb(255 240 220 / 0.05), 0 1px 2px rgb(0 0 0 / 0.3),
     0 8px 24px -8px rgb(0 0 0 / 0.5);
-  --shadow-2: inset 0 1px 0 rgb(255 255 255 / 0.07), 0 2px 4px rgb(0 0 0 / 0.3),
+  --shadow-2: inset 0 1px 0 rgb(255 240 220 / 0.07), 0 2px 4px rgb(0 0 0 / 0.3),
     0 18px 40px -12px rgb(0 0 0 / 0.6);
-  --shadow-3: inset 0 1px 0 rgb(255 255 255 / 0.08), 0 4px 8px rgb(0 0 0 / 0.35),
+  --shadow-3: inset 0 1px 0 rgb(255 240 220 / 0.08), 0 4px 8px rgb(0 0 0 / 0.35),
     0 32px 64px -16px rgb(0 0 0 / 0.7);
 }
 

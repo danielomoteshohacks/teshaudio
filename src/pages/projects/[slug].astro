@@ -1,8 +1,8 @@
 ---
 /**
- * Project detail: overview, facts (status, role, tech, dates, links), media
- * gallery and the write-up. Facts that are not set are simply not shown;
- * the gallery and write-up show calm "coming soon" panels until they exist.
+ * Project detail: tagline, overview, facts (role, tech, dates), links, media
+ * gallery and an optional longer write-up. Anything not set is simply not
+ * shown: no "coming soon" panels, so the page is only real content.
  */
 import { render } from 'astro:content';
 import { Image } from 'astro:assets';
@@ -12,7 +12,6 @@ import Container from '../../components/Container.astro';
 import Button from '../../components/Button.astro';
 import Badge from '../../components/Badge.astro';
 import Card from '../../components/Card.astro';
-import EmptyState from '../../components/EmptyState.astro';
 import { getPublishedLab, getPublishedProjects, isEmptyBody } from '../../lib/content';
 import { formatDate, statusLabel } from '../../lib/format';
 import '../../styles/prose.css';
@@ -23,7 +22,8 @@ export async function getStaticPaths() {
 }
 
 const { project } = Astro.props;
-const { title, summary, status, role, tech, repoUrl, liveUrl, startDate, gallery } = project.data;
+const { title, tagline, summary, note, status, role, tech, repoUrl, liveUrl, startDate, gallery } =
+  project.data;
 const { Content } = await render(project);
 const hasWriteUp = !isEmptyBody(project);
 const labEntries = (await getPublishedLab()).filter((e) => e.data.relatedProject?.id === project.id);
@@ -35,7 +35,7 @@ const facts = [
 ].filter(Boolean) as { label: string; value: string }[];
 ---
 
-<BaseLayout title={title} description={summary}>
+<BaseLayout title={title} description={tagline ?? summary}>
   <article>
     <header class="project-header">
       <Container>
@@ -44,16 +44,16 @@ const facts = [
           All work
         </a>
         <div class="project-header__grid">
-          <div class="project-header__text">
+          <div class="project-header__text glow">
             <Badge tone={status === 'active' || status === 'shipped' ? 'accent' : 'neutral'} dot>
               {statusLabel[status]}
             </Badge>
             <h1 class="project-header__title">{title}</h1>
-            <p class="project-header__lead">{summary}</p>
+            <p class="project-header__lead">{tagline ?? summary}</p>
             {
               (repoUrl || liveUrl) && (
                 <div class="project-header__links">
-                  {liveUrl && <Button href={liveUrl} rel="noopener">Open live</Button>}
+                  {liveUrl && <Button href={liveUrl} rel="noopener">Try it live</Button>}
                   {repoUrl && (
                     <Button href={repoUrl} variant="secondary" rel="noopener">
                       View on GitHub
@@ -92,11 +92,30 @@ const facts = [
       </Container>
     </header>
 
-    <Section aria-labelledby="media-title" spacing="flush-top">
+    <Section aria-labelledby="overview-title" spacing="flush-top">
       <Container>
-        <h2 id="media-title" class="section-label meta">Media</h2>
-        {
-          gallery.length > 0 ? (
+        <div class="overview reveal">
+          <h2 id="overview-title" class="section-label meta">Overview</h2>
+          {/* Shown only when there is a separate tagline; otherwise the summary
+              is already the lead above. */}
+          {tagline && <p class="overview__text">{summary}</p>}
+          {note && <p class="overview__note">{note}</p>}
+          {
+            hasWriteUp && (
+              <div class="prose overview__writeup">
+                <Content />
+              </div>
+            )
+          }
+        </div>
+      </Container>
+    </Section>
+
+    {
+      gallery.length > 0 && (
+        <Section aria-labelledby="media-title" spacing="flush-top">
+          <Container>
+            <h2 id="media-title" class="section-label meta">Media</h2>
             <ul class="gallery">
               {gallery.map((item) => (
                 <li>
@@ -112,31 +131,10 @@ const facts = [
                 </li>
               ))}
             </ul>
-          ) : (
-            <div class="media-placeholder">
-              <p class="meta">Media coming soon</p>
-            </div>
-          )
-        }
-      </Container>
-    </Section>
-
-    <Section aria-labelledby="writeup-title" spacing="flush-top">
-      <Container>
-        <div class="writeup">
-          <h2 id="writeup-title" class="section-label meta">Write-up</h2>
-          {
-            hasWriteUp ? (
-              <div class="prose">
-                <Content />
-              </div>
-            ) : (
-              <EmptyState title="Write-up coming soon" body="A full write-up of this project is being prepared." />
-            )
-          }
-        </div>
-      </Container>
-    </Section>
+          </Container>
+        </Section>
+      )
+    }
 
     {
       labEntries.length > 0 && (
@@ -282,21 +280,26 @@ const facts = [
     margin-top: var(--space-2);
   }
 
-  /* A wide 16:9 frame, so the page has the same shape before and after real
-     media arrives. */
-  .media-placeholder {
+  .overview {
     display: grid;
-    place-items: center;
-    aspect-ratio: 16 / 9;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    background:
-      radial-gradient(ellipse at 70% 80%, color-mix(in oklab, var(--color-accent) 14%, transparent), transparent 60%),
-      var(--color-surface-raised);
+    gap: var(--space-6);
+    max-width: var(--measure);
   }
 
-  .writeup {
-    max-width: var(--measure);
+  .overview__text {
+    font-size: var(--step-1);
+    line-height: 1.55;
+  }
+
+  /* A quiet caveat (e.g. "not a medical device"), set apart with the warm
+     accent so it is noticed without shouting. */
+  .overview__note {
+    padding: var(--space-4) var(--space-5);
+    border-left: 2px solid var(--color-warm);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    background-color: color-mix(in oklab, var(--color-warm) 7%, transparent);
+    font-size: var(--step--1);
+    color: var(--color-text-muted);
   }
 
   .lab-links {

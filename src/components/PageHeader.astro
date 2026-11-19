@@ -14,16 +14,14 @@ interface Props {
   eyebrow?: string;
   title: string;
   lead?: string;
-  grid?: boolean;
 }
 
-const { eyebrow, title, lead, grid = false } = Astro.props;
+const { eyebrow, title, lead } = Astro.props;
 ---
 
 <header class="page-header">
-  {grid && <div class="page-header__grid grid-paper" aria-hidden="true" />}
   <Container>
-    <div class="page-header__inner">
+    <div class="page-header__inner glow">
       {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
       <h1 class="page-header__title">{title}</h1>
       {lead && <p class="page-header__lead">{lead}</p>}
@@ -37,19 +35,6 @@ const { eyebrow, title, lead, grid = false } = Astro.props;
     position: relative;
     isolation: isolate;
     padding-block: clamp(var(--space-16), 10vw, var(--space-32)) clamp(var(--space-10), 6vw, var(--space-20));
-  }
-
-  /* Grid paper on its own layer, faded toward the bottom with a mask so it
-     never meets the content below with a hard edge. Used only on Lab. */
-  .page-header__grid {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    mask-image: linear-gradient(to bottom, black 30%, transparent);
-    -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent);
-    /* Fainter than the default texture: it must sit behind, not define, the look. */
-    --grid-line-minor: color-mix(in oklab, var(--color-text) 3%, transparent);
-    --grid-line-major: color-mix(in oklab, var(--color-text) 6%, transparent);
   }
 
   .page-header__inner {
