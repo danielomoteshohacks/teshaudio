@@ -1,0 +1,99 @@
+---
+/**
+ * Music: the track list (plays through the persistent player) and the
+ * "Mix and master" section of loudness-matched A/B comparisons.
+ */
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Section from '../components/Section.astro';
+import Container from '../components/Container.astro';
+import PageHeader from '../components/PageHeader.astro';
+import SectionIntro from '../components/SectionIntro.astro';
+import TrackRow from '../components/TrackRow.astro';
+import ABPlayer from '../components/ABPlayer.astro';
+import EmptyState from '../components/EmptyState.astro';
+import { getPublishedComparisons, getPublishedTracks } from '../lib/content';
+import { copy } from '../lib/site';
+
+const tracks = await getPublishedTracks();
+const comparisons = await getPublishedComparisons();
+---
+
+<BaseLayout title="Music" description={copy.music.description}>
+  <PageHeader eyebrow="Music" title={copy.music.title} lead={copy.music.lead} />
+
+  <Section aria-labelledby="tracks-title" spacing="flush-top">
+    <Container>
+      <h2 id="tracks-title" class="visually-hidden">Tracks</h2>
+      {
+        tracks.length > 0 ? (
+          <div class="tracklist">
+            <div class="tracklist__head meta" aria-hidden="true">
+              <span>#</span>
+              <span />
+              <span />
+              <span>Title</span>
+              <span>Year</span>
+              <span class="tracklist__right">Time</span>
+            </div>
+            {tracks.map((track, i) => (
+              <TrackRow track={track} index={i + 1} showCredits />
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="Music coming soon" body="New releases and selected work will appear here." />
+        )
+      }
+    </Container>
+  </Section>
+
+  <Section theme="dark" aria-labelledby="ab-title">
+    <Container>
+      <SectionIntro
+        eyebrow={copy.music.comparisons.eyebrow}
+        id="ab-title"
+        title={copy.music.comparisons.title}
+        lead={copy.music.comparisons.lead}
+      />
+      {
+        comparisons.length > 0 ? (
+          <div class="comparisons">
+            {comparisons.map((comparison) => (
+              <ABPlayer comparison={comparison} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="Comparisons coming soon" body="Mix and master before and afters will appear here." />
+        )
+      }
+    </Container>
+  </Section>
+</BaseLayout>
+
+<style>
+  .tracklist__head {
+    display: none;
+  }
+
+  /* Column labels only where the row is laid out in columns. Mirrors the
+     TrackRow grid so headings sit exactly above their values. */
+  @media (min-width: 48rem) {
+    .tracklist__head {
+      display: grid;
+      grid-template-columns: 2rem 44px 56px minmax(0, 1fr) 4rem 4rem;
+      gap: var(--space-4);
+      padding-bottom: var(--space-3);
+      border-bottom: 1px solid var(--color-border);
+      text-transform: uppercase;
+      letter-spacing: var(--tracking-wide);
+    }
+  }
+
+  .tracklist__right {
+    text-align: right;
+  }
+
+  .comparisons {
+    display: grid;
+    gap: var(--space-6);
+  }
+</style>

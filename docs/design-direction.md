@@ -53,16 +53,22 @@ Kept after the design-system PR review; no alternative made a strong enough case
 
 ## Implemented tokens
 
-The design-system PR turned this direction into tokens and base components.
+The design-system work turned this direction into tokens and base components;
+"Personal site v1" built every page on them.
 
 - Tokens: `src/styles/tokens.css` (values, with contrast ratios in comments).
 - Base element rules, grid paper and the reduced-motion safety net:
   `src/styles/global.css`.
 - Components: `src/components/` (Container, Section, Eyebrow, Button, Card,
   Stat).
-- Living style guide: `/design` (noindex, not in the sitemap).
 - Contexts: set `data-theme="light"` or `data-theme="dark"` on any element.
   The site default is light.
-- Accent: three candidates (cobalt "Signal", violet "Ultraviolet", amber "VU")
-  switched by `data-accent` on `<html>`. Cobalt is the default until one is
-  chosen; the other two are then removed.
+- Accent: Signal (cobalt), chosen from three candidates. A deeper shade in
+  light contexts (`#2f4fe0`) and a brighter one in dark contexts (`#8ea2ff`).
+- Grid paper: used once, as a very faint, masked texture behind the Lab
+  section (the Home lab teaser and the `/lab` header). It must not define the
+  look anywhere else.
+- Motion: Astro view transitions between pages and a CSS scroll-driven
+  fade-up as sections enter. Both are off under `prefers-reduced-motion`.
+- Mono type only for small labels and metadata (dates, tags, status,
+  durations).

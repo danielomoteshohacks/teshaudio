@@ -172,6 +172,165 @@ pre {
   background-position: center top;
 }
 
+/* ----- Page chrome -------------------------------------------------------- */
+
+html {
+  /* Anchor jumps (table of contents, skip link) land below the sticky header
+     instead of underneath it. */
+  scroll-padding-top: calc(var(--header-height) + var(--space-4));
+}
+
+/* Visible only when focused, so keyboard users can jump past the header. */
+.skip-link {
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: 100;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-text);
+  color: var(--color-surface);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+}
+
+/* <main> takes focus from the skip link; the ring is not needed there. */
+main:focus {
+  outline: none;
+}
+
+/* ----- Range inputs (player scrubbers) -------------------------------------
+ * Restyled consistently across browsers. The input box is 44px tall so the
+ * touch target is comfortable, while the visible track stays a slim 4px.
+ * --progress (set by the player scripts) fills the played part.
+ */
+input[type='range'] {
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input[type='range']::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(
+    to right,
+    var(--color-accent) var(--progress, 0%),
+    color-mix(in oklab, var(--color-text) 18%, transparent) var(--progress, 0%)
+  );
+}
+
+input[type='range']::-moz-range-track {
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: color-mix(in oklab, var(--color-text) 18%, transparent);
+}
+
+input[type='range']::-moz-range-progress {
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--color-accent);
+}
+
+input[type='range']::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  margin-top: -5px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-text);
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-text);
+}
+
+input[type='range']:focus-visible {
+  outline: none;
+}
+
+input[type='range']:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+input[type='range']:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+/* ----- Code (Shiki dual themes) --------------------------------------------
+ * Shiki emits both a light and a dark colour per token as CSS variables;
+ * the section's context picks one, so code always matches its surroundings.
+ */
+.astro-code,
+.astro-code span {
+  color: var(--shiki-light);
+  background-color: var(--shiki-light-bg);
+}
+
+[data-theme='dark'] .astro-code,
+[data-theme='dark'] .astro-code span {
+  color: var(--shiki-dark);
+  background-color: var(--shiki-dark-bg);
+}
+
+/* ----- Reveal on scroll ----------------------------------------------------
+ * A subtle fade-up as sections enter, driven by CSS scroll-driven animations
+ * instead of JavaScript. Content is never hidden waiting for a script: where
+ * animation-timeline is unsupported, or motion is reduced, nothing animates
+ * and everything is simply visible. Transform and opacity only, so it never
+ * causes layout shift.
+ */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ----- Shared text styles ------------------------------------------------- */
+
+/* Small mono metadata: dates, tags, status, durations. Tabular figures keep
+   columns of numbers aligned. */
+.meta {
+  font-family: var(--font-mono);
+  font-size: var(--step--2);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+}
+
 /* ----- Utilities -------------------------------------------------------- */
 
 /* Hidden visually but still read by screen readers. */

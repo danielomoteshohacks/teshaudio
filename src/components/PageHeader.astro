@@ -1,0 +1,73 @@
+---
+/**
+ * PageHeader
+ *
+ * The opening block of every inner page: mono eyebrow, a large headline and
+ * an optional lead. Left-aligned on inner pages (it sits above lists and
+ * long text, which also read left to right); Home has its own hero.
+ * Extra content (filters, metadata) goes in the default slot.
+ */
+import Container from './Container.astro';
+import Eyebrow from './Eyebrow.astro';
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  lead?: string;
+  grid?: boolean;
+}
+
+const { eyebrow, title, lead, grid = false } = Astro.props;
+---
+
+<header class="page-header">
+  {grid && <div class="page-header__grid grid-paper" aria-hidden="true" />}
+  <Container>
+    <div class="page-header__inner">
+      {eyebrow && <Eyebrow>{eyebrow}</Eyebrow>}
+      <h1 class="page-header__title">{title}</h1>
+      {lead && <p class="page-header__lead">{lead}</p>}
+      <slot />
+    </div>
+  </Container>
+</header>
+
+<style>
+  .page-header {
+    position: relative;
+    isolation: isolate;
+    padding-block: clamp(var(--space-16), 10vw, var(--space-32)) clamp(var(--space-10), 6vw, var(--space-20));
+  }
+
+  /* Grid paper on its own layer, faded toward the bottom with a mask so it
+     never meets the content below with a hard edge. Used only on Lab. */
+  .page-header__grid {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    mask-image: linear-gradient(to bottom, black 30%, transparent);
+    -webkit-mask-image: linear-gradient(to bottom, black 30%, transparent);
+    /* Fainter than the default texture: it must sit behind, not define, the look. */
+    --grid-line-minor: color-mix(in oklab, var(--color-text) 3%, transparent);
+    --grid-line-major: color-mix(in oklab, var(--color-text) 6%, transparent);
+  }
+
+  .page-header__inner {
+    display: grid;
+    gap: var(--space-5);
+    max-width: 48rem;
+  }
+
+  .page-header__title {
+    font-size: var(--step-6);
+    line-height: var(--leading-display);
+    letter-spacing: var(--tracking-display);
+  }
+
+  .page-header__lead {
+    max-width: 36rem;
+    font-size: var(--step-1);
+    line-height: var(--leading-snug);
+    color: var(--color-text-muted);
+  }
+</style>

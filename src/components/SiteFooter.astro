@@ -1,0 +1,133 @@
+---
+/**
+ * SiteFooter
+ *
+ * Dark band closing every page: identity, navigation, contact links (only
+ * those set in site.ts) and the RSS feed. The year is taken at build time,
+ * which is accurate because every deploy rebuilds the site.
+ */
+import Container from './Container.astro';
+import { nav, site } from '../lib/site';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="footer" data-theme="dark">
+  <Container>
+    <div class="footer__grid">
+      <div class="footer__identity">
+        <a class="footer__name" href="/">{site.name}</a>
+        <p class="footer__line">{site.description}</p>
+      </div>
+
+      <nav class="footer__col" aria-label="Footer">
+        <p class="footer__label">Explore</p>
+        <ul>
+          {nav.map((item) => (
+            <li><a href={item.href}>{item.label}</a></li>
+          ))}
+        </ul>
+      </nav>
+
+      <div class="footer__col">
+        <p class="footer__label">Elsewhere</p>
+        <ul>
+          {site.email && <li><a href={`mailto:${site.email}`}>Email</a></li>}
+          {site.socials.map((social) => (
+            <li><a href={social.url} rel="me noopener">{social.label}</a></li>
+          ))}
+          <li><a href="/rss.xml">RSS</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer__base">
+      <p>&copy; {year} {site.fullName} ({site.name})</p>
+      <p>{site.location}</p>
+    </div>
+  </Container>
+</footer>
+
+<style>
+  .footer {
+    padding-block: var(--space-20) var(--space-10);
+    /* Leaves room for the mini-player so it never covers the last line. */
+    padding-bottom: calc(var(--space-10) + var(--player-offset, 0px));
+  }
+
+  .footer__grid {
+    display: grid;
+    gap: var(--space-12) var(--space-8);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .footer__identity {
+    grid-column: 1 / -1;
+    max-width: 28rem;
+  }
+
+  @media (min-width: 48rem) {
+    .footer__grid {
+      grid-template-columns: 2fr 1fr 1fr;
+    }
+
+    .footer__identity {
+      grid-column: auto;
+    }
+  }
+
+  .footer__name {
+    font-size: var(--step-2);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .footer__line {
+    margin-top: var(--space-3);
+    color: var(--color-text-muted);
+  }
+
+  .footer__label {
+    margin-bottom: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .footer__col ul {
+    display: grid;
+    padding: 0;
+    list-style: none;
+  }
+
+  .footer__col a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .footer__col a:hover {
+    color: var(--color-accent);
+  }
+
+  .footer__base {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--space-2) var(--space-6);
+    margin-top: var(--space-16);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border);
+    font-family: var(--font-mono);
+    font-size: var(--step--2);
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+</style>

@@ -6,11 +6,12 @@
  * page section puts its content in one, so left edges line up down the page.
  *
  * width: "default" for layouts and grids, "narrow" for long-form reading,
- * where a capped line length is easier on the eye.
+ * where a capped line length is easier on the eye, "wide" for articles,
+ * which need room for a contents column and a sidenote margin.
  */
 interface Props {
   as?: 'div' | 'header' | 'footer' | 'main' | 'article' | 'nav';
-  width?: 'default' | 'narrow';
+  width?: 'default' | 'narrow' | 'wide';
   class?: string;
 }
 
@@ -31,5 +32,9 @@ const { as: Tag = 'div', width = 'default', class: className } = Astro.props;
 
   .container--narrow {
     max-width: var(--container-narrow);
+  }
+
+  .container--wide {
+    max-width: var(--container-wide);
   }
 </style>
