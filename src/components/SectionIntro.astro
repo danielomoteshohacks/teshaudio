@@ -21,7 +21,7 @@ const { eyebrow, index, title, id, lead, link } = Astro.props;
 ---
 
 <div class="intro">
-  <div class="intro__text">
+  <div class="intro__text glow">
     <Eyebrow index={index}>{eyebrow}</Eyebrow>
     <h2 id={id} class="intro__title">{title}</h2>
     {lead && <p class="intro__lead">{lead}</p>}

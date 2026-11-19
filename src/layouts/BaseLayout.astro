@@ -66,10 +66,54 @@ const ogImage = new URL(`/og/${ogKey}.png`, Astro.site);
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
     {noindex && <meta name="robots" content="noindex" />}
-    {/* Light only: dark sections opt in explicitly through data-theme, so the
-        page must not follow the OS dark mode. */}
-    <meta name="color-scheme" content="light" />
-    <meta name="theme-color" content="#f6f6f3" />
+    {/* Both schemes are supported; the inline script below picks one. */}
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#f6f2ec" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#14120f" media="(prefers-color-scheme: dark)" />
+    {/* Sets data-mode on <html> before first paint, so there is never a flash
+        of the wrong theme. Order: the visitor's saved choice, else their OS
+        setting. Inline and render-blocking on purpose: it is tiny, and it
+        must run before the body is drawn. ClientRouter replaces <html>
+        attributes on every navigation, so it re-applies after each swap. The
+        header toggle (SiteHeader.astro) is wired here too, with one delegated
+        listener, because the header is re-rendered on every page. */}
+    <script is:inline>
+      (() => {
+        const key = 'tesh-mode';
+        const media = matchMedia('(prefers-color-scheme: dark)');
+        const saved = () => {
+          try {
+            return localStorage.getItem(key);
+          } catch {
+            return null;
+          }
+        };
+        const current = () => saved() || (media.matches ? 'dark' : 'light');
+        const apply = () => {
+          const mode = current();
+          document.documentElement.dataset.mode = mode;
+          document.querySelectorAll('[data-mode-toggle]').forEach((button) => {
+            button.setAttribute('aria-pressed', String(mode === 'dark'));
+          });
+        };
+        apply();
+        if (window.__teshMode) return;
+        window.__teshMode = true;
+        document.addEventListener('astro:after-swap', apply);
+        document.addEventListener('DOMContentLoaded', apply);
+        media.addEventListener('change', () => {
+          if (!saved()) apply();
+        });
+        document.addEventListener('click', (event) => {
+          if (!event.target.closest('[data-mode-toggle]')) return;
+          const next = document.documentElement.dataset.mode === 'dark' ? 'light' : 'dark';
+          try {
+            localStorage.setItem(key, next);
+          } catch {}
+          apply();
+        });
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="sitemap" href="/sitemap-index.xml" />
@@ -95,6 +139,7 @@ const ogImage = new URL(`/og/${ogKey}.png`, Astro.site);
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to content</a>
+    <div class="grain" aria-hidden="true"></div>
     <SiteHeader />
     <main id="main" tabindex="-1">
       <slot />

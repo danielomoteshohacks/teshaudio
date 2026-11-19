@@ -15,7 +15,8 @@ import { getPublishedComparisons, getPublishedTracks } from '../lib/content';
 import { copy } from '../lib/site';
 
 const tracks = await getPublishedTracks();
-const comparisons = await getPublishedComparisons();
+// Synthetic test comparisons live in the Lab; Music shows real work only.
+const comparisons = (await getPublishedComparisons()).filter((c) => !c.data.testAudio);
 ---
 
 <BaseLayout title="Music" description={copy.music.description}>
@@ -40,33 +41,31 @@ const comparisons = await getPublishedComparisons();
             ))}
           </div>
         ) : (
-          <EmptyState title="Music coming soon" body="New releases and selected work will appear here." />
+          <EmptyState title={copy.music.empty} />
         )
       }
     </Container>
   </Section>
 
-  <Section theme="dark" aria-labelledby="ab-title">
-    <Container>
-      <SectionIntro
-        eyebrow={copy.music.comparisons.eyebrow}
-        id="ab-title"
-        title={copy.music.comparisons.title}
-        lead={copy.music.comparisons.lead}
-      />
-      {
-        comparisons.length > 0 ? (
+  {
+    comparisons.length > 0 && (
+      <Section theme="dark" aria-labelledby="ab-title">
+        <Container>
+          <SectionIntro
+            eyebrow={copy.music.comparisons.eyebrow}
+            id="ab-title"
+            title={copy.music.comparisons.title}
+            lead={copy.music.comparisons.lead}
+          />
           <div class="comparisons">
             {comparisons.map((comparison) => (
               <ABPlayer comparison={comparison} />
             ))}
           </div>
-        ) : (
-          <EmptyState title="Comparisons coming soon" body="Mix and master before and afters will appear here." />
-        )
-      }
-    </Container>
-  </Section>
+        </Container>
+      </Section>
+    )
+  }
 </BaseLayout>
 
 <style>

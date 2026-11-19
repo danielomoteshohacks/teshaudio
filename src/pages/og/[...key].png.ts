@@ -17,6 +17,7 @@ export const getStaticPaths = (async () => {
     { key: 'projects', eyebrow: 'Work', title: copy.projects.title },
     { key: 'writing', eyebrow: 'Writing', title: copy.writing.title },
     { key: 'findings', eyebrow: 'Findings', title: copy.findings.title },
+    { key: 'ideas', eyebrow: 'Ideas', title: copy.ideas.title },
     { key: 'philosophy', eyebrow: 'Philosophy', title: copy.philosophy.title },
     { key: 'lab', eyebrow: 'Lab', title: copy.lab.title },
   ];
