@@ -2,8 +2,8 @@
  * Global base styles.
  *
  * tokens.css holds values only; this file holds the element-level rules that
- * use them: a small reset, base typography, context surfaces, focus, the
- * grid-paper texture and the reduced-motion safety net. Component-specific
+ * use them: a small reset, base typography, context surfaces, focus, film
+ * grain, studio glows and the reduced-motion safety net. Component-specific
  * styling belongs in each component's scoped <style>, not here.
  */
 
@@ -39,6 +39,13 @@ body {
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Glows extend past their elements. Clipping on <main> (not <body>, whose
+   overflow is handed to the viewport and would not clip) stops them causing
+   sideways scroll; clip, unlike hidden, keeps sticky elements working. */
+main {
+  overflow-x: clip;
 }
 
 img,
@@ -121,8 +128,11 @@ a {
   text-underline-offset: 0.2em;
 }
 
+/* Amber underline on hover: a small warm signal, while the link text keeps
+   its AA-passing accent colour. */
 a:hover {
   text-decoration-thickness: 2px;
+  text-decoration-color: var(--color-warm);
 }
 
 code,
@@ -148,28 +158,46 @@ pre {
   outline-offset: 3px;
 }
 
-/* ----- Grid-paper texture ------------------------------------------------
- * Pure CSS: four 1px gradient lines (major and minor, both axes) layered over
- * the surface colour. Line colours mix the current text colour into
- * transparent, so the grid follows light and dark contexts automatically.
- * At 5% and 9% the darkest line still leaves text above 13:1 (see tokens.css).
+/* ----- Film grain ----------------------------------------------------------
+ * A very fine noise layer over the whole page, like grain on film or the
+ * hiss of a quiet room: it takes the digital flatness off large surfaces.
+ * The noise is an inline SVG (feTurbulence), drawn once and tiled, fixed so
+ * it does not repaint on scroll, and ignored by the pointer. Opacity is low
+ * enough that text contrast is unaffected.
  */
-.grid-paper {
-  --grid-line-minor: color-mix(in oklab, var(--color-text) 5%, transparent);
-  --grid-line-major: color-mix(in oklab, var(--color-text) 9%, transparent);
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.45 0 0 0 0 0.4 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
 
-  background-image:
-    linear-gradient(to right, var(--grid-line-major) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-line-major) 1px, transparent 1px),
-    linear-gradient(to right, var(--grid-line-minor) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-line-minor) 1px, transparent 1px);
-  background-size:
-    var(--grid-major) var(--grid-major),
-    var(--grid-major) var(--grid-major),
-    var(--grid-minor) var(--grid-minor),
-    var(--grid-minor) var(--grid-minor);
-  /* Centring the pattern keeps it symmetrical at every viewport width. */
-  background-position: center top;
+:root[data-mode='dark'] .grain {
+  opacity: 0.07;
+}
+
+/* ----- Studio glow ------------------------------------------------------------
+ * Soft accent light behind heroes and headings, like a lamp in a dim room.
+ * Plain radial gradients (no blur filter), so they cost nothing to render.
+ * Place .glow on a positioned element; the light sits behind its content.
+ */
+.glow {
+  position: relative;
+  isolation: isolate;
+}
+
+.glow::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -40% -20%;
+  pointer-events: none;
+  background:
+    radial-gradient(closest-side at 30% 45%, color-mix(in oklab, var(--color-accent) var(--glow-strength), transparent), transparent),
+    radial-gradient(closest-side at 72% 60%, color-mix(in oklab, var(--color-warm) calc(var(--glow-strength) * 0.8), transparent), transparent);
 }
 
 /* ----- Page chrome -------------------------------------------------------- */
@@ -299,10 +327,12 @@ input[type='range']:focus-visible::-moz-range-thumb {
  */
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
+    /* --stagger (0, 1, 2...) on siblings shifts each one's range slightly,
+       so items in a row rise one after another rather than as a block. */
     .reveal {
       animation: reveal linear both;
       animation-timeline: view();
-      animation-range: entry 0% entry 40%;
+      animation-range: entry calc(var(--stagger, 0) * 6%) entry calc(45% + var(--stagger, 0) * 6%);
     }
   }
 }
@@ -310,7 +340,7 @@ input[type='range']:focus-visible::-moz-range-thumb {
 @keyframes reveal {
   from {
     opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(20px);
   }
 
   to {

@@ -44,10 +44,11 @@ const { tone = 'neutral', dot = false } = Astro.props;
     color: var(--color-accent);
   }
 
+  /* Status dots use the warm accent: a small amber "lamp" on every badge. */
   .badge__dot {
     width: 6px;
     height: 6px;
     border-radius: var(--radius-pill);
-    background-color: currentColor;
+    background-color: var(--color-warm);
   }
 </style>

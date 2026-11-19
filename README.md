@@ -29,6 +29,7 @@ Node 22.23.4 or newer. Cloudflare builds with the version in `.node-version`.
 - `src/content` Markdown/MDX entries, with schemas in `src/content.config.ts`
 - `src/lib/site.ts` identity, contact, home and page copy (one file for site facts)
 - `src/data/about.ts` everything on the About page
+- `src/data/ideas.ts` the "Ideas I'm exploring" notes
 - `src/lib/content.ts` the only way pages read collections (filters drafts)
 - `src/styles/tokens.css` design tokens, `global.css` base styles, `prose.css` long-form text
 - `src/assets/portrait.jpg` the portrait
@@ -67,7 +68,9 @@ order: 1                        # position in lists, lowest first
 ---
 ```
 
-Then delete `src/content/tracks/test-tone-440.md` once real music exists.
+Start from `src/content/tracks/track-template.md` (a draft). Featured tracks appear
+on Home; the Home listening section stays hidden until
+at least one published track exists.
 
 ### Comparison (mix or master A/B)
 
@@ -95,12 +98,14 @@ need CORS enabled for the site's origin. Delete
 
 ### Project
 
-Edit or create `src/content/projects/<slug>.md`. Required: `title`,
-`summary`, `status` (`active`, `paused`, `shipped`, `concept`), `order`.
-Optional and hidden until set: `role`, `tech`, `repoUrl`, `liveUrl`,
-`startDate`, `gallery`, `featured` (shows under "Currently building" on Home).
-Write the write-up as the Markdown body below the frontmatter; while the body
-is empty the page shows "Write-up coming soon". Gallery images:
+Audio projects only. Edit or create `src/content/projects/<slug>.md`.
+Required: `title`, `summary` (the overview paragraph), `status` and `order`.
+Statuses display as: `shipped` "Live", `active` "In development",
+`concept` "In design", `paused` "Paused". Optional and hidden until set:
+`tagline` (one line for cards and the page lead), `note` (a short caveat),
+`role`, `tech`, `repoUrl`, `liveUrl`, `startDate`, `gallery`, `featured`
+(shows under "What I'm building" on Home). A longer write-up can go in the
+Markdown body; nothing is shown while it is empty. Gallery images:
 
 ```md
 gallery:
@@ -128,7 +133,7 @@ Inside the body, without imports: `<Sidenote>...</Sidenote>` (inside a
 paragraph), `<Figure caption="...">...</Figure>`, `<TrackPlayer track="slug" />`,
 `<ABPlayer comparison="slug" />`, `$inline$` and `$$display$$` math, and fenced
 code blocks. A table of contents appears automatically with three or more `##`
-headings. `src/content/writing/article-template.mdx` shows every feature.
+headings.
 
 ### Finding
 
@@ -137,22 +142,30 @@ Same as writing, with `kind: finding`. Keep it short. It appears on
 
 ### Lab entry
 
-Create `src/content/lab/<slug>.md` with `title`, `summary`, `status`
-(`live` or `coming-soon`), `relatedProject` (a project slug) and `order`.
-The demo itself mounts into `#lab-demo-mount` on the entry's page; the
-contract is documented at the top of `src/pages/lab/[slug].astro`.
+Create `src/content/lab/<slug>.md` (or `.mdx`) with `title`, `summary`,
+`status` (`live` or `coming-soon`), `order`, and optionally
+`relatedProject` (a project slug) and `demoUrl` (where the demo runs, for
+example a Hugging Face Space). Live entries show their body, which can embed
+`<ABPlayer comparison="slug" />`. Coming-soon entries show the demo mount
+area, documented at the top of `src/pages/lab/[slug].astro`.
 
 ### Philosophy
 
 Edit the four files in `src/content/philosophy/` (`music.mdx`, `sound.mdx`,
-`consumer-audio-experience.mdx`, `spatial-audio.mdx`). Replace the placeholder
-paragraph with the essay text. `order` sets the sequence. The pull quote on
-Home is `philosophyQuote` in `src/lib/site.ts`.
+`consumer-audio-experience.mdx`, `spatial-audio.mdx`). `thesis` is the large
+one-line position; the body is the text. `order` sets the sequence. The pull
+quote on Home is `philosophyQuote` in `src/lib/site.ts`.
 
-### Bio, skills, education, tools
+### Bio, education, skills
 
-Edit `src/data/about.ts`. Each skill group renders "Details coming soon"
-until its list has items.
+Edit `src/data/about.ts`: `bio` (one string per paragraph), `education`
+(one line) and `skills` (title and a short note each). Audio only.
+
+### Now and Ideas
+
+"What I'm doing now" on Home is `now` in `src/lib/site.ts` (each item can
+link with `href`). Ideas are in `src/data/ideas.ts` (title and note, no
+status).
 
 ### Identity, contact and page copy
 
@@ -166,7 +179,3 @@ Replace `src/assets/portrait.jpg` with a JPEG of the same name (portrait
 orientation, at least 1200 x 1500). Astro generates the AVIF and WebP sizes
 automatically. `npm run generate:portrait` restores the placeholder.
 
-### CV
-
-Add `public/cv.pdf`. The download button appears on About at the next build;
-remove the file to hide it again.

@@ -65,9 +65,13 @@ The design-system work turned this direction into tokens and base components;
   The site default is light.
 - Accent: Signal (cobalt), chosen from three candidates. A deeper shade in
   light contexts (`#2f4fe0`) and a brighter one in dark contexts (`#8ea2ff`).
-- Grid paper: used once, as a very faint, masked texture behind the Lab
-  section (the Home lab teaser and the `/lab` header). It must not define the
-  look anywhere else.
+- Second iteration, "warm, comfy, intimate": slightly warm neutrals, full
+  dark mode (follows the OS, with a remembered header toggle and no flash on
+  load), a very fine film-grain overlay, and soft accent glows behind heroes
+  and headings, like light in a dim studio. Grid paper has been removed.
+- Accents: Signal (cobalt) stays primary; VU (amber) is a secondary warm
+  accent for small highlights only (status dots, the Now section, hover
+  underlines).
 - Motion: Astro view transitions between pages and a CSS scroll-driven
   fade-up as sections enter. Both are off under `prefers-reduced-motion`.
 - Mono type only for small labels and metadata (dates, tags, status,

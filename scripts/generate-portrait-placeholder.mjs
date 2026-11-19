@@ -1,6 +1,8 @@
 /**
- * Generates the placeholder portrait at src/assets/portrait.jpg: a soft
- * gradient with a geometric "T" monogram. Never a stock photo.
+ * Generates the placeholder portrait at src/assets/portrait.jpg: a dim, warm
+ * "studio at night" gradient (amber lamp top left, cobalt glow bottom right)
+ * with a light geometric "T" monogram. Dark so it sits calmly in both light
+ * and dark mode. Never a stock photo.
  *
  * Usage: node scripts/generate-portrait-placeholder.mjs
  * To use a real photo instead, replace src/assets/portrait.jpg with any JPEG
@@ -27,27 +29,27 @@ const svg = `
 <svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
   <defs>
     <linearGradient id="base" x1="0" y1="0" x2="0.4" y2="1">
-      <stop offset="0" stop-color="#eef0f6"/>
-      <stop offset="1" stop-color="#dfe3ef"/>
+      <stop offset="0" stop-color="#221e1a"/>
+      <stop offset="1" stop-color="#14120f"/>
     </linearGradient>
-    <radialGradient id="glow" cx="0.82" cy="0.88" r="0.75">
-      <stop offset="0" stop-color="#2f4fe0" stop-opacity="0.32"/>
+    <radialGradient id="glow" cx="0.82" cy="0.9" r="0.75">
+      <stop offset="0" stop-color="#2f4fe0" stop-opacity="0.45"/>
       <stop offset="1" stop-color="#2f4fe0" stop-opacity="0"/>
     </radialGradient>
-    <radialGradient id="light" cx="0.15" cy="0.08" r="0.7">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.85"/>
-      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    <radialGradient id="light" cx="0.18" cy="0.1" r="0.7">
+      <stop offset="0" stop-color="#ffa45c" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#ffa45c" stop-opacity="0"/>
     </radialGradient>
     <filter id="grain">
       <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7"/>
       <feColorMatrix type="saturate" values="0"/>
-      <feComponentTransfer><feFuncA type="linear" slope="0.06"/></feComponentTransfer>
+      <feComponentTransfer><feFuncA type="linear" slope="0.08"/></feComponentTransfer>
     </filter>
   </defs>
   <rect width="${W}" height="${H}" fill="url(#base)"/>
   <rect width="${W}" height="${H}" fill="url(#glow)"/>
   <rect width="${W}" height="${H}" fill="url(#light)"/>
-  <g fill="#121316">
+  <g fill="#efe9e0">
     <rect x="${x}" y="${y}" width="${barW}" height="${barH}" rx="6"/>
     <rect x="${(W - stemW) / 2}" y="${y}" width="${stemW}" height="${stemH}" rx="6"/>
   </g>

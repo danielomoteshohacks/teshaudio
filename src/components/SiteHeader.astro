@@ -41,11 +41,24 @@ const isPage = (href: string) => path === href;
       </ul>
     </nav>
 
+    <div class="header__actions">
+    {/* Dark mode toggle. The click handler and the saved choice live in the
+        inline script in BaseLayout, which also keeps aria-pressed in sync. */}
+    <button class="header__icon-button" type="button" data-mode-toggle aria-pressed="false" aria-label="Dark mode">
+      <svg class="icon-moon" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true">
+        <path d="M16.5 12.2A7 7 0 0 1 7.8 3.5a7 7 0 1 0 8.7 8.7z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"></path>
+      </svg>
+      <svg class="icon-sun" width="18" height="18" viewBox="0 0 20 20" aria-hidden="true">
+        <circle cx="10" cy="10" r="3.5" fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+        <path d="M10 1.5v2M10 16.5v2M1.5 10h2M16.5 10h2M4 4l1.4 1.4M14.6 14.6L16 16M4 16l1.4-1.4M14.6 5.4L16 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+      </svg>
+    </button>
     <button class="header__menu-button" type="button" popovertarget="site-menu" aria-label="Open menu">
       <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
         <path d="M3 7h14M3 13h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
       </svg>
     </button>
+    </div>
   </div>
 
   <div id="site-menu" class="menu" popover data-theme="light">
@@ -158,12 +171,46 @@ const isPage = (href: string) => path === href;
     background-color: color-mix(in oklab, var(--color-text) 7%, transparent);
   }
 
+  .header__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin-inline-end: calc(var(--space-3) * -1);
+  }
+
+  .header__icon-button {
+    display: inline-grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: color var(--duration-fast) var(--ease-out);
+  }
+
+  .header__icon-button:hover {
+    color: var(--color-text);
+    background-color: color-mix(in oklab, var(--color-text) 6%, transparent);
+  }
+
+  /* Show the moon in light mode (switch to dark) and the sun in dark mode. */
+  .icon-sun,
+  :global(:root[data-mode='dark']) .icon-moon {
+    display: none;
+  }
+
+  :global(:root[data-mode='dark']) .icon-sun {
+    display: block;
+  }
+
   .header__menu-button {
     display: inline-grid;
     place-items: center;
     width: 44px;
     height: 44px;
-    margin-inline-end: calc(var(--space-3) * -1);
     border: 0;
     border-radius: var(--radius-pill);
     background: transparent;
@@ -175,12 +222,15 @@ const isPage = (href: string) => path === href;
     background-color: color-mix(in oklab, var(--color-text) 6%, transparent);
   }
 
-  @media (min-width: 64rem) {
+  /* Eight links plus the toggle need about 70rem to sit on one line with
+     comfortable spacing; below that the menu button takes over. */
+  @media (min-width: 70rem) {
     .header__nav {
       display: block;
+      margin-inline-start: auto;
     }
 
-    .header__inner > .header__menu-button {
+    .header__actions > .header__menu-button {
       display: none;
     }
   }

@@ -1,9 +1,9 @@
 ---
 title: AcoustiMorph
-summary: Browser-based acoustic measurement, with room and headphone calibration.
-status: active
-tech: ['Rust', 'WebAssembly']
-featured: true
-order: 1
-# TODO: role, startDate, repoUrl, liveUrl, gallery and the write-up below.
+tagline: Room and headphone calibration in the browser, with nothing to install.
+summary: A browser-based acoustic measurement engine built in Rust and WebAssembly that profiles a room or a pair of headphones using just a phone microphone, then calibrates playback to match.
+status: concept
+tech: ['Rust', 'WebAssembly', 'Web Audio']
+order: 3
+# TODO: repoUrl once Tesh shares it.
 ---

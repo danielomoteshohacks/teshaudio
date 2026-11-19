@@ -10,7 +10,8 @@ export type Social = { label: string; url: string; handle: string };
 
 export const site = {
   name: 'Tesh',
-  fullName: 'Daniel',
+  fullName: 'Daniel Omotesho',
+  firstName: 'Daniel',
   // Production origin on Cloudflare Pages. Used by astro.config.mjs as `site`,
   // so canonical tags and the sitemap point here. Update if a custom domain
   // is added, otherwise search engines index the pages.dev address.
@@ -21,36 +22,43 @@ export const site = {
   lang: 'en',
   location: 'Lagos, Nigeria',
 
-  // TODO: Tesh to rewrite. Derived from the site title.
-  roleStatement: 'Music producer and spatial audio engineer.',
-
-  // TODO: Tesh to rewrite. Kept short because the Disciplines section below
-  // the hero already lists every role.
+  // Tesh's own words.
+  roleStatement: 'I make music, and I build the software that shapes how it’s heard.',
   intro:
-    'Daniel, known as Tesh, makes music and builds the software that shapes how it is heard. Based in Lagos, Nigeria.',
+    'I’m Daniel. I produce, write and mix records, and I study the physics underneath them: acoustics, signal processing, and how the ear actually takes sound in. This is where I keep the work, the research, and what I’m learning along the way.',
 
-  // The five roles. Each line describes the craft, not credits or clients.
-  // TODO: Tesh to rewrite the one-liners.
   disciplines: [
-    { title: 'Music Producer', summary: 'Shaping songs from first idea to finished record.' },
-    { title: 'Composer', summary: 'Writing music with a clear emotional intent.' },
+    { title: 'Music Producer', summary: 'Building records from the first idea to the final bounce.' },
+    { title: 'Composer', summary: 'Writing the melodies, chords and arrangements a record stands on.' },
     {
       title: 'Mix and Mastering Engineer',
-      summary: 'Balancing, shaping and finishing records so they translate on every system.',
+      summary:
+        'Balancing and finishing records so they hold up everywhere, from studio monitors to a phone speaker.',
     },
     {
       title: 'Spatial Audio Software Engineer',
-      summary: 'Building software that places sound around the listener.',
+      summary: 'Building engines that place sound around the listener, without depending on special hardware.',
     },
     {
       title: 'Audio Experience Designer',
-      summary: 'Designing how people discover, hear and feel audio.',
+      summary: 'Thinking about how audio feels to the person on the other end: the earbuds, the car, the app.',
     },
   ],
 
-  // Pull quote for the philosophy teaser on Home. Taken from the site
-  // description, Tesh's own words. TODO: replace with a line from the essay.
-  philosophyQuote: 'Building the future of how music is heard.',
+  // "What I'm doing now" on Home. Each item is HTML-free text; `href`
+  // optionally links the item. Update as things change.
+  now: [
+    {
+      text: 'Building Stage, a spatial audio engine for any song on any phone.',
+      href: '/projects/stage/',
+    },
+    {
+      text: 'Working through Kinsler’s Fundamentals of Acoustics and Li and Cox’s Digital Signal Processing in Audio and Acoustical Engineering.',
+    },
+  ] as { text: string; href?: string }[],
+
+  // Pull quote for the philosophy teaser on Home.
+  philosophyQuote: 'Your ears are the one piece of gear you can’t replace.',
 
   // Contact. Every item renders only if set; remove a line to hide it.
   email: 'danielomotesho.work@gmail.com',
@@ -62,28 +70,30 @@ export const site = {
 } as const;
 
 /**
- * Page and section copy: headings, intros and search descriptions. Kept here
- * so every word on the site is editable in one place. This is neutral
- * placeholder copy describing each page, not facts about Tesh.
- * TODO: Tesh to review and rewrite in Tesh's own voice where wanted.
+ * Page and section copy: headings, intros and search descriptions, kept here
+ * so every word on the site is editable in one place. Short and plain on
+ * purpose: these frame Tesh's own words rather than speak for Tesh.
  */
 export const copy = {
   home: {
+    now: { eyebrow: 'Now', title: 'What I’m doing now' },
     disciplines: { eyebrow: 'Disciplines', title: 'Five disciplines, one practice' },
     listening: {
       eyebrow: 'Listen',
       title: 'Featured listening',
       lead: 'Playback continues in the player at the bottom of the screen while you browse.',
     },
-    building: { eyebrow: 'Work', title: 'Currently building' },
+    building: { eyebrow: 'Work', title: 'What I’m building' },
     writing: { eyebrow: 'Writing', title: 'Latest writing' },
-    lab: { eyebrow: 'Lab', title: 'From the lab', lead: 'Interactive demos that run in the browser. The first ones are on the way.' },
+    ideas: { eyebrow: 'Ideas', title: 'Ideas I’m exploring' },
+    lab: { eyebrow: 'Lab', title: 'From the lab', lead: 'Small tools and demos you can try in the browser.' },
     contact: { eyebrow: 'Contact', title: 'Get in touch' },
   },
   music: {
     title: 'Listen',
-    lead: 'Productions, compositions, mixes and masters. Playback continues in the player at the bottom of the screen while you browse.',
-    description: 'Productions, compositions, mixes and masters by Tesh, plus loudness-matched before and after comparisons.',
+    lead: 'Records I’ve produced, written, mixed and mastered. Playback continues in the player at the bottom of the screen while you browse.',
+    empty: 'My first releases on this site are coming soon.',
+    description: 'Music by Tesh: productions, compositions, mixes and masters.',
     comparisons: {
       eyebrow: 'Mix and master',
       title: 'Before and after',
@@ -91,32 +101,36 @@ export const copy = {
     },
   },
   about: {
-    skillsTitle: 'Areas of practice',
-    backgroundTitle: 'Education and certification',
+    skillsTitle: 'What I work on',
   },
   projects: {
     title: 'Projects',
-    lead: 'Software for measuring, shaping and placing sound, and the tools behind the music.',
-    description: 'Projects by Tesh: software for measuring, shaping and placing sound.',
+    lead: 'Tools for hearing, measuring and placing sound.',
+    description: 'Audio projects by Tesh: hearing health, spatial audio and acoustic measurement.',
+  },
+  ideas: {
+    title: 'Ideas I’m exploring',
+    lead: 'Things I want to build or understand next. Notes, not promises.',
+    description: 'Audio ideas Tesh is exploring.',
   },
   writing: {
     title: 'Writing',
-    lead: 'Essays, research and notes on music, sound, listening and spatial audio.',
-    description: 'Essays, research and notes by Tesh on music, sound, listening and spatial audio.',
+    lead: 'Research, essays and notes on music, sound, listening and spatial audio.',
+    description: 'Research, essays and notes by Tesh on music, sound, listening and spatial audio.',
   },
   findings: {
     title: 'Findings',
-    lead: 'Short notes on things discovered along the way.',
+    lead: 'Short notes on things I’ve noticed along the way.',
     description: 'Short-form discoveries by Tesh about sound, listening and audio software.',
   },
   philosophy: {
-    title: 'On music, sound and how it is heard',
+    title: 'How I think about sound',
     description: 'Tesh on music, sound, the consumer audio experience and spatial audio.',
   },
   lab: {
     title: 'Lab',
-    lead: 'Interactive demos of the projects, running in the browser with Web Audio and WebAssembly. The first ones are on the way.',
-    description: 'Interactive audio demos by Tesh that run in the browser.',
+    lead: 'Small tools and demos you can try in the browser.',
+    description: 'Audio tools and demos by Tesh that run in the browser.',
   },
 } as const;
 
@@ -126,6 +140,7 @@ export const nav = [
   { label: 'Work', href: '/projects/' },
   { label: 'Writing', href: '/writing/' },
   { label: 'Findings', href: '/findings/' },
+  { label: 'Ideas', href: '/ideas/' },
   { label: 'Philosophy', href: '/philosophy/' },
   { label: 'Lab', href: '/lab/' },
   { label: 'About', href: '/about/' },

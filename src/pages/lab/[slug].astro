@@ -15,6 +15,8 @@ import { render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Container from '../../components/Container.astro';
 import Badge from '../../components/Badge.astro';
+import Button from '../../components/Button.astro';
+import ABPlayer from '../../components/ABPlayer.astro';
 import { getProject, getPublishedLab, isEmptyBody } from '../../lib/content';
 import { statusLabel } from '../../lib/format';
 import '../../styles/prose.css';
@@ -25,7 +27,7 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const { title, summary, status, relatedProject } = entry.data;
+const { title, summary, status, relatedProject, demoUrl } = entry.data;
 const project = relatedProject ? await getProject(relatedProject.id) : undefined;
 const { Content } = await render(entry);
 ---
@@ -37,10 +39,11 @@ const { Content } = await render(entry);
         <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M11 7H3M6.5 3.5L3 7l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
         Lab
       </a>
-      <header class="lab-entry__header">
+      <header class="lab-entry__header glow">
         <Badge tone={status === 'live' ? 'accent' : 'neutral'} dot>{statusLabel[status]}</Badge>
         <h1 class="lab-entry__title">{title}</h1>
         <p class="lab-entry__lead">{summary}</p>
+        {demoUrl && <Button href={demoUrl} rel="noopener">Open the demo</Button>}
         {
           project && (
             <p class="lab-entry__project">
@@ -51,6 +54,9 @@ const { Content } = await render(entry);
         }
       </header>
 
+      {/* The mount area is shown only while a demo is coming; live entries
+          show their own content (for example an embedded player) below. */}
+      {status === 'coming-soon' && (
       <section
         id="lab-demo-mount"
         class="mount"
@@ -66,11 +72,12 @@ const { Content } = await render(entry);
           <p class="meta">This space will host an interactive demo that runs in your browser.</p>
         </div>
       </section>
+      )}
 
       {
         !isEmptyBody(entry) && (
           <div class="prose lab-entry__notes">
-            <Content />
+            <Content components={{ ABPlayer }} />
           </div>
         )
       }
@@ -167,6 +174,6 @@ const { Content } = await render(entry);
   }
 
   .lab-entry__notes {
-    margin-top: var(--space-16);
+    margin-top: var(--space-4);
   }
 </style>

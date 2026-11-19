@@ -11,6 +11,8 @@ Deployed to Cloudflare: build command `npm run build`, output folder `dist`.
 
 ## Writing and content
 
+- The site is strictly about audio. No certifications, unrelated education,
+  or non-audio projects. If in doubt, leave it out.
 - No emojis anywhere: code, comments, commit messages, PR text or site content.
 - Never invent facts about Tesh: biography, credits, clients, releases, project
   details, dates or links. If something is missing, read it from

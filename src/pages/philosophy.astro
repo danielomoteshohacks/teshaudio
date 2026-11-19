@@ -20,7 +20,7 @@ const sections = await Promise.all(
 <BaseLayout title="Philosophy" description={copy.philosophy.description}>
   <article class="essay">
     <Container width="narrow">
-      <header class="essay__header">
+      <header class="essay__header glow">
         <Eyebrow>Philosophy</Eyebrow>
         <h1 class="essay__title">{copy.philosophy.title}</h1>
         <p class="essay__lead">{site.philosophyQuote}</p>
@@ -49,6 +49,7 @@ const sections = await Promise.all(
             <h2 id={`${entry.id}-title`} class="essay__part-title">
               {entry.data.title}
             </h2>
+            {entry.data.thesis && <p class="essay__thesis">{entry.data.thesis}</p>}
             <div class="prose essay__prose">
               <Content />
             </div>
@@ -118,7 +119,19 @@ const sections = await Promise.all(
   }
 
   .essay__part-title {
+    font-size: var(--step-1);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-muted);
+    letter-spacing: var(--tracking-normal);
+  }
+
+  /* The part's position, set large: the line a reader should remember. */
+  .essay__thesis {
     font-size: var(--step-4);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    text-wrap: balance;
   }
 
   /* Essay text reads slightly larger than article text: it is meant to be

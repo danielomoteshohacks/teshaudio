@@ -19,7 +19,7 @@ const projectTitles = new Map((await getPublishedProjects()).map((p) => [p.id, p
 ---
 
 <BaseLayout title="Lab" description={copy.lab.description}>
-  <PageHeader eyebrow="Lab" title={copy.lab.title} lead={copy.lab.lead} grid />
+  <PageHeader eyebrow="Lab" title={copy.lab.title} lead={copy.lab.lead} />
 
   <Section spacing="flush-top" aria-label="Lab entries">
     <Container>
