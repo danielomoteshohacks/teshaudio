@@ -1,0 +1,12 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import WritingView from '../../components/WritingView.astro';
+import { getPublishedWriting } from '../../lib/content';
+import { copy } from '../../lib/site';
+
+const all = await getPublishedWriting();
+---
+
+<BaseLayout title="Writing" description={copy.writing.description}>
+  <WritingView all={all} />
+</BaseLayout>

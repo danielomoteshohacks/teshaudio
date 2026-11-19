@@ -1,20 +1,518 @@
 ---
-// Placeholder home page. Its only job is to prove the build, layout and
-// content pipeline work end to end; the design PR replaces it.
+/**
+ * Home.
+ *
+ * Section order (from the brief): hero, disciplines, featured listening,
+ * currently building, philosophy teaser, latest writing, lab teaser, contact.
+ * Light and dark sections are grouped rather than strictly alternated, so the
+ * page reads as a few calm movements instead of stripes.
+ */
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { site } from '../lib/site';
-import { getPublishedProjects, getPublishedWriting } from '../lib/content';
+import Section from '../components/Section.astro';
+import Container from '../components/Container.astro';
+import Eyebrow from '../components/Eyebrow.astro';
+import Button from '../components/Button.astro';
+import Card from '../components/Card.astro';
+import Badge from '../components/Badge.astro';
+import Portrait from '../components/Portrait.astro';
+import SectionIntro from '../components/SectionIntro.astro';
+import TrackRow from '../components/TrackRow.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import WritingRow from '../components/WritingRow.astro';
+import EmptyState from '../components/EmptyState.astro';
+import { copy, site } from '../lib/site';
+import { personSchema } from '../lib/schema';
+import { statusLabel } from '../lib/format';
+import {
+  getPublishedLab,
+  getPublishedProjects,
+  getPublishedTracks,
+  getPublishedWriting,
+} from '../lib/content';
 
-// Read through the helpers so the draft filter is exercised on every build.
-const projects = await getPublishedProjects();
-const writing = await getPublishedWriting();
+const tracks = (await getPublishedTracks()).filter((t) => t.data.featured).slice(0, 3);
+const projects = (await getPublishedProjects()).filter((p) => p.data.featured);
+const writing = (await getPublishedWriting()).slice(0, 3);
+const lab = await getPublishedLab();
+const projectTitles = new Map((await getPublishedProjects()).map((p) => [p.id, p.data.title]));
 ---
 
-<BaseLayout>
-  <main>
-    <h1>{site.name}</h1>
-    <p>{site.description}</p>
-    <p>Foundation build is working.</p>
-    <p>Published projects: {projects.length}. Published writing: {writing.length}.</p>
-  </main>
+<BaseLayout jsonLd={personSchema()}>
+  <!-- Hero -->
+  <section class="hero" aria-labelledby="hero-title">
+    <Container>
+      <div class="hero__grid">
+        <div class="hero__text">
+          <Eyebrow>{site.fullName} · {site.location}</Eyebrow>
+          <h1 id="hero-title" class="hero__name">{site.name}</h1>
+          <p class="hero__role">{site.roleStatement}</p>
+          <p class="hero__intro">{site.intro}</p>
+          <div class="hero__actions">
+            <Button size="lg" href="/music/">Listen</Button>
+            <Button size="lg" variant="secondary" href="/projects/">View work</Button>
+            <Button size="lg" variant="ghost" href="/writing/">Read writing</Button>
+          </div>
+        </div>
+        <div class="hero__portrait">
+          <Portrait priority sizes="(min-width: 64rem) 30rem, (min-width: 40rem) 28rem, calc(100vw - 2rem)" />
+        </div>
+      </div>
+    </Container>
+  </section>
+
+  <!-- Disciplines -->
+  <Section aria-labelledby="disciplines-title" spacing="flush-top">
+    <Container class="reveal">
+      <SectionIntro eyebrow={copy.home.disciplines.eyebrow} index="01" id="disciplines-title" title={copy.home.disciplines.title} />
+      <ul class="disciplines">
+        {
+          site.disciplines.map((discipline, i) => (
+            <li>
+              <Card as="div">
+                <p class="disciplines__index meta">{String(i + 1).padStart(2, '0')}</p>
+                <h3 class="disciplines__title">{discipline.title}</h3>
+                <p class="disciplines__summary">{discipline.summary}</p>
+              </Card>
+            </li>
+          ))
+        }
+      </ul>
+    </Container>
+  </Section>
+
+  <!-- Featured listening -->
+  <Section theme="dark" aria-labelledby="listening-title">
+    <Container class="reveal">
+      <SectionIntro
+        eyebrow={copy.home.listening.eyebrow}
+        index="02"
+        id="listening-title"
+        title={copy.home.listening.title}
+        lead={tracks.length > 0 ? copy.home.listening.lead : undefined}
+        link={{ label: 'All music', href: '/music/' }}
+      />
+      {
+        tracks.length > 0 ? (
+          <div class="tracks">
+            {tracks.map((track, i) => (
+              <TrackRow track={track} index={i + 1} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState title="Music coming soon" body="New releases and selected work will appear here." />
+        )
+      }
+    </Container>
+  </Section>
+
+  <!-- Currently building -->
+  <Section aria-labelledby="building-title">
+    <Container class="reveal">
+      <SectionIntro
+        eyebrow={copy.home.building.eyebrow}
+        index="03"
+        id="building-title"
+        title={copy.home.building.title}
+        link={{ label: 'All work', href: '/projects/' }}
+      />
+      <ul class="cards cards--two">
+        {
+          projects.map((project) => (
+            <li>
+              <ProjectCard project={project} />
+            </li>
+          ))
+        }
+      </ul>
+    </Container>
+  </Section>
+
+  <!-- Philosophy teaser -->
+  <Section theme="dark" aria-labelledby="philosophy-title">
+    <Container class="reveal">
+      <div class="quote">
+        <Eyebrow index="04">Philosophy</Eyebrow>
+        <h2 id="philosophy-title" class="visually-hidden">Philosophy</h2>
+        <figure>
+          <blockquote class="quote__text">
+            <p>{site.philosophyQuote}</p>
+          </blockquote>
+        </figure>
+        <Button variant="secondary" href="/philosophy/">Read the philosophy</Button>
+      </div>
+    </Container>
+  </Section>
+
+  <!-- Latest writing -->
+  <Section aria-labelledby="writing-title">
+    <Container class="reveal">
+      <SectionIntro
+        eyebrow={copy.home.writing.eyebrow}
+        index="05"
+        id="writing-title"
+        title={copy.home.writing.title}
+        link={writing.length > 0 ? { label: 'All writing', href: '/writing/' } : undefined}
+      />
+      {
+        writing.length > 0 ? (
+          <div class="writing">
+            {writing.map((entry) => (
+              <WritingRow entry={entry} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title="Writing is on the way"
+            body="Essays, research notes and findings on music, sound and spatial audio will appear here."
+          >
+            <Button variant="secondary" href="/rss.xml">Follow via RSS</Button>
+          </EmptyState>
+        )
+      }
+    </Container>
+  </Section>
+
+  <!-- Lab teaser: the one place the grid-paper texture appears on Home -->
+  <section class="lab" aria-labelledby="lab-title">
+    <div class="lab__grid grid-paper" aria-hidden="true"></div>
+    <Container class="reveal">
+      <SectionIntro
+        eyebrow={copy.home.lab.eyebrow}
+        index="06"
+        id="lab-title"
+        title={copy.home.lab.title}
+        lead={copy.home.lab.lead}
+        link={{ label: 'Visit the lab', href: '/lab/' }}
+      />
+      <ul class="cards cards--two">
+        {
+          lab.map((entry) => (
+            <li>
+              <Card href={`/lab/${entry.id}/`}>
+                <div class="lab-card">
+                  <Badge tone={entry.data.status === 'live' ? 'accent' : 'neutral'} dot>
+                    {statusLabel[entry.data.status]}
+                  </Badge>
+                  <h3 class="lab-card__title">{entry.data.title}</h3>
+                  <p class="lab-card__summary">{entry.data.summary}</p>
+                  {entry.data.relatedProject && (
+                    <p class="meta">Project: {projectTitles.get(entry.data.relatedProject.id)}</p>
+                  )}
+                </div>
+              </Card>
+            </li>
+          ))
+        }
+      </ul>
+    </Container>
+  </section>
+
+  <!-- Contact -->
+  <Section theme="dark" aria-labelledby="contact-title">
+    <Container class="reveal">
+      <div class="contact">
+        <Eyebrow index="07">{copy.home.contact.eyebrow}</Eyebrow>
+        <h2 id="contact-title" class="contact__title">{copy.home.contact.title}</h2>
+        {
+          site.email || site.socials.length > 0 ? (
+            <>
+              {site.email && (
+                <a class="contact__email" href={`mailto:${site.email}`}>
+                  {site.email}
+                </a>
+              )}
+              {site.socials.length > 0 && (
+                <ul class="contact__socials">
+                  {site.socials.map((social) => (
+                    <li>
+                      <a href={social.url} rel="me noopener">
+                        <span class="contact__social-label">{social.label}</span>
+                        <span class="meta">@{social.handle}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </>
+          ) : (
+            <p class="contact__pending">Contact details coming soon.</p>
+          )
+        }
+      </div>
+    </Container>
+  </Section>
 </BaseLayout>
+
+<style>
+  /* ----- Hero ----- */
+  .hero {
+    padding-block: clamp(var(--space-12), 8vw, var(--space-24)) clamp(var(--space-16), 8vw, var(--space-24));
+  }
+
+  .hero__grid {
+    display: grid;
+    gap: var(--space-12);
+    align-items: center;
+  }
+
+  .hero__text {
+    display: grid;
+    gap: var(--space-5);
+    /* The action row adapts to the width of this column, not the viewport:
+       on tablets the column is narrow even though the screen is not. */
+    container-type: inline-size;
+  }
+
+  .hero__name {
+    line-height: 0.95;
+    letter-spacing: var(--tracking-display);
+    /* Slightly larger than the display step: the name is the page's single focal point. */
+    font-size: clamp(3.5rem, 2rem + 7vw, 8rem);
+    font-weight: var(--weight-bold);
+  }
+
+  .hero__role {
+    font-size: var(--step-3);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    text-wrap: balance;
+  }
+
+  .hero__intro {
+    max-width: 34rem;
+    font-size: var(--step-1);
+    line-height: var(--leading-snug);
+    color: var(--color-text-muted);
+  }
+
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+  }
+
+  /* Narrow columns: the two main actions share the first row at equal width
+     and the quiet third action sits centred beneath them, so nothing wraps
+     by accident or hangs indented by its own padding. */
+  @container (max-width: 30rem) {
+    .hero__actions > :global(*) {
+      flex: 1 1 0;
+    }
+
+    .hero__actions > :global(:last-child) {
+      flex-basis: 100%;
+    }
+  }
+
+  .hero__portrait {
+    width: 100%;
+    max-width: 28rem;
+  }
+
+  /* Two columns from tablet width up, so the portrait never sits alone
+     beside empty space. */
+  @media (min-width: 48rem) {
+    .hero__grid {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+      gap: clamp(var(--space-8), 5vw, var(--space-16));
+    }
+
+    .hero__portrait {
+      max-width: 30rem;
+      justify-self: end;
+    }
+  }
+
+  /* ----- Disciplines ----- */
+  .disciplines {
+    display: grid;
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 40rem) {
+    .disciplines {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .disciplines li:last-child {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* Five cards on a six-column grid: three across, then two wider ones, so
+     the last row is balanced instead of leaving a hole. */
+  @media (min-width: 64rem) {
+    .disciplines {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+
+    .disciplines li {
+      grid-column: span 2;
+    }
+
+    .disciplines li:nth-child(n + 4),
+    .disciplines li:last-child {
+      grid-column: span 3;
+    }
+  }
+
+  .disciplines__title {
+    margin-top: clamp(var(--space-4), 3vw, var(--space-8));
+    font-size: var(--step-2);
+  }
+
+  .disciplines__summary {
+    margin-top: var(--space-3);
+    color: var(--color-text-muted);
+  }
+
+  /* ----- Shared lists ----- */
+  .tracks,
+  .writing {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .cards {
+    display: grid;
+    gap: var(--space-4);
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (min-width: 48rem) {
+    .cards--two {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  /* ----- Philosophy quote ----- */
+  .quote {
+    display: grid;
+    justify-items: center;
+    gap: var(--space-8);
+    max-width: 52rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .quote__text {
+    font-size: var(--step-5);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-display);
+    text-wrap: balance;
+  }
+
+  /* Accent-coloured curly quotes. Not hung outside the block: on centred
+     text a hanging mark would pull the first line off-centre. */
+  .quote__text p::before {
+    content: '\201C';
+    color: var(--color-accent);
+  }
+
+  .quote__text p::after {
+    content: '\201D';
+    color: var(--color-accent);
+  }
+
+  /* ----- Lab teaser ----- */
+  /* Follows another light section (Latest writing), whose bottom padding
+     already separates them; full top padding here would double the gap. */
+  .lab {
+    position: relative;
+    isolation: isolate;
+    padding-block: 0 var(--section-pad);
+  }
+
+  /* A very faint texture that fades out at every edge, so it reads as a
+     surface quality rather than a pattern. */
+  .lab__grid {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    --grid-line-minor: color-mix(in oklab, var(--color-text) 3%, transparent);
+    --grid-line-major: color-mix(in oklab, var(--color-text) 6%, transparent);
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 20%, transparent 75%);
+    -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 50%, black 20%, transparent 75%);
+  }
+
+  .lab-card {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-3);
+  }
+
+  .lab-card__title {
+    margin-top: var(--space-2);
+    font-size: var(--step-2);
+  }
+
+  .lab-card__summary {
+    color: var(--color-text-muted);
+  }
+
+  /* ----- Contact ----- */
+  .contact {
+    display: grid;
+    gap: var(--space-6);
+  }
+
+  .contact__title {
+    font-size: var(--step-5);
+    letter-spacing: var(--tracking-display);
+  }
+
+  .contact__email {
+    justify-self: start;
+    font-size: var(--step-3);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-tight);
+    text-decoration: none;
+    /* Long addresses wrap at any character on narrow phones instead of overflowing. */
+    overflow-wrap: anywhere;
+    border-bottom: 2px solid color-mix(in oklab, var(--color-accent) 40%, transparent);
+    transition: border-color var(--duration-base) var(--ease-out);
+  }
+
+  .contact__email:hover {
+    border-color: var(--color-accent);
+  }
+
+  .contact__socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    padding: 0;
+    list-style: none;
+  }
+
+  .contact__socials a {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 52px;
+    padding-inline: var(--space-5);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-pill);
+    color: var(--color-text);
+    text-decoration: none;
+    transition: background-color var(--duration-fast) var(--ease-out);
+  }
+
+  .contact__socials a:hover {
+    background-color: color-mix(in oklab, var(--color-text) 8%, transparent);
+  }
+
+  .contact__social-label {
+    font-weight: var(--weight-semibold);
+  }
+
+  .contact__pending {
+    font-size: var(--step-1);
+    color: var(--color-text-muted);
+  }
+</style>
