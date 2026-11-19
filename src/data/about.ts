@@ -1,38 +1,26 @@
 /**
  * Everything on the About page, as structured data in one file.
- *
- * Facts here come only from Tesh. Anything not yet supplied is an empty list
- * or neutral placeholder copy with a TODO comment; the page renders a calm
- * "coming soon" state for empty groups instead of inventing detail.
+ * Facts here come only from Tesh. The site is strictly about audio, so only
+ * audio-related background belongs here.
  */
 
-export type SkillGroup = { title: string; skills: string[] };
+export type Skill = { title: string; note: string };
 
 export const about = {
-  // TODO: Tesh's long bio. One string per paragraph.
+  // One string per paragraph.
   bio: [
-    'Daniel, known as Tesh, makes music and builds the software that shapes how it is heard. Tesh works across music production, composition, mixing and mastering, spatial audio software and audio experience design, from Lagos, Nigeria.',
-    'A longer biography is coming soon.',
+    'I’m Daniel Omotesho, and most people call me Tesh. I’m a music producer and engineer, and I work professionally in FL Studio and Cubase.',
+    'Making records pulled me into the engineering underneath them. I wanted to understand why a mix sounds right in one room and falls apart in a car, why some records tire your ears and others don’t, and why spatial audio still depends on which phone you bought. So I build tools to answer those questions.',
   ],
 
-  // TODO: list skills in each group. Empty groups show "Details coming soon".
-  skillGroups: [
-    { title: 'Music Production and Composition', skills: [] },
-    { title: 'Mixing and Mastering', skills: [] },
-    { title: 'DSP and Audio Software', skills: [] },
-    { title: 'Machine Learning', skills: [] },
-    { title: 'Software Engineering', skills: [] },
-    { title: 'Security', skills: [] },
-  ] as SkillGroup[],
+  education: 'Electrical/Electronic Engineering student, University of Lagos.',
 
-  // Degree level and dates are not listed until Tesh supplies them.
-  education: [
-    { institution: 'University of Lagos', field: 'Electrical/Electronic Engineering' },
-    { institution: 'University of the People', field: 'Computer Science' },
-  ],
-
-  certifications: [{ name: 'Certified in Cybersecurity (CC)', issuer: 'ISC2' }],
-
-  // TODO: tools, instruments and gear. Empty shows "Details coming soon".
-  tools: [] as string[],
+  skills: [
+    { title: 'Production (FL Studio, Cubase)', note: 'Full records from first idea to final arrangement.' },
+    { title: 'Mixing and Mastering', note: 'Balance, depth and translation across real playback systems.' },
+    { title: 'Sound Design', note: 'Shaping sounds and textures that give a record its identity.' },
+    { title: 'Spatial Audio', note: 'Placing sound in space with depth, not gimmicks.' },
+    { title: 'Audio DSP and Software', note: 'Building audio tools with Python, Web Audio, and Rust/WebAssembly.' },
+    { title: 'Audio Experience Design', note: 'Designing how audio feels in products, from earbuds to apps.' },
+  ] as Skill[],
 } as const;

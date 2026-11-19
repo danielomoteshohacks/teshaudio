@@ -1,38 +1,29 @@
 ---
 /**
- * About: portrait, bio, skills, education, certification, tools and the CV.
+ * About: portrait, bio, education and the areas Tesh works in.
  * Every word comes from src/data/about.ts (and site.ts); this page only lays
- * it out. Empty groups show a quiet "Details coming soon" instead of filler.
+ * it out. Strictly audio: no unrelated credentials or history.
  */
-import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Section from '../components/Section.astro';
 import Container from '../components/Container.astro';
 import Eyebrow from '../components/Eyebrow.astro';
-import Button from '../components/Button.astro';
 import Portrait from '../components/Portrait.astro';
 import SectionIntro from '../components/SectionIntro.astro';
 import { about } from '../data/about';
 import { copy, site } from '../lib/site';
 import { personSchema } from '../lib/schema';
-
-// The CV button appears only once public/cv.pdf exists, checked at build
-// time, so there is never a link to a missing file. Resolved from the project
-// root: at build time this file runs from a compiled chunk, so a path
-// relative to import.meta.url would point at the wrong folder.
-const hasCv = existsSync(join(process.cwd(), 'public', 'cv.pdf'));
 ---
 
 <BaseLayout
   title="About"
-  description={`About ${site.fullName}, known as ${site.name}: ${site.disciplines.map((d) => d.title.toLowerCase()).join(', ')}. Based in ${site.location}.`}
+  description={`About ${site.fullName}, known as ${site.name}: music producer, composer, mix and mastering engineer and spatial audio software engineer in ${site.location}.`}
   jsonLd={personSchema()}
 >
   <section class="about-hero" aria-labelledby="about-title">
     <Container>
       <div class="about-hero__grid">
-        <div class="about-hero__head">
+        <div class="about-hero__head glow">
           <Eyebrow>About</Eyebrow>
           <h1 id="about-title" class="about-hero__title">{site.fullName}, known as {site.name}</h1>
           <p class="meta about-hero__roles">{site.disciplines.map((d) => d.title).join(' · ')}</p>
@@ -44,89 +35,28 @@ const hasCv = existsSync(join(process.cwd(), 'public', 'cv.pdf'));
           <div class="about-hero__bio">
             {about.bio.map((paragraph) => <p>{paragraph}</p>)}
           </div>
-          {
-            hasCv && (
-              <div>
-                <Button href="/cv.pdf" variant="secondary" download>
-                  Download CV (PDF)
-                </Button>
-              </div>
-            )
-          }
+          <p class="about-hero__education">
+            <span class="meta">Education</span>
+            {about.education}
+          </p>
         </div>
       </div>
     </Container>
   </section>
 
   <Section theme="dark" aria-labelledby="skills-title">
-    <Container class="reveal">
-      <SectionIntro eyebrow="Skills" index="01" id="skills-title" title={copy.about.skillsTitle} />
+    <Container>
+      <SectionIntro eyebrow="Practice" index="01" id="skills-title" title={copy.about.skillsTitle} />
       <ul class="skills">
         {
-          about.skillGroups.map((group) => (
-            <li class="skills__group">
-              <h3 class="skills__title">{group.title}</h3>
-              {group.skills.length > 0 ? (
-                <ul class="tags">
-                  {group.skills.map((skill) => (
-                    <li>{skill}</li>
-                  ))}
-                </ul>
-              ) : (
-                <p class="pending">Details coming soon</p>
-              )}
+          about.skills.map((skill, i) => (
+            <li class="skills__item reveal" style={`--stagger: ${i % 3}`}>
+              <h3 class="skills__title">{skill.title}</h3>
+              <p class="skills__note">{skill.note}</p>
             </li>
           ))
         }
       </ul>
-    </Container>
-  </Section>
-
-  <Section aria-labelledby="background-title">
-    <Container class="reveal">
-      <SectionIntro eyebrow="Background" index="02" id="background-title" title={copy.about.backgroundTitle} />
-      <div class="background">
-        <div>
-          <h3 class="background__label meta">Education</h3>
-          <ul class="timeline">
-            {
-              about.education.map((item) => (
-                <li>
-                  <p class="timeline__primary">{item.field}</p>
-                  <p class="timeline__secondary">{item.institution}</p>
-                </li>
-              ))
-            }
-          </ul>
-        </div>
-        <div>
-          <h3 class="background__label meta">Certification</h3>
-          <ul class="timeline">
-            {
-              about.certifications.map((item) => (
-                <li>
-                  <p class="timeline__primary">{item.name}</p>
-                  <p class="timeline__secondary">{item.issuer}</p>
-                </li>
-              ))
-            }
-          </ul>
-        </div>
-        <div>
-          <h3 class="background__label meta">Tools and gear</h3>
-          {
-            about.tools.length > 0 ? (
-              <ul class="tags">
-                {about.tools.map((tool) => (
-                  <li>{tool}</li>
-                ))}
-              </ul>
-            ) : (
-              <p class="pending">Details coming soon</p>
-            )
-          }
-        </div>
-      </div>
     </Container>
   </Section>
 </BaseLayout>
@@ -154,19 +84,13 @@ const hasCv = existsSync(join(process.cwd(), 'public', 'cv.pdf'));
 
   .about-hero__portrait {
     grid-area: portrait;
-  }
-
-  .about-hero__text {
-    grid-area: text;
-  }
-
-  .about-hero__portrait {
     max-width: 28rem;
   }
 
   .about-hero__text {
+    grid-area: text;
     display: grid;
-    gap: var(--space-5);
+    gap: var(--space-8);
   }
 
   .about-hero__title {
@@ -179,23 +103,29 @@ const hasCv = existsSync(join(process.cwd(), 'public', 'cv.pdf'));
 
   .about-hero__bio {
     display: grid;
-    gap: var(--space-4);
+    gap: var(--space-5);
     max-width: var(--measure);
   }
 
-  /* The opening paragraph reads as a lead; the rest at body size, so a long
-     bio stays comfortable on a phone. */
+  /* The opening paragraph reads as a lead; the rest at body size. */
   .about-hero__bio p:first-child {
     font-size: var(--step-1);
     line-height: var(--leading-snug);
   }
 
-  .about-hero__bio p + p {
-    color: var(--color-text-muted);
+  .about-hero__education {
+    display: grid;
+    gap: var(--space-1);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-border);
+    max-width: var(--measure);
   }
 
-  /* Wide screens: a large portrait beside the text, kept in view while the
-     bio scrolls past it. */
+  .about-hero__education .meta {
+    letter-spacing: var(--tracking-wide);
+    text-transform: uppercase;
+  }
+
   @media (min-width: 64rem) {
     .about-hero__grid {
       grid-template-areas: 'portrait head' 'portrait text';
@@ -204,6 +134,7 @@ const hasCv = existsSync(join(process.cwd(), 'public', 'cv.pdf'));
       gap: var(--space-8) var(--space-20);
     }
 
+    /* Kept in view while the bio scrolls past it. */
     .about-hero__portrait {
       position: sticky;
       top: calc(var(--header-height) + var(--space-8));
@@ -215,7 +146,7 @@ const hasCv = existsSync(join(process.cwd(), 'public', 'cv.pdf'));
     }
   }
 
-  /* ----- Skills ----- */
+  /* ----- Practice ----- */
   .skills {
     display: grid;
     gap: var(--space-4);
@@ -235,11 +166,11 @@ const hasCv = existsSync(join(process.cwd(), 'public', 'cv.pdf'));
     }
   }
 
-  .skills__group {
+  .skills__item {
     display: grid;
     align-content: start;
-    gap: var(--space-4);
-    padding: var(--space-6);
+    gap: var(--space-3);
+    padding: var(--space-6) var(--space-6) var(--space-8);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
     background-color: var(--color-surface-raised);
@@ -249,82 +180,7 @@ const hasCv = existsSync(join(process.cwd(), 'public', 'cv.pdf'));
     font-size: var(--step-1);
   }
 
-  .tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-    padding: 0;
-    list-style: none;
-  }
-
-  .tags li {
-    padding: var(--space-1) var(--space-3);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-mono);
-    font-size: var(--step--2);
-  }
-
-  .pending {
-    font-family: var(--font-mono);
-    font-size: var(--step--2);
-    letter-spacing: 0.02em;
-    color: var(--color-text-muted);
-  }
-
-  /* ----- Background ----- */
-  .background {
-    display: grid;
-    gap: var(--space-12);
-  }
-
-  @media (min-width: 64rem) {
-    .background {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-
-  .background__label {
-    margin-bottom: var(--space-5);
-    font-weight: var(--weight-regular);
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-  }
-
-  .timeline {
-    display: grid;
-    gap: var(--space-6);
-    padding: 0;
-    list-style: none;
-  }
-
-  /* A hairline with a small accent node on each item: the engineering layer's
-     drawing-office feel, without becoming decoration for its own sake. */
-  .timeline li {
-    position: relative;
-    padding-left: var(--space-6);
-    border-left: 1px solid var(--color-border);
-  }
-
-  .timeline li::before {
-    content: '';
-    position: absolute;
-    top: 0.55em;
-    left: -4px;
-    width: 7px;
-    height: 7px;
-    border-radius: var(--radius-pill);
-    background-color: var(--color-accent);
-  }
-
-  .timeline__primary {
-    font-size: var(--step-1);
-    font-weight: var(--weight-semibold);
-    line-height: var(--leading-snug);
-  }
-
-  .timeline__secondary {
-    margin-top: var(--space-1);
+  .skills__note {
     color: var(--color-text-muted);
   }
 </style>

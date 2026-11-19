@@ -17,7 +17,7 @@ interface Props {
 }
 
 const { project, headingLevel: Heading = 'h3' } = Astro.props;
-const { title, summary, status, tech } = project.data;
+const { title, tagline, summary, status, tech } = project.data;
 ---
 
 <Card href={`/projects/${project.id}/`}>
@@ -26,7 +26,8 @@ const { title, summary, status, tech } = project.data;
       {statusLabel[status]}
     </Badge>
     <Heading class="project__title">{title}</Heading>
-    <p class="project__summary">{summary}</p>
+    {/* The one-line tagline on cards; the full summary lives on the page. */}
+    <p class="project__summary">{tagline ?? summary}</p>
     {
       tech.length > 0 && (
         <ul class="project__tech" aria-label="Technology">
