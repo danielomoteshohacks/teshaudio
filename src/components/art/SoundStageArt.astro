@@ -1,0 +1,73 @@
+---
+/**
+ * Artwork: SoundStage. A listener seen from above at the centre of a
+ * calibrated dial, with sound sources placed around them at different
+ * directions and distances: the idea of the project in one drawing. The lead
+ * source in front is amber; the rest are cobalt. Hairline strokes only.
+ * Decorative: the panel or page around it carries the words.
+ */
+import ListenerHead from '../diagrams/ListenerHead.astro';
+
+const cx = 320;
+const cy = 200;
+const rings = [58, 104, 150];
+
+// Degree ticks around the outer ring, like a panning dial: a longer tick
+// every 30 degrees.
+const ticks = Array.from({ length: 72 }, (_, i) => {
+  const deg = i * 5;
+  const a = (deg * Math.PI) / 180;
+  const r1 = 168;
+  const r2 = deg % 30 === 0 ? 178 : 173;
+  return `M${(cx + r1 * Math.sin(a)).toFixed(1)} ${(cy - r1 * Math.cos(a)).toFixed(1)}L${(cx + r2 * Math.sin(a)).toFixed(1)} ${(cy - r2 * Math.cos(a)).toFixed(1)}`;
+}).join('');
+
+const at = (deg: number, r: number) => {
+  const a = (deg * Math.PI) / 180;
+  return [cx + r * Math.sin(a), cy - r * Math.cos(a)];
+};
+// [angle, ring radius, dot radius, raised (halo), tone]
+const sources: [number, number, number, boolean, 'warm' | 'accent'][] = [
+  [0, 58, 6, false, 'warm'],
+  [0, 104, 4.5, false, 'accent'],
+  [-48, 104, 4.5, false, 'accent'],
+  [48, 104, 4.5, false, 'accent'],
+  [-96, 136, 4, true, 'accent'],
+  [96, 136, 4, true, 'accent'],
+  [-140, 86, 4, true, 'accent'],
+  [140, 86, 4, true, 'accent'],
+  [180, 150, 4, true, 'accent'],
+];
+---
+
+<svg class="art" viewBox="0 0 640 400" width="640" height="400" aria-hidden="true" focusable="false">
+  <path class="s-line" d={ticks} stroke-width="1"></path>
+  {rings.map((r, i) => <circle class="s-line" cx={cx} cy={cy} r={r} stroke-width="1" stroke-dasharray={i === 0 ? undefined : i === 1 ? '3 5' : '1 5'} />)}
+  {/* Direction lines from the listener to the front sources. */}
+  <g class="s-line" stroke-width="1">
+    {sources.slice(0, 4).map(([deg, r]) => {
+      const [x, y] = at(deg, r);
+      return <line x1={cx} y1={cy} x2={x} y2={y} />;
+    })}
+  </g>
+  <ListenerHead x={cx} y={cy} r={20} />
+  {
+    sources.map(([deg, r, size, raised, tone]) => {
+      const [x, y] = at(deg, r);
+      return (
+        <g>
+          {raised && <circle class={tone === 'warm' ? 's-warm' : 's-accent'} cx={x} cy={y} r={size + 6} stroke-width="1" />}
+          <circle class={tone === 'warm' ? 'f-warm' : 'f-accent'} cx={x} cy={y} r={size} />
+        </g>
+      );
+    })
+  }
+</svg>
+
+<style>
+  .art {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+</style>

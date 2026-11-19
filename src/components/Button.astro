@@ -2,13 +2,13 @@
 /**
  * Button
  *
- * Pill-shaped action (the soft layer). Renders a link when given `href`
+ * Pill-shaped action. Renders a link when given `href`
  * (navigation) and a <button> otherwise (an action on the page), because
  * screen readers announce the two differently and users expect different
  * keyboard behaviour from each.
  *
  * variant:
- *   primary    accent fill, for the single most important action in a view
+ *   primary    inverted ink fill, for the single most important action
  *   secondary  outlined, for alternatives next to a primary
  *   ghost      text only, for low-emphasis actions
  * size: "md" (44px, the minimum comfortable touch target) or "lg" (52px).
@@ -51,25 +51,20 @@ const classes = ['button', `button--${variant}`, `button--${size}`, className];
     align-items: center;
     justify-content: center;
     gap: var(--space-2);
+    min-height: 44px;
     padding-inline: var(--space-6);
     border: 1px solid transparent;
     border-radius: var(--radius-pill);
     font-family: var(--font-sans);
+    font-size: var(--step--1);
     font-weight: var(--weight-semibold);
     line-height: 1;
     text-decoration: none;
-    white-space: nowrap;
     cursor: pointer;
     transition:
       background-color var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out),
-      color var(--duration-fast) var(--ease-out),
-      transform var(--duration-fast) var(--ease-out);
-  }
-
-  .button--md {
-    min-height: 44px;
-    font-size: var(--step--1);
+      color var(--duration-fast) var(--ease-out);
   }
 
   .button--lg {
@@ -78,41 +73,33 @@ const classes = ['button', `button--${variant}`, `button--${size}`, className];
     font-size: var(--step-0);
   }
 
-  /* A slight press gives tactile feedback; it stays a static state change
-     (no animation) under reduced motion via the global override. */
-  .button:active {
-    transform: scale(0.98);
-  }
-
-  .button:focus-visible {
-    outline: 2px solid var(--color-focus);
-    outline-offset: 3px;
-  }
-
+  /* Primary: ink on paper, inverted. The strongest contrast on the page,
+     so the one main action is unmistakable without spending the accent. */
   .button--primary {
-    background-color: var(--color-accent);
-    color: var(--color-accent-contrast);
+    background-color: var(--color-text);
+    color: var(--color-bg);
   }
 
-  /* Mixing toward the text colour darkens the accent in light contexts and
-     lightens it in dark ones, so hover always increases label contrast. */
   .button--primary:hover {
-    background-color: color-mix(in oklab, var(--color-accent) 85%, var(--color-text));
+    background-color: color-mix(in oklab, var(--color-text) 86%, var(--color-bg));
   }
 
   .button--secondary {
-    background-color: transparent;
-    border-color: var(--color-border-strong);
+    border-color: var(--color-line-strong);
     color: var(--color-text);
+  }
+
+  .button--secondary:hover {
+    border-color: var(--color-text-3);
+    background-color: var(--color-bg-2);
   }
 
   .button--ghost {
-    background-color: transparent;
+    padding-inline: var(--space-3);
     color: var(--color-text);
   }
 
-  .button--secondary:hover,
   .button--ghost:hover {
-    background-color: color-mix(in oklab, var(--color-text) 7%, transparent);
+    color: var(--color-accent);
   }
 </style>

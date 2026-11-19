@@ -35,9 +35,9 @@ const { src, alt = '', caption } = Astro.props;
 
   .figure__media {
     overflow: hidden;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-line);
     border-radius: var(--radius-md);
-    background-color: var(--color-surface-raised);
+    background-color: var(--color-bg-2);
   }
 
   .figure__media :global(img),
@@ -50,13 +50,13 @@ const { src, alt = '', caption } = Astro.props;
   .figure__caption {
     margin-top: var(--space-3);
     font-size: var(--step--1);
-    color: var(--color-text-muted);
+    color: var(--color-text-3);
   }
 
   .figure__label {
-    font-family: var(--font-mono);
-    font-size: var(--step--2);
-    letter-spacing: var(--tracking-wide);
+    font-family: var(--font-sans);
+    font-size: var(--step--1);
+    letter-spacing: var(--tracking-label);
     text-transform: uppercase;
     color: var(--color-text);
   }

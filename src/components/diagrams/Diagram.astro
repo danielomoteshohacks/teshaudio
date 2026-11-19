@@ -1,61 +1,87 @@
 ---
 /**
- * Diagram: the frame shared by the hand-built article diagrams.
+ * Diagram: the figure frame shared by the article diagrams.
  *
- * Provides the numbered caption (the same "figure" counter as Figure.astro,
- * so photos-free numbering stays continuous) and a small palette of classes
- * the SVGs use instead of raw colours. Every class maps to a design token,
- * so the diagrams follow light and dark mode with no extra code:
+ * A quiet panel (one tonal step above the page, hairline border) with a
+ * numbered caption in small grey text. In articles it breaks slightly out of
+ * the text column on wide screens (see the article page).
  *
- *   .d-ink     main strokes and text       --color-text
- *   .d-muted   secondary text and lines    --color-text-muted
- *   .d-line    hairlines, rings            --color-border-strong
- *   .d-accent  the subject (cobalt)        --color-accent
- *   .d-warm    the second voice (amber)    --color-warm
- *   .d-paper   fills that hide lines       --color-surface-raised
- *
- * Text inside the SVGs is real text (selectable, translatable) in the site's
- * fonts. Each SVG carries its own <title> and <desc> for screen readers.
+ * Responsive diagrams: a diagram can pass two drawings, `wide` and `narrow`
+ * slots. The figure is a size container, and only the drawing that suits
+ * its width is displayed, so labels stay at a legible size on a 360px phone
+ * instead of shrinking with a wide drawing. display: none also removes the
+ * hidden drawing from the accessibility tree, so it is never read twice.
  */
 interface Props {
-  caption: string;
-  /** Breaks out wider than the text column on large screens. */
-  wide?: boolean;
+  caption?: string;
+  /** Number the caption ("Figure 1."). Off for artwork reuse. */
+  numbered?: boolean;
+  class?: string;
 }
 
-const { caption, wide = false } = Astro.props;
+const { caption, numbered = true, class: className } = Astro.props;
+const hasNarrow = Astro.slots.has('narrow');
 ---
 
-<figure class:list={['diagram', { 'diagram--wide': wide }]}>
+<figure class:list={['diagram', className]}>
   <div class="diagram__media">
-    <slot />
+    {
+      hasNarrow ? (
+        <>
+          <div class="diagram__wide">
+            <slot />
+          </div>
+          <div class="diagram__narrow">
+            <slot name="narrow" />
+          </div>
+        </>
+      ) : (
+        <slot />
+      )
+    }
   </div>
-  <figcaption class="diagram__caption"><span class="diagram__label">Figure</span> {caption}</figcaption>
+  {
+    caption && (
+      <figcaption class="diagram__caption">
+        {numbered && <span class="diagram__label">Figure</span>} {caption}
+      </figcaption>
+    )
+  }
 </figure>
 
 <style>
   .diagram {
     counter-increment: figure;
-    margin-block: var(--space-12);
+    container-type: inline-size;
   }
 
   .diagram__media {
-    padding: clamp(var(--space-3), 3vw, var(--space-8));
-    border: 1px solid var(--color-border);
+    padding: clamp(var(--space-4), 3.5cqi, var(--space-8));
+    border: 1px solid var(--color-line);
     border-radius: var(--radius-lg);
-    /* A faint cobalt wash from the top, so diagrams feel lit rather than
-       printed, while staying calm next to body text. */
-    background:
-      radial-gradient(ellipse 90% 70% at 50% 0%, color-mix(in oklab, var(--color-accent) 7%, transparent), transparent 70%),
-      var(--color-surface-raised);
+    background-color: var(--color-bg-2);
   }
 
+  /* Every drawing carries width and height attributes (so Safari can size
+     it from its aspect ratio) and is scaled to the column here. */
   .diagram__media :global(svg) {
     display: block;
     width: 100%;
     height: auto;
-    overflow: visible;
-    font-family: var(--font-sans);
+  }
+
+  .diagram__narrow {
+    display: none;
+  }
+
+  @container (max-width: 34rem) {
+    .diagram__wide {
+      display: none;
+    }
+
+    .diagram__narrow {
+      display: block;
+    }
   }
 
   .diagram__caption {
@@ -63,46 +89,15 @@ const { caption, wide = false } = Astro.props;
     font-family: var(--font-sans);
     font-size: var(--step--1);
     line-height: var(--leading-snug);
-    color: var(--color-text-muted);
+    color: var(--color-text-3);
   }
 
   .diagram__label {
-    font-family: var(--font-mono);
-    font-size: var(--step--2);
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    color: var(--color-text);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text-2);
   }
 
   .diagram__label::after {
     content: ' ' counter(figure) '.';
-  }
-
-  /* ----- Palette (see the header comment) ----- */
-  .diagram :global(.d-ink) { color: var(--color-text); }
-  .diagram :global(.d-muted) { color: var(--color-text-muted); }
-  .diagram :global(.d-line) { color: var(--color-border-strong); }
-  .diagram :global(.d-accent) { color: var(--color-accent); }
-  .diagram :global(.d-warm) { color: var(--color-warm); }
-  .diagram :global(.d-paper) { color: var(--color-surface-raised); }
-
-  .diagram :global(text) {
-    fill: currentColor;
-  }
-
-  .diagram :global(.d-label) {
-    font-size: 15px;
-    font-weight: var(--weight-semibold);
-  }
-
-  .diagram :global(.d-small) {
-    font-size: 13px;
-  }
-
-  .diagram :global(.d-mono) {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
   }
 </style>

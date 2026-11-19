@@ -1,12 +1,12 @@
 ---
 /**
- * PullQuote (MDX): a line from the article, set large.
+ * PullQuote (MDX): one line from the article, set large in the sans.
  *
- *   <PullQuote>The music is already there.</PullQuote>
+ *   <PullQuote>A line from the text.</PullQuote>
  *
  * Used in place of the paragraph it quotes, never as a repeat of it, so a
- * screen reader hears the sentence once, in its place in the argument.
- * Hence a plain <blockquote> with no "quote" announcement of a source.
+ * screen reader hears the sentence once, in its place in the argument. One
+ * per article at most: it is the moment the essay turns.
  */
 ---
 
@@ -16,37 +16,15 @@
 
 <style>
   .pull {
-    position: relative;
-    margin-block: var(--space-16) !important;
-    padding-block: var(--space-8);
-    border-block: 1px solid var(--color-border);
-    font-family: var(--font-serif);
+    margin-block: 2em !important;
+    padding-left: var(--space-6);
+    border-left: 2px solid var(--color-accent);
+    font-family: var(--font-sans);
     font-size: var(--step-3);
-    font-weight: 500;
-    font-optical-sizing: auto;
-    line-height: 1.22;
-    letter-spacing: -0.012em;
-    text-wrap: balance;
+    font-weight: var(--weight-semibold);
+    line-height: 1.18;
+    letter-spacing: var(--tracking-display);
     color: var(--color-text);
-  }
-
-  /* A short cobalt rule over the top border: the quote's one accent. */
-  .pull::before {
-    content: '';
-    position: absolute;
-    top: -1.5px;
-    left: 0;
-    width: 3.5rem;
-    height: 3px;
-    border-radius: var(--radius-pill);
-    background-color: var(--color-accent);
-  }
-
-  /* Outranks the generic blockquote rule in prose.css (a left rule and
-     indent), which is meant for ordinary quotations. */
-  :global(.prose) .pull {
-    padding-left: 0;
-    border-left: 0;
   }
 
   .pull p {

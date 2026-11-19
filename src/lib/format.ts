@@ -66,6 +66,7 @@ export const statusLabel = {
   paused: 'Paused',
   shipped: 'Live',
   concept: 'In design',
+  research: 'Research',
   live: 'Live',
   'coming-soon': 'Coming soon',
 } as const;

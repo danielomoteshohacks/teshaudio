@@ -1,82 +1,53 @@
 ---
 /**
- * Diagram: stereo vs spatial, seen from above.
- *
- * Two panels side by side (stacked on phones): in stereo every sound sits on
+ * Diagram: stereo vs spatial, seen from above. In stereo every sound sits on
  * the line between the ears; in spatial audio sounds are placed around the
  * listener in a room, with reflections coming back off the walls.
- * Two SVGs rather than one wide one, so each panel stays readable on a phone.
+ *
+ * Two drawings: side by side for wide figures, stacked for narrow ones, so
+ * the labels keep the same legible size at any width. `bare` drops the
+ * caption and numbering, for use as artwork (the Home story panel); there
+ * the narrow drawing is the spatial room alone, the more evocative half,
+ * so the panel stays a sensible height on a phone.
  */
 import Diagram from './Diagram.astro';
-import ListenerHead from './ListenerHead.astro';
+import StereoPanel from './StereoPanel.astro';
+
+interface Props {
+  bare?: boolean;
+  /** Unique per page: the SVG title and description ids derive from it. */
+  id?: string;
+}
+
+const { bare = false, id = 'svs' } = Astro.props;
+const caption = bare
+  ? undefined
+  : 'Seen from above. Stereo places every sound on one line between your ears. Spatial audio opens that line into a room around you.';
+const desc =
+  'Left: a listener seen from above, with keys, vocal and drums all on one straight line running from ear to ear. Right: the same listener inside a room, with drums and vocal in front, backing vocals to each side, keys behind, and reverb returning off the walls.';
 ---
 
-<Diagram caption="Seen from above. Stereo places every sound on one line between your ears. Spatial audio opens that line into a room around you.">
-  <div class="panels">
-    <svg viewBox="0 0 320 300" role="img" aria-labelledby="svs-a-title svs-a-desc">
-      <title id="svs-a-title">Stereo</title>
-      <desc id="svs-a-desc">A listener's head seen from above. A single straight line runs from the left ear to the right ear, and the drums, vocal and keys all sit somewhere on that line.</desc>
-      <text class="d-mono d-muted" x="160" y="24" text-anchor="middle">Stereo</text>
-      <ListenerHead x={160} y={175} />
-      {/* The stereo line: drawn over the head, because that is where stereo
-          puts the music, inside it. */}
-      <g class="d-accent">
-        <line x1="62" y1="175" x2="258" y2="175" stroke="currentColor" stroke-width="3" stroke-linecap="round"></line>
-        <circle cx="62" cy="175" r="7" fill="currentColor"></circle>
-        <circle cx="160" cy="175" r="7" fill="currentColor"></circle>
-        <circle cx="258" cy="175" r="7" fill="currentColor"></circle>
-      </g>
-      <g class="d-ink" text-anchor="middle">
-        <text class="d-small" x="62" y="205">Keys</text>
-        <text class="d-small" x="160" y="230">Vocal</text>
-        <text class="d-small" x="258" y="205">Drums</text>
-      </g>
-      <text class="d-small d-muted" x="160" y="270" text-anchor="middle">Everything on one line</text>
-    </svg>
-
-    <svg viewBox="0 0 320 300" role="img" aria-labelledby="svs-b-title svs-b-desc">
-      <title id="svs-b-title">Spatial</title>
-      <desc id="svs-b-desc">The same head seen from above, inside a room. The drums sit in front, the vocal just ahead of the listener, background vocals float to either side and the keys sit behind, while reverb comes back off the walls.</desc>
-      <text class="d-mono d-muted" x="160" y="24" text-anchor="middle">Spatial</text>
-      {/* The room, and reflections returning off its walls. */}
-      <rect class="d-line" x="22" y="42" width="276" height="244" rx="22" fill="none" stroke="currentColor" stroke-dasharray="3 6"></rect>
-      <g class="d-warm" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" opacity="0.8">
-        <path d="M40 70 q14 -10 28 -16"></path>
-        <path d="M40 84 q20 -16 40 -24"></path>
-        <path d="M280 70 q-14 -10 -28 -16"></path>
-        <path d="M280 84 q-20 -16 -40 -24"></path>
-        <path d="M40 268 q14 8 28 12"></path>
-        <path d="M280 268 q-14 8 -28 12"></path>
-      </g>
-      <ListenerHead x={160} y={185} />
-      <g class="d-accent" fill="currentColor">
-        <circle cx="160" cy="74" r="7"></circle>
-        <circle cx="160" cy="128" r="7"></circle>
-        <circle cx="62" cy="172" r="6"></circle>
-        <circle cx="258" cy="172" r="6"></circle>
-        <circle cx="110" cy="256" r="6"></circle>
-      </g>
-      <g class="d-ink" text-anchor="middle">
-        <text class="d-small" x="160" y="98">Drums</text>
-        <text class="d-small" x="200" y="132">Vocal</text>
-        <text class="d-small" x="62" y="198">Backing</text>
-        <text class="d-small" x="258" y="198">Backing</text>
-        <text class="d-small" x="152" y="260" text-anchor="start">Keys</text>
-      </g>
-      <text class="d-small d-warm" x="252" y="112" text-anchor="middle">Reverb</text>
-    </svg>
-  </div>
+<Diagram caption={caption} numbered={!bare} class={bare ? 'diagram--bare' : undefined}>
+  <svg viewBox="0 0 720 300" width="720" height="300" role="img" aria-labelledby={`${id}-w-t ${id}-w-d`}>
+    <title id={`${id}-w-t`}>Stereo vs spatial audio</title>
+    <desc id={`${id}-w-d`}>{desc}</desc>
+    <StereoPanel kind="stereo" x={10} y={4} />
+    <line class="s-line" x1="360" y1="40" x2="360" y2="270" stroke-width="1" />
+    <StereoPanel kind="spatial" x={370} y={4} />
+  </svg>
+  {
+    bare ? (
+      <svg slot="narrow" viewBox="0 0 340 290" width="340" height="290" aria-hidden="true" focusable="false">
+        <StereoPanel kind="spatial" />
+      </svg>
+    ) : (
+      <svg slot="narrow" viewBox="0 0 340 600" width="340" height="600" role="img" aria-labelledby={`${id}-n-t ${id}-n-d`}>
+        <title id={`${id}-n-t`}>Stereo vs spatial audio</title>
+        <desc id={`${id}-n-d`}>{desc}</desc>
+        <StereoPanel kind="stereo" />
+        <line class="s-line" x1="20" y1="300" x2="320" y2="300" stroke-width="1" />
+        <StereoPanel kind="spatial" y={308} />
+      </svg>
+    )
+  }
 </Diagram>
-
-<style>
-  .panels {
-    display: grid;
-    gap: var(--space-6);
-  }
-
-  @media (min-width: 36rem) {
-    .panels {
-      grid-template-columns: 1fr 1fr;
-    }
-  }
-</style>

@@ -28,7 +28,7 @@
     position: relative;
     top: -0.5em;
     margin-left: 0.1em;
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-size: 0.7em;
     font-weight: var(--weight-semibold);
     color: var(--color-accent);
@@ -36,7 +36,7 @@
 
   .sidenote__number::before {
     content: counter(sidenote) '\2002';
-    font-family: var(--font-mono);
+    font-family: var(--font-sans);
     font-weight: var(--weight-semibold);
     color: var(--color-accent);
   }
@@ -46,10 +46,10 @@
     display: block;
     margin-block: var(--space-3);
     padding-left: var(--space-4);
-    border-left: 2px solid var(--color-border);
+    border-left: 2px solid var(--color-line);
     font-size: var(--step--1);
     line-height: var(--leading-body);
-    color: var(--color-text-muted);
+    color: var(--color-text-3);
   }
 
   /* Wide screens: float into the margin column reserved by the article grid. */

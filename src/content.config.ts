@@ -33,7 +33,8 @@ const projects = defineCollection({
       summary: z.string(),
       // A short caveat shown on the project page (e.g. "not a medical device").
       note: z.string().optional(),
-      status: z.enum(['active', 'paused', 'shipped', 'concept']),
+      // research: an ongoing study or tool shown as research, not a product.
+      status: z.enum(['active', 'paused', 'shipped', 'concept', 'research']),
       // Optional and hidden until supplied: these are facts, never guessed.
       role: z.string().optional(),
       tech: z.array(z.string()).default([]),
@@ -71,20 +72,6 @@ const writing = defineCollection({
       )
       .default([]),
     relatedProject: reference('projects').optional(),
-    // Cover photo, by file name in src/assets/photos/ (see src/lib/photos.ts).
-    // A name rather than an image() import, so an entry can name a photo that
-    // has not been added yet: until the file exists the page shows the
-    // site's own cover art instead of failing the build. `credit` is printed
-    // under the photo ("Photo: Name / Unsplash"); it is optional only so a
-    // slot can exist before its photo is chosen. Always add it with the file.
-    cover: z
-      .object({
-        file: z.string(),
-        alt: z.string(),
-        credit: z.string().optional(),
-        creditUrl: z.url().optional(),
-      })
-      .optional(),
     // Unlisted: built and reachable by URL, but kept out of every list, the
     // RSS feed and the sitemap, and marked noindex.
     unlisted: z.boolean().default(false),

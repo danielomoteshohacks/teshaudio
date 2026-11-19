@@ -1,0 +1,93 @@
+---
+/**
+ * Artwork: Beyond the Decibel. The cochlea drawn as an uncoiling spiral,
+ * marked like a frequency scale: high frequencies at the base (outside),
+ * low at the apex (centre), placed with Greenwood's frequency-position map
+ * for the human cochlea. The 3 to 6 kHz region, which the project notes
+ * usually wears out first, is drawn in amber. Hairline strokes only.
+ * Decorative: the panel or page around it carries the words.
+ */
+
+const cx = 320;
+const cy = 204;
+const turns = 2.6;
+const r0 = 168; // base (outer end)
+const r1 = 22; // apex (centre)
+const k = Math.log(r0 / r1) / (turns * 2 * Math.PI);
+
+// Sample the spiral densely, measuring length along it as we go.
+const samples: { x: number; y: number; nx: number; ny: number; s: number }[] = [];
+const N = 900;
+let length = 0;
+let prev: [number, number] | undefined;
+for (let i = 0; i <= N; i++) {
+  const th = (i / N) * turns * 2 * Math.PI;
+  const r = r0 * Math.exp(-k * th);
+  // Start at the lower left and coil clockwise inward.
+  const a = th + Math.PI * 0.82;
+  const x = cx + r * Math.cos(a);
+  const y = cy + r * Math.sin(a);
+  if (prev) length += Math.hypot(x - prev[0], y - prev[1]);
+  prev = [x, y];
+  // Normal direction (pointing outward from the centre).
+  samples.push({ x, y, nx: Math.cos(a), ny: Math.sin(a), s: length });
+}
+
+// Greenwood: f = 165.4 * (10^(2.1 * p) - 0.88), p = position from the apex
+// (0) to the base (1). Our samples run from base to apex, so p = 1 - s/L.
+const freqAt = (s: number) => 165.4 * (10 ** (2.1 * (1 - s / length)) - 0.88);
+
+const spiral = samples.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join('');
+
+// Ticks every few units of length; longer at each octave-ish landmark.
+const ticks: { d: string; warm: boolean }[] = [];
+const spacing = 9;
+let next = 0;
+for (const p of samples) {
+  if (p.s < next) continue;
+  next += spacing;
+  const f = freqAt(p.s);
+  const warm = f >= 3000 && f <= 6000;
+  const len = warm ? 13 : 7;
+  ticks.push({
+    d: `M${(p.x + p.nx * 3).toFixed(1)} ${(p.y + p.ny * 3).toFixed(1)}L${(p.x + p.nx * (3 + len)).toFixed(1)} ${(p.y + p.ny * (3 + len)).toFixed(1)}`,
+    warm,
+  });
+}
+const base = samples[0];
+const apex = samples[samples.length - 1];
+// Where to label the amber region: its middle, pushed outward.
+const mid = samples.reduce((best, p) => (Math.abs(freqAt(p.s) - 4200) < Math.abs(freqAt(best.s) - 4200) ? p : best));
+---
+
+<svg class="art" viewBox="0 0 640 400" width="640" height="400" aria-hidden="true" focusable="false">
+  <path class="s-ink" d={spiral} stroke-width="1.25" stroke-linecap="round"></path>
+  <path class="s-accent" d={ticks.filter((t) => !t.warm).map((t) => t.d).join('')} stroke-width="1"></path>
+  <path class="s-warm" d={ticks.filter((t) => t.warm).map((t) => t.d).join('')} stroke-width="1.5"></path>
+  <circle class="f-accent" cx={base.x} cy={base.y} r="4"></circle>
+  <circle class="f-accent" cx={apex.x} cy={apex.y} r="3"></circle>
+  {/* Scale labels: a few words make the drawing legible as a frequency map. */}
+  <text class="t t-small" x={base.x - 10} y={base.y + 30} text-anchor="middle">20 kHz</text>
+  <text class="t t-small" x={apex.x} y={apex.y + 28} text-anchor="middle">20 Hz</text>
+  <text class="t t-warm" x={mid.x + mid.nx * 34} y={mid.y + mid.ny * 34 + 5} text-anchor={mid.nx > 0 ? 'start' : 'end'}>3 to 6 kHz</text>
+</svg>
+
+<style>
+  .art {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Labels sized for the art at panel size; on phones the drawing is too
+     small for any label to stay legible, so the scale alone carries it. */
+  .art text {
+    font-size: 19px;
+  }
+
+  @media (max-width: 40rem) {
+    .art text {
+      display: none;
+    }
+  }
+</style>

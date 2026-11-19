@@ -1,0 +1,39 @@
+---
+/**
+ * Status: a project's state as a small dot and a word. Amber for work in
+ * progress (the warm "on air" colour), cobalt for research.
+ */
+import { statusLabel } from '../lib/format';
+
+interface Props {
+  status: keyof typeof statusLabel;
+}
+
+const { status } = Astro.props;
+const warm = status === 'active' || status === 'paused' || status === 'concept';
+---
+
+<p class:list={['status', { 'status--warm': warm }]}>{statusLabel[status]}</p>
+
+<style>
+  .status {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--step--1);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-2);
+  }
+
+  .status::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-accent);
+  }
+
+  .status--warm::before {
+    background-color: var(--color-warm);
+  }
+</style>

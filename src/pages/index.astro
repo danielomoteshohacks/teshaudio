@@ -2,1026 +2,380 @@
 /**
  * Home.
  *
- * Order: hero, lead story, now, disciplines, featured listening (only once a
- * published track is featured), what I'm building, philosophy quote, more
- * writing, ideas, lab (only once a lab entry is published), contact.
- *
- * The page is built as a few movements rather than a stack of identical
- * cards: a cinematic hero, one big editorial story, a full-width statement,
- * a typographic list, then a dark band for the work and the quote. Sections
- * with nothing real in them are left out entirely, so the page never shows
- * an empty shelf.
+ * Four movements, each with its own layout: a split hero (name and intro
+ * beside a large portrait), a wide featured story panel, the work as two
+ * large artwork panels, and a single line of belief set large. Every section
+ * renders only when it has real content.
  */
-import { Image } from 'astro:assets';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Section from '../components/Section.astro';
-import Container from '../components/Container.astro';
-import Eyebrow from '../components/Eyebrow.astro';
 import Button from '../components/Button.astro';
-import Card from '../components/Card.astro';
-import Badge from '../components/Badge.astro';
 import Portrait from '../components/Portrait.astro';
-import CoverArt from '../components/CoverArt.astro';
-import SectionIntro from '../components/SectionIntro.astro';
-import TrackRow from '../components/TrackRow.astro';
-import ProjectCard from '../components/ProjectCard.astro';
-import WritingRow from '../components/WritingRow.astro';
+import Waveform from '../components/Waveform.astro';
+import ProjectPanel from '../components/ProjectPanel.astro';
+import StereoVsSpatial from '../components/diagrams/StereoVsSpatial.astro';
 import { copy, site } from '../lib/site';
-import { ideas } from '../data/ideas';
 import { personSchema } from '../lib/schema';
-import { formatDate, isoDate, kindLabel, readingTime, statusLabel } from '../lib/format';
-import { getPhoto } from '../lib/photos';
-import {
-  getPublishedLab,
-  getPublishedProjects,
-  getPublishedTracks,
-  getPublishedWriting,
-} from '../lib/content';
+import { formatDate, isoDate, kindLabel, readingTime } from '../lib/format';
+import { getPublishedProjects, getPublishedWriting } from '../lib/content';
 
-const tracks = (await getPublishedTracks()).filter((t) => t.data.featured).slice(0, 3);
 const projects = (await getPublishedProjects()).filter((p) => p.data.featured);
-const allWriting = await getPublishedWriting();
-const lab = await getPublishedLab();
-const projectTitles = new Map((await getPublishedProjects()).map((p) => [p.id, p.data.title]));
-
-// The lead story is the newest essay; the rest of the writing follows lower
-// down. If no essay exists, the section simply does not render.
-const lead = allWriting.find((entry) => entry.data.kind === 'essay');
-const leadCover = lead?.data.cover ? getPhoto(lead.data.cover.file) : undefined;
-const moreWriting = allWriting.filter((entry) => entry !== lead).slice(0, 3);
-
-// Section numbers follow the sections actually shown, so hiding one never
-// leaves a gap in the sequence.
-let n = 0;
-const next = () => String(++n).padStart(2, '0');
+// The featured story is the newest essay.
+const story = (await getPublishedWriting()).find((entry) => entry.data.kind === 'essay');
 ---
 
 <BaseLayout jsonLd={personSchema()}>
   <!-- Hero -->
-  <section class="hero" aria-labelledby="hero-title">
-    {/* The stage: slow drifting cobalt and amber light, a soft beam and film
-        grain. Decorative layers only, painted behind the content. */}
-    <div class="hero__stage" aria-hidden="true">
-      <span class="hero__light hero__light--cobalt"></span>
-      <span class="hero__light hero__light--amber"></span>
-      <span class="hero__beam"></span>
-      <span class="hero__grain"></span>
-    </div>
-
-    <Container>
-      <div class="hero__grid">
-        <div class="hero__text">
-          <p class="hero__eyebrow">
-            <span>{site.fullName}</span>
-            <span class="hero__dot" aria-hidden="true"></span>
-            <span>{site.location}</span>
-          </p>
-          <h1 id="hero-title" class="hero__name">{site.name}</h1>
-          <p class="hero__role">{site.roleStatement}</p>
-          <p class="hero__intro">{site.intro}</p>
-          <div class="hero__actions">
-            {lead && <Button size="lg" href={`/writing/${lead.id}/`}>{copy.home.lead.cta}</Button>}
-            <Button size="lg" variant="secondary" href="/projects/">View work</Button>
-            <Button size="lg" variant="ghost" href="/about/">About me</Button>
-          </div>
-        </div>
-        <div class="hero__portrait">
-          <Portrait priority sizes="(min-width: 64rem) 30rem, (min-width: 48rem) 40vw, calc(100vw - 4rem)" />
-        </div>
+  <section class="hero wrap" aria-labelledby="hero-title">
+    <div class="hero__text">
+      <p class="hero__kicker enter">{site.name} · {site.city}</p>
+      <h1 id="hero-title" class="hero__name enter" style="--order: 1">{site.fullName}</h1>
+      <p class="hero__intro enter" style="--order: 2">{site.intro}</p>
+      <div class="hero__actions enter" style="--order: 3">
+        {story && <Button size="lg" href={`/writing/${story.id}/`}>{copy.home.storyCta}</Button>}
+        <Button size="lg" variant="secondary" href="/projects/">{copy.home.workCta}</Button>
       </div>
-    </Container>
+      <div class="hero__wave"><Waveform seed={3} draw /></div>
+    </div>
+    <div class="hero__portrait enter" style="--order: 1">
+      <Portrait priority sizes="(min-width: 64rem) 30rem, (min-width: 48rem) 42vw, calc(100vw - 2.5rem)" />
+    </div>
   </section>
 
-  <!-- Lead story -->
+  <!-- Featured story -->
   {
-    lead && (
-      <Section aria-labelledby="lead-title" class="lead-section">
-        <Container>
-          <Eyebrow index={next()}>{copy.home.lead.eyebrow}</Eyebrow>
-          <a class="lead reveal" href={`/writing/${lead.id}/`}>
-            <div class="lead__media">
-              {leadCover && lead.data.cover ? (
-                <Image
-                  src={leadCover}
-                  alt={lead.data.cover.alt}
-                  widths={[480, 720, 960, 1280]}
-                  sizes="(min-width: 64rem) 40rem, 100vw"
-                  quality={76}
-                />
-              ) : (
-                <CoverArt id="lead-cover" />
-              )}
-            </div>
-            <div class="lead__body">
-              <p class="lead__meta meta">
-                <span>{kindLabel[lead.data.kind]}</span>
-                <span aria-hidden="true">·</span>
-                <span>{readingTime(lead.body)}</span>
-                <span aria-hidden="true">·</span>
-                <time datetime={isoDate(lead.data.pubDate)}>{formatDate(lead.data.pubDate)}</time>
+    story && (
+      <section class="story wrap" aria-labelledby="story-title">
+        <a class="story__panel" href={`/writing/${story.id}/`}>
+          <div class="story__art">
+            <StereoVsSpatial bare id="home-svs" />
+          </div>
+          <div class="story__body">
+            <p class="label">
+              {copy.home.storyLabel} · {kindLabel[story.data.kind]} · {readingTime(story.body)}
+            </p>
+            <h2 id="story-title" class="story__title">{story.data.title}</h2>
+            <div class="story__side">
+              <p class="story__subtitle">{story.data.description}</p>
+              <p class="story__meta label">
+                <time datetime={isoDate(story.data.pubDate)}>{formatDate(story.data.pubDate)}</time>
               </p>
-              <h2 id="lead-title" class="lead__title">{lead.data.title}</h2>
-              <p class="lead__subtitle">{lead.data.description}</p>
-              <span class="lead__cta" aria-hidden="true">
-                {copy.home.lead.cta}
-                <svg width="16" height="16" viewBox="0 0 14 14">
-                  <path d="M3 7h8M7.5 3.5L11 7l-3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
+              <span class="story__more" aria-hidden="true">
+                <span class="slide-link">{copy.home.storyCta}</span> &rarr;
               </span>
             </div>
-          </a>
-        </Container>
-      </Section>
-    )
-  }
-
-  <!-- Now: one full-width statement -->
-  {
-    site.now.length > 0 && (
-      <section class="now" aria-labelledby="now-title">
-        <Container>
-          <div class="now__inner reveal">
-            <h2 id="now-title" class="now__label">
-              <span class="now__dot" aria-hidden="true" />
-              {copy.home.now.title}
-            </h2>
-            <ul class="now__list">
-              {site.now.map((item) => (
-                <li>{item.href ? <a href={item.href}>{item.text}</a> : item.text}</li>
-              ))}
-            </ul>
           </div>
-        </Container>
+        </a>
       </section>
     )
   }
 
-  <!-- Disciplines: an editorial list, not a grid of boxes -->
-  <Section aria-labelledby="disciplines-title">
-    <Container>
-      <SectionIntro eyebrow={copy.home.disciplines.eyebrow} index={next()} id="disciplines-title" title={copy.home.disciplines.title} />
-      <ol class="disciplines">
-        {
-          site.disciplines.map((discipline, i) => (
-            <li class="discipline reveal" style={`--stagger: ${i % 3}`}>
-              <span class="discipline__index" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-              <h3 class="discipline__title">{discipline.title}</h3>
-              <p class="discipline__summary">{discipline.summary}</p>
-            </li>
-          ))
-        }
-      </ol>
-    </Container>
-  </Section>
-
-  <!-- Featured listening: hidden until a published track is featured -->
-  {
-    tracks.length > 0 && (
-      <Section theme="dark" aria-labelledby="listening-title">
-        <Container class="reveal">
-          <SectionIntro
-            eyebrow={copy.home.listening.eyebrow}
-            index={next()}
-            id="listening-title"
-            title={copy.home.listening.title}
-            lead={copy.home.listening.lead}
-            link={{ label: 'All music', href: '/music/' }}
-          />
-          <div class="tracks">
-            {tracks.map((track, i) => (
-              <TrackRow track={track} index={i + 1} />
-            ))}
-          </div>
-        </Container>
-      </Section>
-    )
-  }
-
-  <!-- What I'm building -->
+  <!-- Work -->
   {
     projects.length > 0 && (
-      <Section theme="dark" aria-labelledby="building-title" class="band">
-        <Container>
-          <SectionIntro
-            eyebrow={copy.home.building.eyebrow}
-            index={next()}
-            id="building-title"
-            title={copy.home.building.title}
-            link={{ label: 'All work', href: '/projects/' }}
-          />
-          <ul class="cards cards--two">
-            {projects.map((project, i) => (
-              <li class="reveal" style={`--stagger: ${i}`}>
-                <ProjectCard project={project} />
-              </li>
-            ))}
-          </ul>
-        </Container>
-      </Section>
-    )
-  }
-
-  <!-- Philosophy quote -->
-  <Section theme="dark" aria-labelledby="philosophy-title" spacing="flush-top">
-    <Container class="reveal">
-      <div class="quote glow">
-        <Eyebrow index={next()}>Philosophy</Eyebrow>
-        <h2 id="philosophy-title" class="visually-hidden">Philosophy</h2>
-        <figure>
-          <blockquote class="quote__text">
-            <p>{site.philosophyQuote}</p>
-          </blockquote>
-        </figure>
-        <Button variant="secondary" href="/philosophy/">How I think about sound</Button>
-      </div>
-    </Container>
-  </Section>
-
-  <!-- More writing (after the lead story) -->
-  {
-    moreWriting.length > 0 && (
-      <Section aria-labelledby="writing-title">
-        <Container class="reveal">
-          <SectionIntro
-            eyebrow={copy.home.writing.eyebrow}
-            index={next()}
-            id="writing-title"
-            title={copy.home.writing.title}
-            link={{ label: 'All writing', href: '/writing/' }}
-          />
-          <div class="writing">
-            {moreWriting.map((entry) => (
-              <WritingRow entry={entry} />
-            ))}
-          </div>
-        </Container>
-      </Section>
-    )
-  }
-
-  <!-- Ideas -->
-  <Section aria-labelledby="ideas-title" spacing={moreWriting.length > 0 ? 'flush-top' : 'default'}>
-    <Container>
-      <SectionIntro
-        eyebrow={copy.home.ideas.eyebrow}
-        index={next()}
-        id="ideas-title"
-        title={copy.home.ideas.title}
-        link={{ label: 'All ideas', href: '/ideas/' }}
-      />
-      <ul class="ideas">
-        {
-          ideas.map((idea, i) => (
-            <li class="reveal" style={`--stagger: ${i % 2}`}>
-              <div class="idea">
-                <p class="meta">Idea</p>
-                <h3 class="idea__title">{idea.title}</h3>
-                <p class="idea__note">{idea.note}</p>
-              </div>
+      <section class="work wrap" aria-labelledby="work-title">
+        <div class="work__head">
+          <h2 id="work-title" class="section-title">{copy.home.workTitle}</h2>
+          <a class="slide-link work__all" href="/projects/">All work</a>
+        </div>
+        <ul class="work__grid">
+          {projects.map((project) => (
+            <li>
+              <ProjectPanel project={project} />
             </li>
-          ))
-        }
-      </ul>
-    </Container>
-  </Section>
-
-  <!-- Lab: hidden until a lab entry is published -->
-  {
-    lab.length > 0 && (
-      <Section aria-labelledby="lab-title" spacing="flush-top">
-        <Container>
-          <SectionIntro
-            eyebrow={copy.home.lab.eyebrow}
-            index={next()}
-            id="lab-title"
-            title={copy.home.lab.title}
-            lead={copy.home.lab.lead}
-            link={{ label: 'Visit the lab', href: '/lab/' }}
-          />
-          <ul class="cards cards--two">
-            {lab.map((entry, i) => (
-              <li class="reveal" style={`--stagger: ${i}`}>
-                <Card href={`/lab/${entry.id}/`}>
-                  <div class="lab-card">
-                    <Badge tone={entry.data.status === 'live' ? 'accent' : 'neutral'} dot>
-                      {statusLabel[entry.data.status]}
-                    </Badge>
-                    <h3 class="lab-card__title">{entry.data.title}</h3>
-                    <p class="lab-card__summary">{entry.data.summary}</p>
-                    {entry.data.relatedProject && (
-                      <p class="meta">Project: {projectTitles.get(entry.data.relatedProject.id)}</p>
-                    )}
-                  </div>
-                </Card>
-              </li>
-            ))}
-          </ul>
-        </Container>
-      </Section>
+          ))}
+        </ul>
+      </section>
     )
   }
 
-  <!-- Contact -->
-  <Section theme="dark" aria-labelledby="contact-title" class="contact-section">
-    <Container class="reveal">
-      <div class="contact glow">
-        <Eyebrow index={next()}>{copy.home.contact.eyebrow}</Eyebrow>
-        <h2 id="contact-title" class="contact__title">{copy.home.contact.title}</h2>
-        {
-          site.email && (
-            <a class="contact__email" href={`mailto:${site.email}`}>
-              {site.email}
-            </a>
-          )
-        }
-        {
-          site.socials.length > 0 && (
-            <ul class="contact__socials">
-              {site.socials.map((social) => (
-                <li>
-                  <a href={social.url} rel="me noopener">
-                    <span class="contact__social-label">{social.label}</span>
-                    <span class="meta">@{social.handle}</span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          )
-        }
-      </div>
-    </Container>
-  </Section>
+  <!-- What I believe -->
+  <section class="belief band-last" aria-labelledby="belief-title">
+    <div class="wrap">
+      <h2 id="belief-title" class="visually-hidden">What I believe</h2>
+      <p class="belief__line">{site.belief}</p>
+      <a class="belief__link" href="/about/#beliefs"><span class="slide-link">{copy.home.beliefLink}</span> &rarr;</a>
+    </div>
+  </section>
 </BaseLayout>
 
 <style>
   /* ===== Hero ==============================================================
-   * Dark-first: a deep stage with two slow pools of light (cobalt, matched
-   * to the portrait's outfit, and warm amber) drifting like stage lighting,
-   * a faint diagonal beam and film grain. Light mode gets a warm daylight
-   * version of the same scene. Everything is gradients on transformed
-   * layers: no filters, no JavaScript, and the motion touches only
-   * transform, so the compositor runs it without repainting.
+   * Split on desktop: type on the left, a large portrait on the right with
+   * its static key light. Stacked on phones: kicker, name, portrait, intro,
+   * actions, so the face arrives right after the name.
    */
   .hero {
-    --hero-base: var(--neutral-50);
-    --hero-cobalt: color-mix(in srgb, var(--light-cobalt) 17%, transparent);
-    --hero-amber: color-mix(in srgb, var(--light-amber) 30%, transparent);
-    --hero-beam: color-mix(in srgb, var(--neutral-25) 70%, transparent);
-    --hero-grain: 0.08;
-    position: relative;
-    isolation: isolate;
-    overflow: hidden;
-    padding-block: clamp(var(--space-10), 6vw, var(--space-20)) clamp(var(--space-16), 9vw, var(--space-32));
-    background-color: var(--hero-base);
-  }
-
-  :global(:root[data-mode='dark']) .hero {
-    --hero-base: var(--neutral-950);
-    --hero-cobalt: color-mix(in srgb, var(--light-cobalt) 50%, transparent);
-    --hero-amber: color-mix(in srgb, var(--light-amber) 20%, transparent);
-    --hero-beam: color-mix(in srgb, var(--accent-on-dark) 10%, transparent);
-    --hero-grain: 0.11;
-  }
-
-  .hero__stage {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-  }
-
-  /* Each pool of light is an oversized radial gradient on its own layer. */
-  .hero__light {
-    position: absolute;
-    border-radius: 50%;
-    will-change: transform;
-  }
-
-  .hero__light--cobalt {
-    width: 110vmax;
-    height: 110vmax;
-    right: -38vmax;
-    top: -30vmax;
-    background: radial-gradient(closest-side, var(--hero-cobalt), transparent);
-  }
-
-  .hero__light--amber {
-    width: 90vmax;
-    height: 90vmax;
-    left: -40vmax;
-    bottom: -52vmax;
-    background: radial-gradient(closest-side, var(--hero-amber), transparent);
-  }
-
-  /* A soft beam falling from the top left, like a spot through haze. */
-  .hero__beam {
-    position: absolute;
-    top: -20%;
-    left: 8%;
-    width: 38%;
-    height: 150%;
-    background: linear-gradient(180deg, var(--hero-beam), transparent 70%);
-    transform: rotate(-18deg);
-    transform-origin: 50% 0;
-    opacity: 0.7;
-    will-change: transform;
-  }
-
-  .hero__grain {
-    position: absolute;
-    inset: 0;
-    background-image: var(--grain-tile);
-    background-size: 160px 160px;
-    opacity: var(--hero-grain);
-    mix-blend-mode: overlay;
-  }
-
-  /* The bottom edge dissolves into the page surface, so the hero flows into
-     the next section instead of ending on a hard line. */
-  .hero__stage::after {
-    content: '';
-    position: absolute;
-    inset: auto 0 0;
-    height: 30%;
-    background: linear-gradient(transparent, var(--color-surface));
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .hero__light--cobalt {
-      animation: drift-a var(--duration-ambient) var(--ease-in-out) infinite alternate;
-    }
-
-    .hero__light--amber {
-      animation: drift-b calc(var(--duration-ambient) * 1.3) var(--ease-in-out) infinite alternate;
-    }
-
-    .hero__beam {
-      animation: sway calc(var(--duration-ambient) * 0.9) var(--ease-in-out) infinite alternate;
-    }
-  }
-
-  @keyframes drift-a {
-    to {
-      transform: translate3d(-14vmax, 12vmax, 0) scale(1.08);
-    }
-  }
-
-  @keyframes drift-b {
-    to {
-      transform: translate3d(22vmax, -10vmax, 0) scale(0.94);
-    }
-  }
-
-  @keyframes sway {
-    to {
-      transform: rotate(-6deg) translateX(10%);
-    }
-  }
-
-  .hero__grid {
     display: grid;
     gap: var(--space-10);
-    align-items: center;
+    padding-block: clamp(var(--space-10), 6vw, var(--space-24)) 0;
   }
 
   .hero__text {
     display: grid;
-    gap: var(--space-5);
-    /* The action row adapts to the width of this column, not the viewport:
-       on tablets the column is narrow even though the screen is not. */
-    container-type: inline-size;
+    align-content: center;
+    gap: var(--space-6);
   }
 
-  .hero__eyebrow {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2) var(--space-3);
-    font-family: var(--font-mono);
-    font-size: var(--step--2);
+  .hero__kicker {
+    font-size: var(--step-0);
     font-weight: var(--weight-medium);
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    color: var(--color-text-muted);
-  }
-
-  .hero__dot {
-    width: 5px;
-    height: 5px;
-    border-radius: var(--radius-pill);
-    background-color: var(--color-warm);
+    color: var(--color-text-3);
   }
 
   .hero__name {
-    margin-block: calc(var(--space-2) * -1) var(--space-1);
+    margin-top: calc(var(--space-2) * -1);
     font-size: var(--step-hero);
-    font-weight: var(--weight-bold);
-    line-height: 0.86;
-    letter-spacing: -0.055em;
-    /* Optical margin: big type's side bearing makes it look indented. */
-    margin-left: -0.04em;
-  }
-
-  .hero__role {
-    max-width: 32rem;
-    font-size: var(--step-3);
-    font-weight: var(--weight-semibold);
-    line-height: var(--leading-tight);
-    letter-spacing: var(--tracking-tight);
-    text-wrap: balance;
+    font-weight: var(--weight-display);
+    line-height: var(--leading-display);
+    letter-spacing: var(--tracking-hero);
+    /* Optical alignment: very large type looks indented by its side bearing. */
+    margin-left: -0.03em;
   }
 
   .hero__intro {
     max-width: 34rem;
     font-size: var(--step-1);
     line-height: var(--leading-snug);
-    color: var(--color-text-muted);
+    color: var(--color-text-2);
   }
 
   .hero__actions {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-3);
-    margin-top: var(--space-3);
+    margin-top: var(--space-2);
   }
 
-  /* Narrow columns: the two main actions share the first row at equal width
-     and the quiet third action sits centred beneath them. */
-  @container (max-width: 30rem) {
-    .hero__actions > :global(*) {
-      flex: 1 1 0;
-    }
-
-    .hero__actions > :global(:last-child) {
-      flex-basis: 100%;
-    }
+  .hero__wave {
+    margin-top: var(--space-6);
+    max-width: 34rem;
   }
 
   .hero__portrait {
     width: 100%;
-    max-width: 26rem;
-    justify-self: center;
-    padding-inline: var(--space-4);
+    max-width: 30rem;
   }
 
-  /* Phones: name and line first, then the portrait, then the rest, so the
-     page opens on who this is and the face follows immediately. */
   @media (max-width: 47.99rem) {
-    .hero__grid {
-      display: flex;
-      flex-direction: column;
-      align-items: stretch;
-    }
-
+    /* Phones: let the portrait sit between the name and the intro. */
     .hero__text {
       display: contents;
     }
 
-    .hero__eyebrow { order: 1; }
+    .hero__kicker { order: 1; }
     .hero__name { order: 2; }
-    .hero__role { order: 3; margin-bottom: var(--space-4); }
-    .hero__portrait { order: 4; margin-bottom: var(--space-6); }
-    .hero__intro { order: 5; margin-bottom: var(--space-2); }
-    .hero__actions { order: 6; }
+    .hero__portrait { order: 3; justify-self: center; max-width: 24rem; }
+    .hero__intro { order: 4; }
+    .hero__actions { order: 5; }
+    .hero__wave { order: 6; margin-top: 0; }
 
-    .hero__grid > * + * {
-      margin-top: var(--space-4);
+    .hero {
+      gap: var(--space-6);
     }
 
-    /* The container query above cannot reach the actions here (their
-       column is display: contents on phones), so the same arrangement is
-       repeated for the viewport. */
     .hero__actions > :global(*) {
-      flex: 1 1 0;
-    }
-
-    .hero__actions > :global(:first-child) {
-      flex-basis: 100%;
+      flex: 1 1 auto;
     }
   }
 
   @media (min-width: 48rem) {
     .hero {
-      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
       align-items: center;
-      min-height: min(56rem, calc(100svh - var(--header-height)));
-    }
-
-    .hero__grid {
-      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-      gap: clamp(var(--space-8), 6vw, var(--space-24));
+      gap: clamp(var(--space-10), 6vw, var(--space-24));
+      min-height: min(52rem, calc(100svh - var(--header-height)));
+      padding-block: var(--space-12);
     }
 
     .hero__portrait {
-      max-width: 30rem;
       justify-self: end;
-      padding: 0;
     }
   }
 
-  /* ===== Lead story ======================================================= */
-  .lead-section {
-    padding-top: clamp(var(--space-8), 4vw, var(--space-16));
+  /* ===== Featured story ====================================================
+   * A wide magazine-cover panel: the essay's own diagram as the artwork,
+   * then the title set large.
+   */
+  .story {
+    margin-top: var(--section-gap);
   }
 
-  .lead {
+  .story__panel {
     display: grid;
-    margin-top: var(--space-6);
     overflow: hidden;
-    border: 1px solid var(--color-border);
+    border: 1px solid var(--color-line);
     border-radius: var(--radius-xl);
-    background-color: var(--color-surface-raised);
-    box-shadow: var(--shadow-2);
+    background-color: var(--color-bg-2);
     color: var(--color-text);
     text-decoration: none;
     transition:
-      box-shadow var(--duration-slow) var(--ease-out),
-      transform var(--duration-slow) var(--ease-out);
+      background-color var(--duration-base) var(--ease-out),
+      border-color var(--duration-base) var(--ease-out);
   }
 
-  .lead:hover {
-    box-shadow: var(--shadow-3);
-    transform: translateY(-3px);
+  .story__panel:hover {
+    border-color: var(--color-line-strong);
   }
 
-  .lead:focus-visible {
+  .story__panel:hover .slide-link {
+    background-size: 100% 1px;
+  }
+
+  .story__panel:focus-visible {
     outline-offset: 4px;
   }
 
-  .lead__media {
-    position: relative;
-    overflow: hidden;
-    aspect-ratio: 16 / 10;
-    background-color: var(--neutral-950);
-  }
-
-  .lead__media :global(img),
-  .lead__media :global(svg) {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 1.2s var(--ease-out);
-  }
-
-  .lead:hover .lead__media :global(img),
-  .lead:hover .lead__media :global(svg) {
-    transform: scale(1.03);
-  }
-
-  .lead__body {
+  /* The artwork as a wide band across the top, like a cover image. */
+  .story__art {
     display: grid;
-    align-content: center;
+    justify-items: center;
+    padding: clamp(var(--space-5), 4vw, var(--space-12)) clamp(var(--space-4), 4vw, var(--space-16));
+    border-bottom: 1px solid var(--color-line);
+    background-color: var(--color-bg);
+  }
+
+  .story__art :global(.diagram) {
+    width: 100%;
+    max-width: 56rem;
+  }
+
+  /* The diagram's own panel styling is dropped here: this panel is the frame. */
+  .story__art :global(.diagram__media) {
+    padding: 0;
+    border: 0;
+    background: none;
+  }
+
+  .story__art :global(.f-bg),
+  .story__art :global(ellipse),
+  .story__art :global(circle.f-bg) {
+    fill: var(--color-bg);
+  }
+
+  .story__body {
+    display: grid;
+    align-content: start;
     gap: var(--space-5);
     padding: clamp(var(--space-6), 4vw, var(--space-16));
   }
 
-  .lead__meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-  }
-
-  .lead__title {
+  .story__title {
     font-size: var(--step-4);
-    line-height: var(--leading-display);
+    font-weight: var(--weight-display);
+    line-height: 1.02;
     letter-spacing: var(--tracking-display);
   }
 
-  .lead__subtitle {
-    max-width: 34rem;
+  .story__subtitle {
+    max-width: 30rem;
     font-size: var(--step-1);
     line-height: var(--leading-snug);
-    color: var(--color-text-muted);
+    color: var(--color-text-2);
   }
 
-  .lead__cta {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
+  .story__side {
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .story__more {
     margin-top: var(--space-2);
     font-weight: var(--weight-semibold);
-    color: var(--color-accent);
   }
 
-  .lead__cta svg {
-    transition: transform var(--duration-base) var(--ease-out);
-  }
-
-  .lead:hover .lead__cta svg {
-    transform: translateX(4px);
-  }
-
+  /* Wide screens: the title on the left, the subtitle and link on the
+     right, aligned to the title's last line: a cover-story layout. */
   @media (min-width: 64rem) {
-    .lead {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    .story__body {
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      grid-template-areas:
+        'label label'
+        'title side';
+      column-gap: var(--space-16);
+      align-items: end;
     }
 
-    .lead__media {
-      aspect-ratio: auto;
-      min-height: 30rem;
+    .story__body > .label {
+      grid-area: label;
+    }
+
+    .story__title {
+      grid-area: title;
+    }
+
+    .story__side {
+      grid-area: side;
     }
   }
 
-  /* ===== Now ==============================================================
-   * One full-width statement between hairlines, with the warm "on air" dot:
-   * what is on the desk today. */
-  .now {
-    border-block: 1px solid var(--color-border);
-    background:
-      radial-gradient(ellipse 60% 140% at 0% 50%, color-mix(in oklab, var(--color-warm) 8%, transparent), transparent 70%),
-      var(--color-surface-raised);
+  /* ===== Work ============================================================== */
+  .work {
+    margin-top: var(--section-gap);
   }
 
-  .now__inner {
+  .work__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+  }
+
+  .section-title {
+    font-size: var(--step-4);
+    font-weight: var(--weight-display);
+    letter-spacing: var(--tracking-display);
+  }
+
+  .work__all {
+    font-weight: var(--weight-semibold);
+  }
+
+  .work__grid {
     display: grid;
     gap: var(--space-5);
-    padding-block: clamp(var(--space-12), 7vw, var(--space-24));
-  }
-
-  @media (min-width: 64rem) {
-    .now__inner {
-      grid-template-columns: 16rem 1fr;
-      align-items: baseline;
-    }
-  }
-
-  .now__label {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-3);
-    font-family: var(--font-mono);
-    font-size: var(--step--2);
-    font-weight: var(--weight-medium);
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    color: var(--color-warm);
-  }
-
-  .now__dot {
-    width: 8px;
-    height: 8px;
-    border-radius: var(--radius-pill);
-    background-color: currentColor;
-    box-shadow: 0 0 0 4px color-mix(in oklab, currentColor 20%, transparent);
-  }
-
-  /* A slow "on air" pulse; still under reduced motion. */
-  @media (prefers-reduced-motion: no-preference) {
-    .now__dot {
-      animation: on-air 2.4s var(--ease-in-out) infinite;
-    }
-  }
-
-  @keyframes on-air {
-    50% {
-      opacity: 0.35;
-    }
-  }
-
-  .now__list {
-    display: grid;
-    gap: var(--space-4);
-    padding: 0;
-    list-style: none;
-  }
-
-  .now__list li {
-    font-size: var(--step-4);
-    font-weight: var(--weight-semibold);
-    line-height: var(--leading-tight);
-    letter-spacing: var(--tracking-display);
-    text-wrap: balance;
-  }
-
-  .now__list a {
-    color: inherit;
-    text-decoration-thickness: 2px;
-    text-underline-offset: 0.16em;
-    text-decoration-color: color-mix(in oklab, var(--color-warm) 55%, transparent);
-  }
-
-  .now__list a:hover {
-    text-decoration-color: var(--color-warm);
-  }
-
-  /* ===== Disciplines ======================================================
-   * Typographic rows with large mono indices: reads like the contents page
-   * of a magazine rather than a grid of boxes. */
-  .disciplines {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    border-top: 1px solid var(--color-border-strong);
-  }
-
-  .discipline {
-    display: grid;
-    grid-template-columns: 3rem 1fr;
-    gap: var(--space-2) var(--space-4);
-    padding-block: clamp(var(--space-5), 3vw, var(--space-8));
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .discipline__index {
-    grid-row: span 2;
-    padding-top: 0.45em;
-    font-family: var(--font-mono);
-    font-size: var(--step--1);
-    color: var(--color-accent);
-  }
-
-  .discipline__title {
-    font-size: var(--step-3);
-    letter-spacing: var(--tracking-display);
-  }
-
-  .discipline__summary {
-    max-width: 34rem;
-    color: var(--color-text-muted);
-  }
-
-  @media (min-width: 56rem) {
-    .discipline {
-      grid-template-columns: 5rem minmax(0, 1.1fr) minmax(0, 1fr);
-      column-gap: var(--space-10);
-      align-items: baseline;
-    }
-
-    .discipline__index {
-      grid-row: auto;
-      padding-top: 0;
-    }
-  }
-
-  /* ===== Work band ========================================================
-   * The dark band opens with a cobalt glow along its top edge, a bold change
-   * of light rather than another boxed section. */
-  .band {
-    position: relative;
-    isolation: isolate;
-  }
-
-  .band::before {
-    content: '';
-    position: absolute;
-    z-index: -1;
-    inset: 0 0 auto;
-    height: 28rem;
-    pointer-events: none;
-    background: radial-gradient(ellipse 70% 100% at 50% 0%, color-mix(in oklab, var(--light-cobalt) 20%, transparent), transparent 70%);
-  }
-
-  /* ===== Shared lists ===================================================== */
-  .tracks,
-  .writing {
-    border-top: 1px solid var(--color-border);
-  }
-
-  .cards {
-    display: grid;
-    gap: var(--space-4);
     padding: 0;
     list-style: none;
   }
 
   @media (min-width: 48rem) {
-    .cards--two {
+    .work__grid {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 
-  /* ===== Philosophy quote ================================================= */
-  .quote {
-    display: grid;
-    justify-items: center;
-    gap: var(--space-8);
-    max-width: 56rem;
-    margin-inline: auto;
+  /* ===== Belief ============================================================
+   * One full-bleed band, one tonal step deeper, the line set large and
+   * centred: the one place the page slows right down.
+   */
+  .belief {
+    margin-top: var(--section-gap);
+    padding-block: clamp(var(--space-20), 12vw, var(--space-32));
+    border-block: 1px solid var(--color-line);
+    background-color: var(--color-bg-2);
     text-align: center;
   }
 
-  .quote__text {
+  .belief__line {
+    max-width: 52rem;
+    margin-inline: auto;
     font-size: var(--step-5);
-    font-weight: var(--weight-semibold);
-    line-height: var(--leading-tight);
+    font-weight: var(--weight-display);
+    line-height: 1.02;
     letter-spacing: var(--tracking-display);
     text-wrap: balance;
-  }
-
-  /* Accent-coloured curly quotes. Not hung outside the block: on centred
-     text a hanging mark would pull the first line off-centre. */
-  .quote__text p::before {
-    content: '\201C';
-    color: var(--color-accent);
-  }
-
-  .quote__text p::after {
-    content: '\201D';
-    color: var(--color-accent);
-  }
-
-  /* ===== Lab teaser ======================================================= */
-  .lab-card {
-    display: grid;
-    justify-items: start;
-    gap: var(--space-3);
-  }
-
-  .lab-card__title {
-    margin-top: var(--space-2);
-    font-size: var(--step-2);
-  }
-
-  .lab-card__summary {
-    color: var(--color-text-muted);
-  }
-
-  /* ===== Ideas ============================================================ */
-  .ideas {
-    display: grid;
-    gap: var(--space-4);
-    padding: 0;
-    list-style: none;
-  }
-
-  @media (min-width: 48rem) {
-    .ideas {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  .idea {
-    display: grid;
-    align-content: start;
-    gap: var(--space-3);
-    height: 100%;
-    padding: var(--space-6) var(--space-6) var(--space-8);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    background-color: var(--color-surface-raised);
-  }
-
-  .idea__title {
-    font-size: var(--step-1);
-  }
-
-  .idea__note {
-    color: var(--color-text-muted);
-  }
-
-  /* ===== Contact ========================================================== */
-  .contact {
-    display: grid;
-    gap: var(--space-6);
-  }
-
-  .contact__title {
-    font-size: var(--step-6);
-    letter-spacing: var(--tracking-display);
-  }
-
-  .contact__email {
-    justify-self: start;
-    font-size: var(--step-3);
-    font-weight: var(--weight-semibold);
-    letter-spacing: var(--tracking-tight);
-    text-decoration: none;
-    /* Long addresses wrap at any character on narrow phones instead of overflowing. */
-    overflow-wrap: anywhere;
-    border-bottom: 2px solid color-mix(in oklab, var(--color-accent) 40%, transparent);
-    transition: border-color var(--duration-base) var(--ease-out);
-  }
-
-  .contact__email:hover {
-    border-color: var(--color-accent);
-  }
-
-  .contact__socials {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    padding: 0;
-    list-style: none;
-  }
-
-  .contact__socials a {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-3);
-    min-height: 52px;
-    padding-inline: var(--space-5);
-    border: 1px solid var(--color-border-strong);
-    border-radius: var(--radius-pill);
     color: var(--color-text);
-    text-decoration: none;
-    transition: background-color var(--duration-fast) var(--ease-out);
   }
 
-  .contact__socials a:hover {
-    background-color: color-mix(in oklab, var(--color-text) 8%, transparent);
-  }
-
-  .contact__social-label {
+  .belief__link {
+    display: inline-block;
+    margin-top: var(--space-8);
     font-weight: var(--weight-semibold);
+    text-decoration: none;
+    color: var(--color-text);
+  }
+
+  .belief__link:hover .slide-link {
+    background-size: 100% 1px;
   }
 </style>

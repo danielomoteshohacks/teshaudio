@@ -1,8 +1,9 @@
 ---
 /**
  * A listener's head seen from above, nose pointing up (forward), shared by
- * the diagrams so the listener looks the same in every figure. Must be used
- * inside an <svg>. `r` scales the whole head.
+ * the artwork and diagrams so the listener looks the same everywhere. Must
+ * be used inside an <svg>. `r` scales the whole head. The fills use the
+ * panel colour so lines passing behind the head are hidden by it.
  */
 interface Props {
   x: number;
@@ -10,22 +11,21 @@ interface Props {
   r?: number;
 }
 
-const { x, y, r = 30 } = Astro.props;
-const ear = { rx: r * 0.2, ry: r * 0.38 };
+const { x, y, r = 26 } = Astro.props;
+const ear = { rx: r * 0.2, ry: r * 0.36 };
 ---
 
-<g class="d-ink">
-  <ellipse cx={x - r} cy={y} rx={ear.rx} ry={ear.ry} class="d-paper" fill="currentColor"></ellipse>
-  <ellipse cx={x - r} cy={y} rx={ear.rx} ry={ear.ry} fill="none" stroke="currentColor" stroke-width="1.5"></ellipse>
-  <ellipse cx={x + r} cy={y} rx={ear.rx} ry={ear.ry} class="d-paper" fill="currentColor"></ellipse>
-  <ellipse cx={x + r} cy={y} rx={ear.rx} ry={ear.ry} fill="none" stroke="currentColor" stroke-width="1.5"></ellipse>
-  <path
-    d={`M${x - r * 0.28} ${y - r * 0.92} L${x} ${y - r * 1.3} L${x + r * 0.28} ${y - r * 0.92}`}
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.5"
-    stroke-linejoin="round"
-  ></path>
-  <circle cx={x} cy={y} r={r} class="d-paper" fill="currentColor"></circle>
-  <circle cx={x} cy={y} r={r} fill="none" stroke="currentColor" stroke-width="1.5"></circle>
+<g stroke-width="1.25">
+  <ellipse class="f-bg s-ink" cx={x - r} cy={y} rx={ear.rx} ry={ear.ry}></ellipse>
+  <ellipse class="f-bg s-ink" cx={x + r} cy={y} rx={ear.rx} ry={ear.ry}></ellipse>
+  <path class="s-ink" d={`M${x - r * 0.26} ${y - r * 0.93} L${x} ${y - r * 1.28} L${x + r * 0.26} ${y - r * 0.93}`} stroke-linejoin="round"></path>
+  <circle class="f-bg s-ink" cx={x} cy={y} r={r}></circle>
 </g>
+
+<style>
+  /* .f-bg sets fill and .s-ink sets fill: none; the fill must win here. */
+  ellipse,
+  circle {
+    fill: var(--color-bg-2);
+  }
+</style>

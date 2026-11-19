@@ -3,13 +3,12 @@
  * 404: shown by Cloudflare Pages for any path that does not exist.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
-import Container from '../components/Container.astro';
 import Button from '../components/Button.astro';
 ---
 
 <BaseLayout title="Page not found" description="This page does not exist." noindex ogKey="home">
   <section class="not-found" aria-labelledby="not-found-title">
-    <Container>
+    <div class="wrap">
       <p class="not-found__code" aria-hidden="true">404</p>
       <h1 id="not-found-title" class="not-found__title">This page is silent.</h1>
       <p class="not-found__body">The link may be old, or the page may have moved.</p>
@@ -17,7 +16,7 @@ import Button from '../components/Button.astro';
         <Button href="/">Go home</Button>
         <Button href="/writing/" variant="secondary">Read the writing</Button>
       </div>
-    </Container>
+    </div>
   </section>
 </BaseLayout>
 
@@ -33,12 +32,12 @@ import Button from '../components/Button.astro';
   /* Outlined numerals: present but quiet, so the sentence below leads. */
   .not-found__code {
     font-size: clamp(6rem, 3rem + 18vw, 16rem);
-    font-weight: var(--weight-bold);
+    font-weight: var(--weight-display);
     line-height: 0.9;
     letter-spacing: var(--tracking-display);
     font-variant-numeric: tabular-nums;
     color: transparent;
-    -webkit-text-stroke: 1.5px var(--color-border-strong);
+    -webkit-text-stroke: 1.5px var(--color-line-strong);
   }
 
   .not-found__title {
@@ -49,7 +48,7 @@ import Button from '../components/Button.astro';
   .not-found__body {
     margin-top: var(--space-3);
     font-size: var(--step-1);
-    color: var(--color-text-muted);
+    color: var(--color-text-3);
   }
 
   .not-found__actions {

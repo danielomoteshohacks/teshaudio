@@ -14,7 +14,7 @@ export function personSchema() {
     alternateName: site.name,
     url: site.url,
     description: site.description,
-    jobTitle: site.disciplines.map((d) => d.title),
+    jobTitle: ['Music producer', 'Composer'],
     address: { '@type': 'PostalAddress', addressLocality: 'Lagos', addressCountry: 'NG' },
     // A current student, so "affiliation" rather than "alumniOf".
     affiliation: { '@type': 'CollegeOrUniversity', name: 'University of Lagos' },

@@ -1,105 +1,74 @@
 # Design direction
 
-Recorded in the foundation PR. The design PR and later PRs implement it.
+**Rich but restrained.** Premium means every element earns its place:
+confident typography, real imagery (the portrait and original artwork), a
+strong layout that changes from section to section, deliberate contrast and
+calm motion. References for craft, never for assets: Apple's product and
+newsroom pages, Linear's site, Teenage Engineering's site.
 
-## Theme
+## Colour
 
-**Precision engineering, soft touch.**
+- Dark-first. A near-black with a hint of blue (`#0b0c10`), layered in small
+  tonal steps (`--color-bg-2`, `--color-bg-3`) with 1px hairline borders for
+  depth. A warm off-white light mode (`#fafaf8`). The site follows the system
+  setting, with the header toggle.
+- One primary accent, cobalt, for links, focus, diagram subjects. Amber is the
+  secondary highlight, used sparingly: the "in development" dot, one region of
+  a diagram, the share card's kicker dot.
+- At most one large, soft, static light: the key light behind the hero
+  portrait. No animated gradients, no grain, no glows elsewhere, no heavy
+  shadows.
 
-Feel words: **precise**, **soft**, **futuristic**.
+## Type
 
-The site pairs two layers. The engineering layer reflects the technical side of
-the work (spatial audio software, DSP, measurement). The soft layer reflects the
-listening side (music, mixing, how sound feels to a person).
+- Inter for everything except article body text, with the optical-size axis
+  on, so headlines get Inter's display letterforms automatically.
+- Very large, tight-tracked display headings (`--step-hero`, `--step-5`);
+  comfortable body sizes; small labels in sentence case, never shouted.
+- Source Serif 4 (variable, opsz) for article body only, 18px on phones and
+  20px on desktop, line height 1.65, 680px measure. Loaded only on articles.
 
-## Engineering layer
+## Signature
 
-Inspired by mlh.com.
+A thin waveform line (`Waveform.astro`): one hairline with a short cobalt
+"selected region". Used sparingly: the hero, the footer. Static, or drawn
+once on load.
 
-- Monospace type for technical labels and metadata (dates, tags, status, tech
-  stacks, section indices).
-- A subtle grid-paper background texture.
-- Bold stat counters.
-- Later: isometric-style diagrams (signal flow, speaker layouts, system
-  architecture).
+## Layout
 
-## Soft layer
+- Home: split hero (type and a large portrait), a wide cover-story panel with
+  the essay's own diagram as artwork, two large artwork panels for the work,
+  then one line of belief set large in a full-bleed band.
+- Never a column of identical cards. Panels are large, one tonal step above
+  the page, with hairline borders and big radii.
+- Articles: centred text column; figures break slightly out of it on wide
+  screens; a quiet contents rail on the right from 80rem.
 
-Inspired by apple.com and cloud.google.com.
+## Artwork and diagrams
 
-- Large, centred headlines.
-- Generous whitespace.
-- Alternating light and dark sections.
-- Large rounded cards.
-- Pill-shaped buttons.
-- A calm sans-serif for body and headings.
+Original SVG only: hairline strokes, the cobalt accent with amber highlights,
+Inter labels, small grey captions. Every SVG colours itself through the
+palette classes in `global.css` (`.s-*` strokes, `.f-*` fills, `.t*` text),
+which map to tokens and follow light and dark mode. Diagrams with labels have
+a wide and a narrow drawing, swapped by the figure's width, so text stays
+legible at 360px. Every SVG carries `width` and `height` attributes, which
+Safari needs to size inline SVG from its aspect ratio.
 
-## Boundaries
+## Motion
 
-- These sites are inspiration only. Never copy their assets, logos, imagery,
-  icons, copy or branding.
-- All values (colour, type, space, radius, motion) live in
-  `src/styles/tokens.css`.
-- Every choice must still meet the quality bar in `CLAUDE.md`: WCAG AA
-  contrast, keyboard access, reduced motion, Lighthouse 95+.
+Purposeful and quiet: one fade-and-rise as a page's header loads, refined
+hover states (underlines that slide in, panels that lift one tonal step),
+and the ClientRouter page crossfade. No scroll-triggered animation, nothing
+floating or looping. Everything is off under `prefers-reduced-motion`.
 
 ## Fonts
 
-Kept after the design-system PR review; no alternative made a strong enough case.
+Self-hosted through Fontsource: `@fontsource-variable/inter/opsz.css` and
+`@fontsource-variable/source-serif-4/opsz.css` (articles only). The static
+`@fontsource/inter` package is used only by the share-image renderer.
 
-- Sans: Inter (variable, with the optical-size axis), via
-  `@fontsource-variable/inter/opsz.css`.
-- Mono: JetBrains Mono (variable), via `@fontsource-variable/jetbrains-mono`.
-- Serif (article body only): Source Serif 4 (variable, with the optical-size
-  axis), via `@fontsource-variable/source-serif-4/opsz.css`, imported only by
-  the article template.
+## Boundaries
 
-## Implemented tokens
-
-The design-system work turned this direction into tokens and base components;
-"Personal site v1" built every page on them.
-
-- Tokens: `src/styles/tokens.css` (values, with contrast ratios in comments).
-- Base element rules, grid paper and the reduced-motion safety net:
-  `src/styles/global.css`.
-- Components: `src/components/` (Container, Section, Eyebrow, Button, Card,
-  Stat).
-- Contexts: set `data-theme="light"` or `data-theme="dark"` on any element.
-  The site default is light.
-- Accent: Signal (cobalt), chosen from three candidates. A deeper shade in
-  light contexts (`#2f4fe0`) and a brighter one in dark contexts (`#8ea2ff`).
-- Second iteration, "warm, comfy, intimate": slightly warm neutrals, full
-  dark mode (follows the OS, with a remembered header toggle and no flash on
-  load), a very fine film-grain overlay, and soft accent glows behind heroes
-  and headings, like light in a dim studio. Grid paper has been removed.
-- Accents: Signal (cobalt) stays primary; VU (amber) is a secondary warm
-  accent for small highlights only (status dots, the Now section, hover
-  underlines).
-- Motion: Astro view transitions between pages and a CSS scroll-driven
-  fade-up as sections enter. Both are off under `prefers-reduced-motion`.
-- Mono type only for small labels and metadata (dates, tags, status,
-  durations).
-
-## Third iteration: cinematic, editorial
-
-- **Hero.** Dark-first stage: deep near-black with two slow pools of light
-  (cobalt matched to the portrait's outfit, warm amber) drifting over about
-  40 s, a faint beam and film grain. CSS only, transform-only animation,
-  off under reduced motion. Light mode is the same scene in warm daylight.
-  The name is set at `--step-hero`, the site's one oversized moment.
-- **Portrait.** The real photo, cropped and gently graded by
-  `scripts/prepare-portrait.mjs`; shown in a `--radius-xl` frame with a
-  cobalt glow behind and a whisper of grain. Never retouched.
-- **Home rhythm.** Movements, not a stack of cards: hero, one large lead
-  story, a full-width "Now" statement, disciplines as a typographic list,
-  then the dark band for work and philosophy.
-- **Reading.** Article body in Source Serif 4 (self-hosted, loaded only on
-  articles) at 68ch with generous leading; Inter for headings and UI.
-  Numbered sections, a drop cap on essays, pull quotes, a CSS scroll-driven
-  progress bar and a sticky contents rail on desktop.
-- **Diagrams.** Hand-built SVG components in `src/components/diagrams/`,
-  coloured only through token-mapped classes, so they follow light and dark
-  mode. Each has a `<title>`, `<desc>` and a numbered caption.
-- **Covers.** Article photos are royalty-free and credited. Until a photo is
-  added, `CoverArt.astro` (an original illustration of a listener in a sound
-  field) stands in; never a stock or generated image.
+All values live in `src/styles/tokens.css`. Every choice must meet the
+quality bar in `CLAUDE.md`: WCAG AA contrast, keyboard access, reduced
+motion, Lighthouse 95+.

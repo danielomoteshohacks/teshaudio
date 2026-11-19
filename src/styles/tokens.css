@@ -1,304 +1,187 @@
 /*
  * Design tokens.
  *
- * Every visual decision (colour, type, spacing, radius, elevation, motion)
- * lives here as a CSS custom property, so components reference names like
- * --space-4 rather than raw values. Changing the design means editing one file.
+ * Every visual value (colour, type, space, radius, motion) lives here as a
+ * custom property; components reference names, never raw values.
  *
- * Structure:
- *   1. Primitives on :root (raw values, never used directly by components).
- *   2. The accent (Signal).
- *   3. Semantic tokens per context, switched by data-theme on any element.
+ * Direction: docs/design-direction.md. Rich but restrained: deep blue-black
+ * surfaces layered in small tonal steps with hairline borders, very large
+ * tight-tracked type, one cobalt accent and amber used sparingly. No grain,
+ * no animated gradients, no heavy shadows.
  *
- * Direction: docs/design-direction.md ("precision engineering, soft touch").
+ * Mode: data-mode on <html> ("light" or "dark"), set before first paint by
+ * BaseLayout from the visitor's choice or their OS setting.
  */
 
 :root {
-  /* ----- Color: neutral primitives --------------------------------------
-   * Slightly warm greys, like paper and wood in lamplight rather than a lab.
-   * The ends are off-white and near-black on purpose: pure #fff and #000
-   * produce harsh glare and halation, especially on OLED phones.
-   */
-  --neutral-25: #fdfbf8;
-  --neutral-50: #f6f2ec;
-  --neutral-200: #e2dbd1;
-  --neutral-300: #aaa298;
-  --neutral-400: #8e867c;
-  --neutral-500: #6f685f;
-  --neutral-600: #5c554d;
-  --neutral-700: #302b25;
-  --neutral-750: #2a2621;
-  --neutral-800: #1e1b17;
-  --neutral-850: #191612;
-  --neutral-900: #1a1714;
-  --neutral-925: #14120f;
-  --neutral-950: #0d0c0a;
-  --neutral-text-dark: #efe9e0;
-
   /* ----- Type -----------------------------------------------------------
-   * Inter for headings and body, JetBrains Mono for technical labels and
-   * metadata. System fallbacks keep metrics close while the fonts load
-   * (font-display: swap), which limits layout shift.
+   * Inter for everything; its optical-size axis (opsz) switches to the
+   * tighter "Display" letterforms automatically at large sizes, which is
+   * what makes the big headlines look cut rather than scaled. The serif is
+   * only for article body text.
    */
   --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
-  /* Reading serif for long-form article body text only. Source Serif 4 was
-     drawn for screens: sturdy serifs and generous x-height stay crisp at body
-     sizes on low-DPI displays, and its optical-size axis tightens it at large
-     sizes (pull quotes, the drop cap). Headings stay in Inter. */
-  --font-serif: 'Source Serif 4 Variable', 'Iowan Old Style', 'Charter', Georgia, serif;
+  --font-serif: 'Source Serif 4 Variable', 'Iowan Old Style', Charter, Georgia, serif;
 
-  /*
-   * Fluid type scale: each step grows linearly from a 360px phone to a
-   * 1440px desktop viewport, then stops. The ratio also grows (1.2 on phones,
-   * 1.333 on desktop), so headlines gain far more than body text: huge on a
-   * desktop, still fitting a phone. The rem part keeps user font-size
-   * preferences working; the vw part alone would ignore browser zoom.
+  /* Fluid scale from a 360px phone to a 1440px desktop. The display steps
+   * grow much faster than body text: confident on desktop, still fitting on
+   * a phone.
    *
-   * step   phone   desktop
-   *  -2    12px    13px    mono labels (kept near-fixed: small text must stay legible)
-   *  -1    14px    15px    small print, buttons
-   *   0    16px    18px    body
-   *   1    19px    24px    lead paragraph
-   *   2    23px    32px    h4
-   *   3    28px    43px    h3
-   *   4    33px    57px    h2
-   *   5    40px    76px    h1, stat numbers
-   *   6    48px    101px   display headline
+   *  step     phone   desktop  use
+   *  -1       14px    15px     meta, captions, labels
+   *   0       16px    17px     UI body
+   *   1       18px    21px     leads
+   *   2       21px    28px     h3, list titles
+   *   3       26px    40px     h2
+   *   4       34px    60px     section display
+   *   5       44px    88px     page titles
+   *   hero    54px    124px    the name on Home
    */
-  --step--2: clamp(0.75rem, 0.729rem + 0.093vw, 0.8125rem);
   --step--1: clamp(0.875rem, 0.854rem + 0.093vw, 0.9375rem);
-  --step-0: clamp(1rem, 0.958rem + 0.185vw, 1.125rem);
-  --step-1: clamp(1.2rem, 1.1rem + 0.444vw, 1.5rem);
-  --step-2: clamp(1.44rem, 1.254rem + 0.828vw, 2rem);
-  --step-3: clamp(1.728rem, 1.416rem + 1.388vw, 2.665rem);
-  --step-4: clamp(2.074rem, 1.581rem + 2.19vw, 3.552rem);
-  --step-5: clamp(2.488rem, 1.739rem + 3.328vw, 4.735rem);
-  --step-6: clamp(2.986rem, 1.877rem + 4.927vw, 6.312rem);
-  /* The hero name only: one oversized, confident moment per site. */
-  --step-hero: clamp(5.5rem, 0.5rem + 23vw, 11.5rem);
+  --step-0: clamp(1rem, 0.979rem + 0.093vw, 1.0625rem);
+  --step-1: clamp(1.125rem, 1.063rem + 0.278vw, 1.3125rem);
+  --step-2: clamp(1.3125rem, 1.167rem + 0.648vw, 1.75rem);
+  --step-3: clamp(1.625rem, 1.333rem + 1.296vw, 2.5rem);
+  --step-4: clamp(2.125rem, 1.583rem + 2.407vw, 3.75rem);
+  --step-5: clamp(2.75rem, 1.833rem + 4.074vw, 5.5rem);
+  --step-hero: clamp(3.375rem, 1.5rem + 8.333vw, 7.75rem);
+
+  /* Article body: 18px on phones, 20px on desktop. */
+  --step-read: clamp(1.125rem, 1.083rem + 0.185vw, 1.25rem);
 
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
-  --weight-bold: 700;
+  --weight-display: 650;
 
-  /* Large text needs less leading and tighter tracking to look precise;
-     body text needs more leading to stay comfortable to read. */
-  --leading-display: 1.02;
-  --leading-tight: 1.12;
-  --leading-snug: 1.3;
+  --leading-display: 0.96;
+  --leading-tight: 1.1;
+  --leading-snug: 1.35;
   --leading-body: 1.6;
+  --leading-read: 1.65;
 
+  /* Large type needs negative tracking to look precise; small labels need a
+     little positive tracking to stay legible. */
+  --tracking-hero: -0.05em;
   --tracking-display: -0.035em;
   --tracking-tight: -0.02em;
-  --tracking-normal: 0;
-  /* Uppercase mono labels need extra space between letters to stay legible. */
-  --tracking-wide: 0.12em;
+  --tracking-label: 0.08em;
 
-  /* About 65 characters per line is the comfortable reading range. */
-  --measure: 65ch;
-  /* Article body in the serif: a touch wider, because serif text sets
-     narrower per character, so 68ch lands at the same comfortable 10 to 12
-     words per line. */
-  --measure-reading: 68ch;
-  --leading-reading: 1.72;
+  /* ----- Space (4px base) ----------------------------------------------- */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  --space-32: 8rem;
 
-  /* ----- Space ----------------------------------------------------------
-   * 4px base. Every margin, padding and gap comes from this list, which
-   * keeps vertical rhythm consistent and the grid-paper texture aligned.
-   */
-  --space-1: 0.25rem;  /*   4px */
-  --space-2: 0.5rem;   /*   8px */
-  --space-3: 0.75rem;  /*  12px */
-  --space-4: 1rem;     /*  16px */
-  --space-5: 1.25rem;  /*  20px */
-  --space-6: 1.5rem;   /*  24px */
-  --space-8: 2rem;     /*  32px */
-  --space-10: 2.5rem;  /*  40px */
-  --space-12: 3rem;    /*  48px */
-  --space-16: 4rem;    /*  64px */
-  --space-20: 5rem;    /*  80px */
-  --space-24: 6rem;    /*  96px */
-  --space-32: 8rem;    /* 128px */
+  /* Vertical space between page sections: generous, so each one reads as
+     its own movement, but not a full screen of nothing on a phone. */
+  --section-gap: clamp(4.5rem, 2.5rem + 8vw, 10rem);
 
-  /* Layout. Generous section padding is the "soft" layer's whitespace;
-     it scales so phones do not waste a full screen on empty space. */
-  --section-pad: clamp(4rem, 2rem + 8vw, 10rem);
-  --container-gutter: clamp(1rem, 0.5rem + 3vw, 3rem);
-  --container-max: 75rem;     /* 1200px */
-  --container-narrow: 46rem;  /*  736px: reading width plus gutters */
-  --container-wide: 84rem;    /* 1344px: articles, to fit contents and sidenote columns */
-
-  /* Sticky header height, also used to offset in-page anchor targets. */
+  /* ----- Layout --------------------------------------------------------- */
+  --gutter: clamp(1.25rem, 0.75rem + 2.5vw, 3rem);
+  --width-wide: 76rem;    /* 1216px: Home, panels, footer */
+  --width-text: 42.5rem;  /*  680px: reading measure */
+  --width-figure: 52rem;  /*  832px: article figures breaking out of the text */
   --header-height: 4rem;
+  --sidenote-width: 12rem;  /* margin notes (Sidenote.astro), where room allows */
 
-  /* Article margin column for sidenotes on wide screens. */
-  --sidenote-width: 12rem;
-
-  /* ----- Radius ---------------------------------------------------------
-   * Large radii are the "soft touch". Cards use lg; small controls use sm
-   * so a 44px element does not turn into a blob.
-   */
-  --radius-sm: 0.5rem;   /*  8px */
-  --radius-md: 0.875rem; /* 14px */
-  --radius-lg: 1.75rem;  /* 28px */
-  --radius-xl: 2.5rem;   /* 40px: the portrait and lead-story frames */
-  --radius-pill: 999px;  /* any value larger than half the height gives a pill */
+  /* ----- Radius --------------------------------------------------------- */
+  --radius-sm: 0.5rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
+  --radius-pill: 999px;
 
   /* ----- Motion ---------------------------------------------------------
-   * Short durations feel precise; a soft ease-out (fast start, long gentle
-   * settle) feels physical without bouncing. Collapsed under reduced motion
-   * at the bottom of this file.
+   * Quiet and purposeful: colour transitions on hover, one fade-and-rise on
+   * the hero, the page crossfade. All collapse under reduced motion (below).
    */
-  --duration-fast: 120ms;
-  --duration-base: 200ms;
-  --duration-slow: 400ms;
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+  --duration-enter: 900ms;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
-  /* Ambient stage light in the hero: slow enough that it is felt rather than
-     watched. Off entirely under reduced motion (global.css). */
-  --duration-ambient: 38s;
 
-  /* ----- Texture --------------------------------------------------------
-   * The film-grain tile (an inline SVG feTurbulence noise), shared by the
-   * page-wide grain layer, the hero and the portrait frame, so the texture is
-   * identical everywhere and the browser decodes it once.
+  /* ----- Fixed colours -------------------------------------------------
+   * Colours that do not change with the mode: the two accents' raw hues,
+   * used for artwork strokes and the hero key light only.
    */
-  --grain-tile: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.45 0 0 0 0 0.4 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-
-  /* ----- Stage light ----------------------------------------------------
-   * Raw light colours for glows, never text. Cobalt is a saturated version
-   * of the accent, matched to the blue of the outfit in the portrait; amber
-   * is the warm VU colour. Used only inside gradients at low strength.
-   */
-  --light-cobalt: #2b4dff;
-  --light-amber: #ff9a3d;
-  --accent-glow: var(--light-cobalt);
+  --cobalt-500: #3d5afe;
+  --amber-400: #ffa45c;
 }
 
-/* ----- Accents ----------------------------------------------------------
- * Signal (cobalt) is the primary accent: links, buttons, focus, players.
- * VU (amber) is a secondary warm accent for small highlights only: status
- * dots, the Now section, hover underlines. One hue cannot pass AA on both
- * light and dark surfaces, so each has a deeper and a brighter shade.
- *
- * Contrast as text (light surface / raised; dark base surface / raised;
- * dark deep surface / raised):
- *   cobalt  #2f4fe0 5.68 / 6.13   #8ea2ff 7.80 / 7.16, 8.16 / 7.52
- *   amber   #9a4208 5.97 / 6.44   #ffa45c 9.54 / 8.75, 9.98 / 9.20
- * Text on a cobalt fill: 6.13 (light), 7.80 or better (dark).
+/* ----- Light mode (default before the script runs) -------------------------
+ * Warm off-white paper, near-black ink. Contrast on --color-bg, and on the
+ * deepest panel tone (--color-bg-3) in brackets:
+ *   text 18.1 (15.5), text-2 7.9 (6.8), text-3 5.8 (5.0), accent 6.1 (5.2),
+ *   warm 6.4 (5.5). Every text colour passes AA on every surface.
  */
 :root {
-  --accent-on-light: #2f4fe0;
-  --accent-on-dark: #8ea2ff;
-  --warm-on-light: #9a4208;
-  --warm-on-dark: #ffa45c;
-}
-
-/* ----- Semantic tokens per context and mode -----------------------------
- * Components only use these. Two levels decide the values:
- *   - Mode (data-mode on <html>): light or dark for the whole site, set
- *     before first paint from the visitor's choice or their OS setting.
- *   - Context (data-theme on any element): the light and dark sections.
- * In dark mode "light" sections become warm charcoal and "dark" sections a
- * deeper near-black, so the section rhythm survives without any glare.
- *
- * Contrast (text / muted / border-strong, on surface then raised):
- *   light       16.00 / 6.58 / 3.22    17.28 / 7.10 / 3.47
- *   dark base   15.49 / 7.42 / 3.40    14.21 / 6.80 / 3.12
- *   dark deep   16.20 / 7.76 / 3.56    14.94 / 7.15 / 3.28
- * Text passes AA (most pass AAA); border-strong meets 3:1 for control
- * outlines; --color-border is a decorative hairline only.
- */
-:root,
-[data-theme='light'] {
   color-scheme: light;
 
-  --color-surface: var(--neutral-50);
-  --color-surface-raised: var(--neutral-25);
-  --color-text: var(--neutral-900);
-  --color-text-muted: var(--neutral-600);
-  --color-border: var(--neutral-200);
-  --color-border-strong: var(--neutral-400);
-  --color-accent: var(--accent-on-light);
-  --color-accent-contrast: var(--neutral-25);
-  --color-warm: var(--warm-on-light);
-  --color-focus: var(--color-accent);
-  /* Strength of the soft accent glows behind heroes and headings: low, so
-     they read as ambient light rather than shapes. */
-  --glow-strength: 10%;
-  --portrait-glow: 30%;
+  --color-bg: #fafaf8;
+  --color-bg-2: #f3f2ee;       /* one step deeper: bands, panels */
+  --color-bg-3: #ebe9e3;       /* two steps: hover, artwork wells */
+  --color-text: #111113;
+  --color-text-2: #4d4e55;     /* secondary text */
+  --color-text-3: #626369;     /* captions, meta */
+  --color-line: #e2e0da;       /* hairlines */
+  --color-line-strong: #c9c6be;
+  --color-accent: #2f4fe0;
+  --color-accent-contrast: #fafaf8;
+  --color-warm: #9a4208;
+  --color-focus: #2f4fe0;
+  /* The static key light behind the hero portrait. */
+  --key-light: color-mix(in srgb, var(--cobalt-500) 16%, transparent);
 
-  /* Elevation: two stacked shadows each, one tight for contact and one wide
-     and faint for ambient light, tinted warm so they read as soft shade. */
-  --shadow-1: 0 1px 2px rgb(40 30 20 / 0.05), 0 8px 24px -8px rgb(40 30 20 / 0.1);
-  --shadow-2: 0 2px 4px rgb(40 30 20 / 0.05), 0 18px 40px -12px rgb(40 30 20 / 0.16);
-  --shadow-3: 0 4px 8px rgb(40 30 20 / 0.06), 0 32px 64px -16px rgb(40 30 20 / 0.2);
+  /* Artwork (SVG) colours. */
+  --art-ink: #2a2b31;
+  --art-line: #b9b6ad;
+  --art-accent: #2f4fe0;
+  --art-warm: #c25a12;
 }
 
-/* Dark sections in light mode, and the deepest layer in dark mode. */
-[data-theme='dark'] {
-  color-scheme: dark;
-
-  --color-surface: var(--neutral-950);
-  --color-surface-raised: var(--neutral-850);
-  --color-text: var(--neutral-text-dark);
-  --color-text-muted: var(--neutral-300);
-  --color-border: var(--neutral-750);
-  --color-border-strong: var(--neutral-500);
-  --color-accent: var(--accent-on-dark);
-  --color-accent-contrast: var(--neutral-950);
-  --color-warm: var(--warm-on-dark);
-  --color-focus: var(--color-accent);
-  --glow-strength: 14%;
-  --portrait-glow: 48%;
-
-  /* Shadows barely show on near-black, so each level adds a faint inset
-     top-edge highlight. That is how raised surfaces read in a dark room. */
-  --shadow-1: inset 0 1px 0 rgb(255 240 220 / 0.05), 0 1px 2px rgb(0 0 0 / 0.3),
-    0 8px 24px -8px rgb(0 0 0 / 0.5);
-  --shadow-2: inset 0 1px 0 rgb(255 240 220 / 0.07), 0 2px 4px rgb(0 0 0 / 0.3),
-    0 18px 40px -12px rgb(0 0 0 / 0.6);
-  --shadow-3: inset 0 1px 0 rgb(255 240 220 / 0.08), 0 4px 8px rgb(0 0 0 / 0.35),
-    0 32px 64px -16px rgb(0 0 0 / 0.7);
-}
-
-/* Dark mode: the page and its "light" sections become warm charcoal. */
-:root[data-mode='dark'],
-:root[data-mode='dark'] [data-theme='light'] {
-  color-scheme: dark;
-
-  --color-surface: var(--neutral-925);
-  --color-surface-raised: var(--neutral-800);
-  --color-text: var(--neutral-text-dark);
-  --color-text-muted: var(--neutral-300);
-  --color-border: var(--neutral-700);
-  --color-border-strong: var(--neutral-500);
-  --color-accent: var(--accent-on-dark);
-  --color-accent-contrast: var(--neutral-950);
-  --color-warm: var(--warm-on-dark);
-  --color-focus: var(--color-accent);
-  --glow-strength: 14%;
-  --portrait-glow: 48%;
-
-  --shadow-1: inset 0 1px 0 rgb(255 240 220 / 0.05), 0 1px 2px rgb(0 0 0 / 0.3),
-    0 8px 24px -8px rgb(0 0 0 / 0.5);
-  --shadow-2: inset 0 1px 0 rgb(255 240 220 / 0.07), 0 2px 4px rgb(0 0 0 / 0.3),
-    0 18px 40px -12px rgb(0 0 0 / 0.6);
-  --shadow-3: inset 0 1px 0 rgb(255 240 220 / 0.08), 0 4px 8px rgb(0 0 0 / 0.35),
-    0 32px 64px -16px rgb(0 0 0 / 0.7);
-}
-
-/* ----- Reduced motion ----------------------------------------------------
- * Collapse durations to near zero rather than exactly zero, so transitionend
- * events still fire for any script that waits on them. global.css adds a
- * blanket override for anything that does not use these tokens.
+/* ----- Dark mode -----------------------------------------------------------
+ * A near-black with a hint of blue, layered in small tonal steps so panels
+ * read as depth rather than boxes. Contrast on --color-bg (and --color-bg-3):
+ *   text 17.3 (15.3), text-2 9.6 (8.4), text-3 6.1 (5.3), accent 8.2 (7.2),
+ *   warm 10.0 (8.8).
  */
+:root[data-mode='dark'] {
+  color-scheme: dark;
+
+  --color-bg: #0b0c10;
+  --color-bg-2: #111318;
+  --color-bg-3: #181b22;
+  --color-text: #f2f1ed;
+  --color-text-2: #b4b5bc;
+  --color-text-3: #8d8f97;
+  --color-line: #22252d;
+  --color-line-strong: #353945;
+  --color-accent: #8ea2ff;
+  --color-accent-contrast: #0b0c10;
+  --color-warm: #ffa45c;
+  --color-focus: #8ea2ff;
+  --key-light: color-mix(in srgb, var(--cobalt-500) 26%, transparent);
+
+  --art-ink: #e8e7e3;
+  --art-line: #3b3f4b;
+  --art-accent: #8ea2ff;
+  --art-warm: #ffa45c;
+}
+
 @media (prefers-reduced-motion: reduce) {
   :root {
     --duration-fast: 0.01ms;
     --duration-base: 0.01ms;
-    --duration-slow: 0.01ms;
+    --duration-enter: 0.01ms;
   }
 }
