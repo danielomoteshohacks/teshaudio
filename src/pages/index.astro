@@ -88,7 +88,7 @@ const projectTitles = new Map((await getPublishedProjects()).map((p) => [p.id, p
         index="02"
         id="listening-title"
         title={copy.home.listening.title}
-        lead={copy.home.listening.lead}
+        lead={tracks.length > 0 ? copy.home.listening.lead : undefined}
         link={{ label: 'All music', href: '/music/' }}
       />
       {

@@ -45,7 +45,13 @@ export default defineConfig({
   integrations: [
     mdx(),
     sitemap({
-      filter: (page) => !unlistedPaths.includes(new URL(page).pathname),
+      // Unlisted articles stay out, and so do the filter views
+      // (/projects/status/..., /writing/kind/...), which repeat entries
+      // already listed on their index pages.
+      filter: (page) => {
+        const path = new URL(page).pathname;
+        return !unlistedPaths.includes(path) && !/^\/(projects\/status|writing\/kind)\//.test(path);
+      },
     }),
   ],
 });
