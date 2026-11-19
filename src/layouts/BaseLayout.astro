@@ -1,0 +1,41 @@
+---
+// Variable fonts: one file per family covers every weight, which is smaller
+// than shipping a file per weight. Fontsource bundles them with the build, so
+// no request ever goes to a third-party font CDN.
+import '@fontsource-variable/inter';
+import '@fontsource-variable/jetbrains-mono';
+import '../styles/tokens.css';
+import { site } from '../lib/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title = site.title, description = site.description } = Astro.props;
+
+// Canonical URL tells search engines which address is the real one, avoiding
+// duplicate-content issues (for example trailing slash vs none).
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang={site.lang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    {/* Lets the browser render native UI (scrollbars, form controls) in the
+        matching scheme before any CSS loads, avoiding a flash. Written as an
+        expression comment so it is stripped from the shipped HTML. */}
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta name="generator" content={Astro.generator} />
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
