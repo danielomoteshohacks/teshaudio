@@ -6,7 +6,8 @@ year: 2026
 genre: Test audio
 durationSeconds: 2
 audioUrl: /audio/test/sine-440.wav
-featured: true
+# Not featured: Home must never present test audio as Tesh's music.
+featured: false
 order: 1
 testAudio: true
 ---

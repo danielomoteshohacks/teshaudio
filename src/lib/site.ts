@@ -77,7 +77,7 @@ export const copy = {
     },
     building: { eyebrow: 'Work', title: 'Currently building' },
     writing: { eyebrow: 'Writing', title: 'Latest writing' },
-    lab: { eyebrow: 'Lab', title: 'From the lab', lead: 'Interactive experiments with sound, built for the browser.' },
+    lab: { eyebrow: 'Lab', title: 'From the lab', lead: 'Interactive demos that run in the browser. The first ones are on the way.' },
     contact: { eyebrow: 'Contact', title: 'Get in touch' },
   },
   music: {
@@ -106,7 +106,7 @@ export const copy = {
   },
   findings: {
     title: 'Findings',
-    lead: 'Short notes on things discovered along the way: measurements, listening tests and small surprises.',
+    lead: 'Short notes on things discovered along the way.',
     description: 'Short-form discoveries by Tesh about sound, listening and audio software.',
   },
   philosophy: {
@@ -115,8 +115,8 @@ export const copy = {
   },
   lab: {
     title: 'Lab',
-    lead: 'Interactive experiments with sound, built for the browser with Web Audio and WebAssembly.',
-    description: 'Interactive experiments with sound by Tesh, built for the browser.',
+    lead: 'Interactive demos of the projects, running in the browser with Web Audio and WebAssembly. The first ones are on the way.',
+    description: 'Interactive audio demos by Tesh that run in the browser.',
   },
 } as const;
 
