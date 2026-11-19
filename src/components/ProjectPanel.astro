@@ -1,0 +1,94 @@
+---
+/**
+ * ProjectPanel: a project as one large link panel, with its artwork above
+ * the status, title and one line. The whole panel is the link (one focus
+ * stop, one big tap target). Hover lifts the panel one tonal step and slides
+ * in the underline on "View project"; no movement, no shadow.
+ */
+import type { CollectionEntry } from 'astro:content';
+import ProjectArt from './art/ProjectArt.astro';
+import Status from './Status.astro';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  headingLevel?: 'h2' | 'h3';
+}
+
+const { project, headingLevel: Heading = 'h3' } = Astro.props;
+const { title, tagline, summary, status } = project.data;
+---
+
+<a class="panel" href={`/projects/${project.id}/`}>
+  <div class="panel__art">
+    <ProjectArt id={project.id} />
+  </div>
+  <div class="panel__body">
+    <Status status={status} />
+    <Heading class="panel__title">{title}</Heading>
+    <p class="panel__line">{tagline ?? summary}</p>
+    <span class="panel__more" aria-hidden="true"><span class="slide-link">View project</span> &rarr;</span>
+  </div>
+</a>
+
+<style>
+  .panel {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    height: 100%;
+    overflow: hidden;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-xl);
+    background-color: var(--color-bg-2);
+    color: var(--color-text);
+    text-decoration: none;
+    transition:
+      background-color var(--duration-base) var(--ease-out),
+      border-color var(--duration-base) var(--ease-out);
+  }
+
+  .panel:hover {
+    border-color: var(--color-line-strong);
+    background-color: var(--color-bg-3);
+  }
+
+  .panel:focus-visible {
+    outline-offset: 4px;
+  }
+
+  .panel__art {
+    aspect-ratio: 8 / 5;
+    padding: clamp(var(--space-4), 3vw, var(--space-8));
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .panel__body {
+    display: grid;
+    align-content: start;
+    gap: var(--space-3);
+    padding: clamp(var(--space-6), 3vw, var(--space-10));
+  }
+
+  .panel__title {
+    margin-top: var(--space-2);
+    font-size: var(--step-3);
+    font-weight: var(--weight-semibold);
+    letter-spacing: var(--tracking-display);
+  }
+
+  .panel__line {
+    max-width: 30rem;
+    font-size: var(--step-1);
+    line-height: var(--leading-snug);
+    color: var(--color-text-2);
+  }
+
+  .panel__more {
+    margin-top: var(--space-4);
+    font-size: var(--step--1);
+    font-weight: var(--weight-semibold);
+  }
+
+  .panel:hover .slide-link {
+    background-size: 100% 1px;
+  }
+</style>

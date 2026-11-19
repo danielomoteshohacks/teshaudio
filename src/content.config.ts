@@ -33,7 +33,8 @@ const projects = defineCollection({
       summary: z.string(),
       // A short caveat shown on the project page (e.g. "not a medical device").
       note: z.string().optional(),
-      status: z.enum(['active', 'paused', 'shipped', 'concept']),
+      // research: an ongoing study or tool shown as research, not a product.
+      status: z.enum(['active', 'paused', 'shipped', 'concept', 'research']),
       // Optional and hidden until supplied: these are facts, never guessed.
       role: z.string().optional(),
       tech: z.array(z.string()).default([]),

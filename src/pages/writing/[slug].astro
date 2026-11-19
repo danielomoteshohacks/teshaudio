@@ -1,31 +1,33 @@
 ---
 /**
- * Article template, shared by every writing kind (essay, research, note,
- * finding).
+ * Article template, shared by every writing kind.
  *
- * Layout: one comfortable reading column on phones. From 75rem it becomes
- * three columns: table of contents (left), text (centre, about 65ch) and a
- * margin for sidenotes (right), the arrangement used by research-grade
- * typesetting so notes sit beside the line they explain.
+ * Set like a publication: a large title, the subtitle, a byline row (small
+ * portrait, name, date, reading time), then the body in the reading serif
+ * at a 680px measure. Figures break slightly out of the text column on
+ * wide screens. From 80rem a quiet contents rail sits to the right of the
+ * text; below that there is no contents list, so a phone reader starts
+ * reading immediately. It ends with a short author note.
  *
  * MDX components available inside articles without importing them:
- * Sidenote, Figure, TrackPlayer, ABPlayer.
+ * Sidenote, Figure, PullQuote, ClosingLine. Diagrams are imported by the
+ * article that uses them.
  */
 import { render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Container from '../../components/Container.astro';
-import Badge from '../../components/Badge.astro';
-import Button from '../../components/Button.astro';
-import ABPlayer from '../../components/ABPlayer.astro';
+import Portrait from '../../components/Portrait.astro';
 import Sidenote from '../../components/mdx/Sidenote.astro';
 import Figure from '../../components/mdx/Figure.astro';
-import TrackPlayer from '../../components/mdx/TrackPlayer.astro';
+import PullQuote from '../../components/mdx/PullQuote.astro';
+import ClosingLine from '../../components/mdx/ClosingLine.astro';
 import { getProject, getPublishedWriting } from '../../lib/content';
 import { formatDate, isoDate, kindLabel, readingTime } from '../../lib/format';
 import { site } from '../../lib/site';
 import '../../styles/prose.css';
-// Emitted as a separate stylesheet and linked only on articles with math,
-// so KaTeX's CSS and fonts never load on pages that do not need them.
+import '@fontsource-variable/source-serif-4/opsz.css';
+import serifLatin from '@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-normal.woff2?url';
+// Linked only on articles with math, so KaTeX's CSS and fonts never load
+// on pages that do not need them.
 import katexCss from 'katex/dist/katex.min.css?url';
 
 export async function getStaticPaths() {
@@ -34,14 +36,14 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const { title, description, pubDate, updatedDate, kind, tags, references, relatedProject, unlisted } =
-  entry.data;
+const { title, description, pubDate, updatedDate, kind, references, relatedProject, unlisted } = entry.data;
 const { Content, headings, remarkPluginFrontmatter } = await render(entry);
 const project = relatedProject ? await getProject(relatedProject.id) : undefined;
 
-// A table of contents only earns its space on longer pieces.
-const tocHeadings = headings.filter((h) => h.depth === 2 || h.depth === 3);
-const showToc = headings.filter((h) => h.depth === 2).length >= 3;
+// The contents rail lists the sections (H2s), and only on longer pieces.
+const toc = headings.filter((h) => h.depth === 2);
+const showToc = toc.length >= 3;
+const github = site.socials.find((s) => s.label === 'GitHub');
 
 const articleSchema = {
   '@context': 'https://schema.org',
@@ -56,203 +58,216 @@ const articleSchema = {
 
 <BaseLayout title={title} description={description} noindex={unlisted} ogType="article" jsonLd={articleSchema}>
   {remarkPluginFrontmatter.hasMath && <link slot="head" rel="stylesheet" href={katexCss} />}
+  {/* The serif is the body face: fetch it alongside the CSS rather than
+      after, so the first paragraph does not reflow when it arrives. */}
+  <link slot="head" rel="preload" href={serifLatin} as="font" type="font/woff2" crossorigin />
 
   <article class="article">
-    <Container>
-      <header class="article__header">
-        <a class="back" href={kind === 'finding' ? '/findings/' : '/writing/'}>
-          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M11 7H3M6.5 3.5L3 7l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-          {kind === 'finding' ? 'All findings' : 'All writing'}
-        </a>
-        <div class="article__kicker">
-          <Badge tone="accent">{kindLabel[kind]}</Badge>
-          <p class="meta">
+    <header class="head wrap wrap--text">
+      <p class="label enter">{kindLabel[kind]}</p>
+      <h1 class="head__title enter" style="--order: 1">{title}</h1>
+      <p class="head__subtitle enter" style="--order: 2">{description}</p>
+      <div class="byline enter" style="--order: 3">
+        <Portrait size="small" />
+        <p class="byline__text">
+          <span class="byline__name">{site.fullName}</span>
+          <span class="label">
             <time datetime={isoDate(pubDate)}>{formatDate(pubDate)}</time>
             {
               updatedDate && (
                 <>
-                  <span aria-hidden="true"> · </span>Updated <time datetime={isoDate(updatedDate)}>{formatDate(updatedDate)}</time>
+                  {' '}· Updated <time datetime={isoDate(updatedDate)}>{formatDate(updatedDate)}</time>
                 </>
               )
             }
-            <span aria-hidden="true"> · </span>{readingTime(entry.body)}
-          </p>
-        </div>
-        <h1 class="article__title">{title}</h1>
-        <p class="article__lead">{description}</p>
-        {
-          tags.length > 0 && (
-            <ul class="article__tags" aria-label="Tags">
-              {tags.map((tag) => (
-                <li class="meta">#{tag}</li>
-              ))}
-            </ul>
-          )
-        }
-      </header>
-
-      <div class:list={['article__layout', { 'article__layout--toc': showToc }]}>
-        {
-          showToc && (
-            <nav class="toc" aria-labelledby="toc-title">
-              <details class="toc__details" open>
-                <summary id="toc-title" class="toc__title meta">Contents</summary>
-                <ol class="toc__list">
-                  {tocHeadings.map((heading) => (
-                    <li class:list={[`toc__item--${heading.depth}`]}>
-                      <a href={`#${heading.slug}`}>{heading.text}</a>
-                    </li>
-                  ))}
-                </ol>
-              </details>
-            </nav>
-          )
-        }
-
-        <div class="article__body">
-          <div class="prose">
-            <Content components={{ Sidenote, Figure, TrackPlayer, ABPlayer }} />
-          </div>
-
-          {
-            references.length > 0 && (
-              <section class="references" aria-labelledby="references-title">
-                <h2 id="references-title" class="references__title">References</h2>
-                <ol class="references__list">
-                  {references.map((ref, i) => (
-                    <li id={`ref-${i + 1}`}>
-                      {ref.authors && <span>{ref.authors}. </span>}
-                      {ref.url ? (
-                        <a href={ref.url} rel="noopener">
-                          {ref.title}
-                        </a>
-                      ) : (
-                        <cite>{ref.title}</cite>
-                      )}
-                      {ref.publisher && <span>. {ref.publisher}</span>}
-                      {ref.year && <span>, {ref.year}</span>}.
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            )
-          }
-
-          <footer class="article__footer">
-            {
-              project && (
-                <p class="article__related">
-                  <span class="meta">Related project</span>
-                  <a href={`/projects/${project.id}/`}>{project.data.title}</a>
-                </p>
-              )
-            }
-            <div class="article__actions">
-              <Button variant="secondary" href={kind === 'finding' ? '/findings/' : '/writing/'}>
-                {kind === 'finding' ? 'More findings' : 'More writing'}
-              </Button>
-              <Button variant="ghost" href="/rss.xml">RSS feed</Button>
-            </div>
-          </footer>
-        </div>
+            {' '}· {readingTime(entry.body)}
+          </span>
+        </p>
       </div>
-    </Container>
+    </header>
+
+    <div class:list={['layout', { 'layout--toc': showToc }]}>
+      <div class="layout__text">
+        <div class="prose prose--read">
+          <Content components={{ Sidenote, Figure, PullQuote, ClosingLine }} />
+        </div>
+
+        {
+          references.length > 0 && (
+            <section class="references" aria-labelledby="references-title">
+              <h2 id="references-title" class="references__title">References</h2>
+              <ol class="references__list">
+                {references.map((ref, i) => (
+                  <li id={`ref-${i + 1}`}>
+                    {ref.authors && <span>{ref.authors}. </span>}
+                    {ref.url ? (
+                      <a href={ref.url} rel="noopener">
+                        {ref.title}
+                      </a>
+                    ) : (
+                      <cite>{ref.title}</cite>
+                    )}
+                    {ref.publisher && <span>. {ref.publisher}</span>}
+                    {ref.year && <span>, {ref.year}</span>}.
+                  </li>
+                ))}
+              </ol>
+            </section>
+          )
+        }
+
+        <footer class="author">
+          <Portrait size="small" class="author__portrait" />
+          <div class="author__text">
+            <p>{site.authorNote}</p>
+            <p class="author__links">
+              {github && (
+                <a class="slide-link" href={github.url} rel="me noopener">
+                  {github.label}
+                </a>
+              )}
+              {project && (
+                <a class="slide-link" href={`/projects/${project.id}/`}>
+                  About {project.data.title}
+                </a>
+              )}
+            </p>
+          </div>
+        </footer>
+      </div>
+
+      {
+        showToc && (
+          <nav class="toc" aria-labelledby="toc-title">
+            <p id="toc-title" class="toc__title">
+              On this page
+            </p>
+            <ol class="toc__list">
+              {toc.map((heading) => (
+                <li>
+                  <a href={`#${heading.slug}`}>{heading.text}</a>
+                </li>
+              ))}
+            </ol>
+          </nav>
+        )
+      }
+    </div>
   </article>
 </BaseLayout>
 
 <style>
   .article {
-    padding-block: var(--space-10) var(--space-24);
+    padding-top: clamp(var(--space-10), 6vw, var(--space-20));
+    /* Figures in the body are numbered per article. */
+    counter-reset: figure sidenote;
   }
 
-  .back {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 44px;
-    margin-bottom: clamp(var(--space-8), 5vw, var(--space-16));
-    font-size: var(--step--1);
-    font-weight: var(--weight-medium);
-    color: var(--color-text-muted);
-    text-decoration: none;
-  }
-
-  .back:hover {
-    color: var(--color-text);
-  }
-
-  .article__header {
+  /* ===== Header ============================================================ */
+  .head {
     display: grid;
     gap: var(--space-5);
-    max-width: 52rem;
-    margin-bottom: clamp(var(--space-12), 6vw, var(--space-20));
+    margin-bottom: clamp(var(--space-10), 5vw, var(--space-16));
   }
 
-  .article__kicker {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-3) var(--space-4);
-  }
-
-  .article__title {
+  .head__title {
     font-size: var(--step-5);
+    font-weight: var(--weight-display);
     line-height: var(--leading-display);
-    letter-spacing: var(--tracking-display);
+    letter-spacing: var(--tracking-hero);
   }
 
-  .article__lead {
-    max-width: 40rem;
-    font-size: var(--step-1);
+  .head__subtitle {
+    font-size: var(--step-2);
+    font-weight: var(--weight-regular);
     line-height: var(--leading-snug);
-    color: var(--color-text-muted);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-text-2);
+    text-wrap: balance;
   }
 
-  .article__tags {
+  .byline {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2) var(--space-4);
-    padding: 0;
-    list-style: none;
+    align-items: center;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-line);
   }
 
-  /* Sidenotes and figures are numbered per article. */
-  .article__body {
+  .byline__text {
+    display: grid;
+    line-height: 1.35;
+  }
+
+  .byline__name {
+    font-size: var(--step--1);
+    font-weight: var(--weight-semibold);
+  }
+
+  /* ===== Body and contents rail ============================================
+   * The text column is centred on the page. Figures break out of it up to
+   * --width-figure (see the rule below); on a phone the breakout is zero.
+   * From 80rem the rail sits in the right-hand margin, far enough out that
+   * a breaking-out figure never runs under it.
+   */
+  .layout {
+    width: min(100% - 2 * var(--gutter), var(--width-text));
+    margin-inline: auto;
+  }
+
+  .layout__text {
     min-width: 0;
-    counter-reset: sidenote figure;
   }
 
-  /* ----- Table of contents ----- */
   .toc {
-    margin-bottom: var(--space-12);
-    padding: var(--space-5) var(--space-6);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    display: none;
+  }
+
+  @media (min-width: 80rem) {
+    .layout--toc {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) var(--width-text) minmax(0, 1fr);
+      width: 100%;
+    }
+
+    .layout--toc .layout__text {
+      grid-column: 2;
+    }
+
+    .toc {
+      display: block;
+      grid-column: 3;
+      grid-row: 1;
+      position: sticky;
+      top: calc(var(--header-height) + var(--space-12));
+      align-self: start;
+      max-width: 15rem;
+      margin-left: 6rem;
+    }
   }
 
   .toc__title {
-    display: flex;
-    align-items: center;
-    min-height: 44px;
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
-    cursor: pointer;
+    font-size: var(--step--1);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
   }
 
   .toc__list {
     display: grid;
     gap: var(--space-1);
-    margin-top: var(--space-2);
-    padding: 0;
+    margin-top: var(--space-3);
+    padding: 0 0 0 var(--space-4);
+    border-left: 1px solid var(--color-line);
     list-style: none;
   }
 
   .toc__list a {
     display: block;
-    padding-block: var(--space-2);
+    padding-block: var(--space-1);
     font-size: var(--step--1);
     line-height: var(--leading-snug);
-    color: var(--color-text-muted);
+    color: var(--color-text-3);
     text-decoration: none;
   }
 
@@ -260,99 +275,49 @@ const articleSchema = {
     color: var(--color-text);
   }
 
-  .toc__item--3 {
-    padding-left: var(--space-4);
-  }
-
-  /* ----- Wide layout: contents | text | sidenote margin -----
-   * Inside the standard container (so every left edge lines up with the
-   * header), the text column narrows slightly to 60ch, still well inside the
-   * comfortable range, to leave a full-width margin for sidenotes. */
-  @media (min-width: 75rem) {
-    .article__layout {
-      --measure: 60ch;
-      display: grid;
-      grid-template-columns: 10rem var(--measure) minmax(0, 1fr);
-      column-gap: var(--space-8);
-    }
-
-    /* The text column stays in the same place with or without contents. */
-    .article__body {
-      grid-column: 2;
-    }
-
-    .toc {
-      grid-column: 1;
-      grid-row: 1;
-      position: sticky;
-      top: calc(var(--header-height) + var(--space-8));
-      align-self: start;
-      max-height: calc(100vh - var(--header-height) - var(--space-16));
-      overflow-y: auto;
-      margin: 0;
-      padding: 0;
-      border: 0;
-    }
-
-    /* Header (which also contains the back link) aligns with the text column. */
-    .article__header {
-      margin-left: calc(10rem + var(--space-8));
-    }
-  }
-
-  /* ----- References and footer ----- */
+  /* ===== References and author note ======================================= */
   .references {
-    max-width: var(--measure);
     margin-top: var(--space-16);
     padding-top: var(--space-8);
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid var(--color-line);
   }
 
   .references__title {
-    font-size: var(--step-1);
+    font-size: var(--step-0);
   }
 
   .references__list {
     display: grid;
     gap: var(--space-3);
-    margin-top: var(--space-5);
+    margin-top: var(--space-4);
     padding-left: var(--space-6);
     font-size: var(--step--1);
-    color: var(--color-text-muted);
+    color: var(--color-text-2);
   }
 
-  .references__list li::marker {
-    font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* Target highlight when jumping to a reference from the text. */
-  .references__list li:target {
-    color: var(--color-text);
-  }
-
-  .article__footer {
-    display: grid;
-    gap: var(--space-8);
-    max-width: var(--measure);
+  .author {
+    display: flex;
+    gap: var(--space-4);
+    align-items: flex-start;
     margin-top: var(--space-16);
-    padding-top: var(--space-8);
-    border-top: 1px solid var(--color-border);
+    padding: var(--space-6);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-bg-2);
   }
 
-  .article__related {
+  .author__text {
     display: grid;
-    gap: var(--space-1);
+    gap: var(--space-2);
+    font-size: var(--step-0);
+    line-height: var(--leading-snug);
   }
 
-  .article__related a {
-    font-size: var(--step-1);
-    font-weight: var(--weight-semibold);
-  }
-
-  .article__actions {
+  .author__links {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-3);
+    gap: var(--space-1) var(--space-5);
+    font-size: var(--step--1);
+    font-weight: var(--weight-semibold);
   }
 </style>

@@ -1,0 +1,136 @@
+---
+/**
+ * Diagram: the life of a song, from opt-in to playback, in five steps.
+ *
+ * An ordered list rather than one big SVG, because a flow that is
+ * horizontal on desktop and vertical on a phone is a layout change, not a
+ * scale change. As a list it reflows naturally, screen readers announce
+ * five steps in order, and the text stays real text at a legible size. The
+ * direction switches on the figure's own width (container query).
+ *
+ * The step text paraphrases the essay's own numbered list, nothing more.
+ */
+import Diagram from './Diagram.astro';
+
+const steps = [
+  { title: 'Opt in', text: 'The artist or label says yes.' },
+  { title: 'Process once', text: 'On the service’s servers: stems separated, cleaned, mix profile built.' },
+  { title: 'Store', text: 'Next to the stereo and lossless files.' },
+  { title: 'Play', text: 'The renderer inside the app plays it on any headphones.' },
+  { title: 'Switch off', text: 'Back to the original stereo master.' },
+];
+---
+
+<Diagram caption="The life of a song. The heavy lifting happens once per song, on the service’s servers, before anyone listens. The phone just plays.">
+  <ol class="flow" aria-label="The life of a song, in five steps">
+    {
+      steps.map((step, i) => (
+        <li class="flow__step">
+          <span class="flow__node" aria-hidden="true">
+            {i + 1}
+          </span>
+          <span class="flow__text">
+            <strong class="flow__title">{step.title}</strong>
+            <span class="flow__body">{step.text}</span>
+          </span>
+        </li>
+      ))
+    }
+  </ol>
+</Diagram>
+
+<style>
+  .flow {
+    --node: 2rem;
+    display: grid;
+    gap: var(--space-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-sans);
+  }
+
+  /* Vertical: numbered node on the left, a hairline joining the nodes. */
+  .flow__step {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--node) 1fr;
+    gap: var(--space-4);
+    align-items: start;
+  }
+
+  .flow__step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: calc(var(--node) + var(--space-1));
+    bottom: calc(-1 * var(--space-5) + var(--space-1));
+    left: calc(var(--node) / 2);
+    width: 1px;
+    background-color: var(--color-line-strong);
+  }
+
+  .flow__node {
+    display: grid;
+    place-items: center;
+    width: var(--node);
+    height: var(--node);
+    border: 1px solid var(--color-accent);
+    border-radius: var(--radius-pill);
+    background-color: var(--color-bg-2);
+    font-size: var(--step--1);
+    font-weight: var(--weight-semibold);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-accent);
+  }
+
+  /* The last step returns to the original: amber marks it. */
+  .flow__step:last-child .flow__node {
+    border-color: var(--color-warm);
+    color: var(--color-warm);
+  }
+
+  .flow__text {
+    display: grid;
+    gap: var(--space-1);
+    padding-top: 0.2rem;
+  }
+
+  .flow__title {
+    font-size: var(--step-0);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-snug);
+    color: var(--color-text);
+  }
+
+  .flow__body {
+    font-size: var(--step--1);
+    line-height: var(--leading-snug);
+    color: var(--color-text-2);
+  }
+
+  /* Horizontal: five columns, nodes in a row joined by a hairline. */
+  @container (min-width: 40rem) {
+    .flow {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: var(--space-5);
+    }
+
+    .flow__step {
+      grid-template-columns: 1fr;
+      gap: var(--space-4);
+    }
+
+    .flow__step:not(:last-child)::after {
+      top: calc(var(--node) / 2);
+      bottom: auto;
+      left: calc(var(--node) + var(--space-2));
+      right: calc(-1 * var(--space-5) + var(--space-2));
+      width: auto;
+      height: 1px;
+    }
+
+    .flow__text {
+      padding-top: 0;
+    }
+  }
+</style>

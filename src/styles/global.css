@@ -1,19 +1,12 @@
 /*
- * Global base styles.
- *
- * tokens.css holds values only; this file holds the element-level rules that
- * use them: a small reset, base typography, context surfaces, focus, film
- * grain, studio glows and the reduced-motion safety net. Component-specific
- * styling belongs in each component's scoped <style>, not here.
+ * Global base styles: a small reset, base typography, focus, links and the
+ * reduced-motion safety net. Component styling lives in each component's
+ * scoped <style>. Values come from tokens.css.
  */
-
-/* ----- Reset ------------------------------------------------------------ */
 
 *,
 *::before,
 *::after {
-  /* Padding and borders count inside the declared width, so a 100% wide
-     element with padding never overflows its parent. */
   box-sizing: border-box;
 }
 
@@ -23,36 +16,36 @@
 
 html {
   font-family: var(--font-sans);
-  /* Inter's optical-size axis: display sizes get tighter, display-tuned
-     letterforms and body sizes keep open, text-tuned ones, automatically. */
+  /* Inter's optical-size axis: display letterforms at headline sizes, text
+     letterforms at body sizes, automatically. */
   font-optical-sizing: auto;
-  /* Stops iOS Safari inflating text in landscape. */
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
+  /* Anchor jumps land below the sticky header instead of underneath it. */
+  scroll-padding-top: calc(var(--header-height) + var(--space-6));
+  background-color: var(--color-bg);
 }
 
 body {
   min-height: 100vh;
   font-size: var(--step-0);
   line-height: var(--leading-body);
-  background-color: var(--color-surface);
+  background-color: var(--color-bg);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Glows extend past their elements. Clipping on <main> (not <body>, whose
-   overflow is handed to the viewport and would not clip) stops them causing
-   sideways scroll; clip, unlike hidden, keeps sticky elements working. */
 main {
+  /* Wide figures in articles bleed toward the edges; clip (unlike hidden)
+     stops sideways scroll without breaking sticky positioning. */
   overflow-x: clip;
 }
 
 img,
 picture,
 svg,
-video,
-canvas {
+video {
   display: block;
   max-width: 100%;
 }
@@ -61,21 +54,9 @@ input,
 button,
 textarea,
 select {
-  /* Form controls do not inherit fonts by default. */
   font: inherit;
   color: inherit;
 }
-
-/* ----- Contexts ----------------------------------------------------------
- * Any element that sets data-theme paints its own surface and text colour,
- * which is what makes Apple-style alternating light and dark sections work.
- */
-[data-theme] {
-  background-color: var(--color-surface);
-  color: var(--color-text);
-}
-
-/* ----- Typography ------------------------------------------------------- */
 
 h1,
 h2,
@@ -84,27 +65,8 @@ h4 {
   font-weight: var(--weight-semibold);
   line-height: var(--leading-tight);
   letter-spacing: var(--tracking-tight);
-  /* Balanced wrapping avoids a single orphaned word on the last line of a
-     large headline, which matters most on narrow phones. */
+  /* Balanced wrapping avoids a lone word on the last line of a headline. */
   text-wrap: balance;
-}
-
-h1 {
-  font-size: var(--step-5);
-  line-height: var(--leading-display);
-  letter-spacing: var(--tracking-display);
-}
-
-h2 {
-  font-size: var(--step-4);
-}
-
-h3 {
-  font-size: var(--step-3);
-}
-
-h4 {
-  font-size: var(--step-2);
 }
 
 p,
@@ -115,32 +77,15 @@ li {
 h1,
 h2,
 h3,
-h4,
 p {
-  /* Long words (URLs, technical terms) wrap instead of forcing a sideways
-     page scroll on a phone. */
   overflow-wrap: break-word;
 }
 
 a {
   color: var(--color-accent);
   text-decoration-thickness: 1px;
-  text-underline-offset: 0.2em;
-}
-
-/* Amber underline on hover: a small warm signal, while the link text keeps
-   its AA-passing accent colour. */
-a:hover {
-  text-decoration-thickness: 2px;
-  text-decoration-color: var(--color-warm);
-}
-
-code,
-kbd,
-samp,
-pre {
-  font-family: var(--font-mono);
-  font-size: 0.9em;
+  text-underline-offset: 0.22em;
+  transition: color var(--duration-fast) var(--ease-out), text-decoration-color var(--duration-fast) var(--ease-out);
 }
 
 ::selection {
@@ -148,220 +93,53 @@ pre {
   color: var(--color-accent-contrast);
 }
 
-/* ----- Focus -------------------------------------------------------------
- * :focus-visible shows the ring for keyboard users without flashing it on
- * every mouse click. The accent passes 3:1 against every surface, and the
- * offset keeps the ring clear of the element's own colour.
- */
 :focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 3px;
+  border-radius: 2px;
 }
 
-/* ----- Film grain ----------------------------------------------------------
- * A very fine noise layer over the whole page, like grain on film or the
- * hiss of a quiet room: it takes the digital flatness off large surfaces.
- * The noise is an inline SVG (feTurbulence), drawn once and tiled, fixed so
- * it does not repaint on scroll, and ignored by the pointer. Opacity is low
- * enough that text contrast is unaffected.
- */
-.grain {
-  position: fixed;
-  inset: 0;
-  z-index: 70;
-  pointer-events: none;
-  opacity: 0.05;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.45 0 0 0 0 0.4 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 160px 160px;
-}
-
-:root[data-mode='dark'] .grain {
-  opacity: 0.07;
-}
-
-/* ----- Studio glow ------------------------------------------------------------
- * Soft accent light behind heroes and headings, like a lamp in a dim room.
- * Plain radial gradients (no blur filter), so they cost nothing to render.
- * Place .glow on a positioned element; the light sits behind its content.
- */
-.glow {
-  position: relative;
-  isolation: isolate;
-}
-
-.glow::before {
-  content: '';
-  position: absolute;
-  z-index: -1;
-  inset: -40% -20%;
-  pointer-events: none;
-  background:
-    radial-gradient(closest-side at 30% 45%, color-mix(in oklab, var(--color-accent) var(--glow-strength), transparent), transparent),
-    radial-gradient(closest-side at 72% 60%, color-mix(in oklab, var(--color-warm) calc(var(--glow-strength) * 0.8), transparent), transparent);
-}
-
-/* ----- Page chrome -------------------------------------------------------- */
-
-html {
-  /* Anchor jumps (table of contents, skip link) land below the sticky header
-     instead of underneath it. */
-  scroll-padding-top: calc(var(--header-height) + var(--space-4));
-}
-
-/* Visible only when focused, so keyboard users can jump past the header. */
-.skip-link {
-  position: fixed;
-  top: var(--space-3);
-  left: var(--space-3);
-  z-index: 100;
-  padding: var(--space-3) var(--space-5);
-  border-radius: var(--radius-pill);
-  background-color: var(--color-text);
-  color: var(--color-surface);
-  font-weight: var(--weight-semibold);
-  text-decoration: none;
-  transform: translateY(-200%);
-}
-
-.skip-link:focus-visible {
-  transform: none;
-}
-
-/* <main> takes focus from the skip link; the ring is not needed there. */
 main:focus {
   outline: none;
 }
 
-/* ----- Range inputs (player scrubbers) -------------------------------------
- * Restyled consistently across browsers. The input box is 44px tall so the
- * touch target is comfortable, while the visible track stays a slim 4px.
- * --progress (set by the player scripts) fills the played part.
- */
-input[type='range'] {
-  width: 100%;
-  height: 44px;
-  margin: 0;
-  background: transparent;
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
+/* ----- Shared pieces ------------------------------------------------------ */
+
+/* Page container: wide for Home and indexes, text for reading. */
+.wrap {
+  width: min(100% - 2 * var(--gutter), var(--width-wide));
+  margin-inline: auto;
 }
 
-input[type='range']::-webkit-slider-runnable-track {
-  height: 4px;
-  border-radius: var(--radius-pill);
-  background: linear-gradient(
-    to right,
-    var(--color-accent) var(--progress, 0%),
-    color-mix(in oklab, var(--color-text) 18%, transparent) var(--progress, 0%)
-  );
+.wrap--text {
+  width: min(100% - 2 * var(--gutter), var(--width-text));
 }
 
-input[type='range']::-moz-range-track {
-  height: 4px;
-  border-radius: var(--radius-pill);
-  background: color-mix(in oklab, var(--color-text) 18%, transparent);
-}
-
-input[type='range']::-moz-range-progress {
-  height: 4px;
-  border-radius: var(--radius-pill);
-  background: var(--color-accent);
-}
-
-input[type='range']::-webkit-slider-thumb {
-  width: 14px;
-  height: 14px;
-  margin-top: -5px;
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: var(--color-text);
-  appearance: none;
-  -webkit-appearance: none;
-}
-
-input[type='range']::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
-  border: 0;
-  border-radius: var(--radius-pill);
-  background: var(--color-text);
-}
-
-input[type='range']:focus-visible {
-  outline: none;
-}
-
-input[type='range']:focus-visible::-webkit-slider-thumb {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 3px;
-}
-
-input[type='range']:focus-visible::-moz-range-thumb {
-  outline: 2px solid var(--color-focus);
-  outline-offset: 3px;
-}
-
-/* ----- Code (Shiki dual themes) --------------------------------------------
- * Shiki emits both a light and a dark colour per token as CSS variables;
- * the section's context picks one, so code always matches its surroundings.
- */
-.astro-code,
-.astro-code span {
-  color: var(--shiki-light);
-  background-color: var(--shiki-light-bg);
-}
-
-[data-theme='dark'] .astro-code,
-[data-theme='dark'] .astro-code span {
-  color: var(--shiki-dark);
-  background-color: var(--shiki-dark-bg);
-}
-
-/* ----- Reveal on scroll ----------------------------------------------------
- * A subtle fade-up as sections enter, driven by CSS scroll-driven animations
- * instead of JavaScript. Content is never hidden waiting for a script: where
- * animation-timeline is unsupported, or motion is reduced, nothing animates
- * and everything is simply visible. Transform and opacity only, so it never
- * causes layout shift.
- */
-@media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: view()) {
-    /* --stagger (0, 1, 2...) on siblings shifts each one's range slightly,
-       so items in a row rise one after another rather than as a block. */
-    .reveal {
-      animation: reveal linear both;
-      animation-timeline: view();
-      animation-range: entry calc(var(--stagger, 0) * 6%) entry calc(45% + var(--stagger, 0) * 6%);
-    }
-  }
-}
-
-@keyframes reveal {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* ----- Shared text styles ------------------------------------------------- */
-
-/* Small mono metadata: dates, tags, status, durations. Tabular figures keep
-   columns of numbers aligned. */
-.meta {
-  font-family: var(--font-mono);
-  font-size: var(--step--2);
+/* Small label above headings and on panels: sentence-case Inter, muted.
+   Quieter than an uppercase mono tag, and it reads as editorial. */
+.label {
+  font-size: var(--step--1);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-3);
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
-  color: var(--color-text-muted);
 }
 
-/* ----- Utilities -------------------------------------------------------- */
+/* A link whose underline slides in from the left on hover: the site's one
+   hover gesture for text links outside running prose. */
+.slide-link {
+  color: var(--color-text);
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  transition: background-size var(--duration-base) var(--ease-out), color var(--duration-fast) var(--ease-out);
+}
+
+.slide-link:hover,
+.slide-link:focus-visible {
+  background-size: 100% 1px;
+}
 
 /* Hidden visually but still read by screen readers. */
 .visually-hidden {
@@ -376,17 +154,44 @@ input[type='range']:focus-visible::-moz-range-thumb {
   border: 0;
 }
 
-/* ----- Motion ------------------------------------------------------------
- * Smooth scrolling only for people who have not asked for reduced motion.
- * The reduced-motion block is a safety net: even a component that forgets to
- * use the duration tokens cannot animate for someone who opted out.
+.skip-link {
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: 100;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-pill);
+  background-color: var(--color-text);
+  color: var(--color-bg);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: none;
+}
+
+/* ----- The one entrance --------------------------------------------------
+ * A single gentle fade-and-rise when a hero first loads, staggered by
+ * --order. Starts at 1% opacity rather than 0 so the browser still counts
+ * the element as painted for Largest Contentful Paint.
  */
 @media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
+  .enter {
+    animation: enter var(--duration-enter) var(--ease-out) both;
+    animation-delay: calc(var(--order, 0) * 90ms);
   }
 }
 
+@keyframes enter {
+  from {
+    opacity: 0.01;
+    transform: translateY(14px);
+  }
+}
+
+/* ----- Reduced motion safety net ------------------------------------------ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -397,3 +202,30 @@ input[type='range']:focus-visible::-moz-range-thumb {
     scroll-behavior: auto !important;
   }
 }
+
+/* ----- Artwork and diagram palette -----------------------------------------
+ * Every SVG on the site (project artwork, article diagrams) colours itself
+ * only through these classes, so it follows light and dark mode and stays
+ * on the token palette. Strokes use the art colours; text always uses the
+ * text colours, which are checked for AA contrast.
+ */
+.s-line { stroke: var(--art-line); fill: none; }
+.s-ink { stroke: var(--art-ink); fill: none; }
+.s-accent { stroke: var(--art-accent); fill: none; }
+.s-warm { stroke: var(--art-warm); fill: none; }
+.f-accent { fill: var(--art-accent); }
+.f-warm { fill: var(--art-warm); }
+.f-ink { fill: var(--art-ink); }
+.f-bg { fill: var(--color-bg-2); }
+
+.t {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: var(--weight-medium);
+  fill: var(--color-text-2);
+}
+
+.t-strong { font-weight: var(--weight-semibold); fill: var(--color-text); }
+.t-small { font-size: 12.5px; fill: var(--color-text-3); }
+.t-accent { fill: var(--color-accent); }
+.t-warm { fill: var(--color-warm); }

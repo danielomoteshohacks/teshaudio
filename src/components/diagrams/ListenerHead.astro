@@ -1,0 +1,31 @@
+---
+/**
+ * A listener's head seen from above, nose pointing up (forward), shared by
+ * the artwork and diagrams so the listener looks the same everywhere. Must
+ * be used inside an <svg>. `r` scales the whole head. The fills use the
+ * panel colour so lines passing behind the head are hidden by it.
+ */
+interface Props {
+  x: number;
+  y: number;
+  r?: number;
+}
+
+const { x, y, r = 26 } = Astro.props;
+const ear = { rx: r * 0.2, ry: r * 0.36 };
+---
+
+<g stroke-width="1.25">
+  <ellipse class="f-bg s-ink" cx={x - r} cy={y} rx={ear.rx} ry={ear.ry}></ellipse>
+  <ellipse class="f-bg s-ink" cx={x + r} cy={y} rx={ear.rx} ry={ear.ry}></ellipse>
+  <path class="s-ink" d={`M${x - r * 0.26} ${y - r * 0.93} L${x} ${y - r * 1.28} L${x + r * 0.26} ${y - r * 0.93}`} stroke-linejoin="round"></path>
+  <circle class="f-bg s-ink" cx={x} cy={y} r={r}></circle>
+</g>
+
+<style>
+  /* .f-bg sets fill and .s-ink sets fill: none; the fill must win here. */
+  ellipse,
+  circle {
+    fill: var(--color-bg-2);
+  }
+</style>

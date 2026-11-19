@@ -1,0 +1,53 @@
+---
+/**
+ * Diagram: stereo vs spatial, seen from above. In stereo every sound sits on
+ * the line between the ears; in spatial audio sounds are placed around the
+ * listener in a room, with reflections coming back off the walls.
+ *
+ * Two drawings: side by side for wide figures, stacked for narrow ones, so
+ * the labels keep the same legible size at any width. `bare` drops the
+ * caption and numbering, for use as artwork (the Home story panel); there
+ * the narrow drawing is the spatial room alone, the more evocative half,
+ * so the panel stays a sensible height on a phone.
+ */
+import Diagram from './Diagram.astro';
+import StereoPanel from './StereoPanel.astro';
+
+interface Props {
+  bare?: boolean;
+  /** Unique per page: the SVG title and description ids derive from it. */
+  id?: string;
+}
+
+const { bare = false, id = 'svs' } = Astro.props;
+const caption = bare
+  ? undefined
+  : 'Seen from above. Stereo places every sound on one line between your ears. Spatial audio opens that line into a room around you.';
+const desc =
+  'Left: a listener seen from above, with keys, vocal and drums all on one straight line running from ear to ear. Right: the same listener inside a room, with drums and vocal in front, backing vocals to each side, keys behind, and reverb returning off the walls.';
+---
+
+<Diagram caption={caption} numbered={!bare} class={bare ? 'diagram--bare' : undefined}>
+  <svg viewBox="0 0 720 300" width="720" height="300" role="img" aria-labelledby={`${id}-w-t ${id}-w-d`}>
+    <title id={`${id}-w-t`}>Stereo vs spatial audio</title>
+    <desc id={`${id}-w-d`}>{desc}</desc>
+    <StereoPanel kind="stereo" x={10} y={4} />
+    <line class="s-line" x1="360" y1="40" x2="360" y2="270" stroke-width="1" />
+    <StereoPanel kind="spatial" x={370} y={4} />
+  </svg>
+  {
+    bare ? (
+      <svg slot="narrow" viewBox="0 0 340 290" width="340" height="290" aria-hidden="true" focusable="false">
+        <StereoPanel kind="spatial" />
+      </svg>
+    ) : (
+      <svg slot="narrow" viewBox="0 0 340 600" width="340" height="600" role="img" aria-labelledby={`${id}-n-t ${id}-n-d`}>
+        <title id={`${id}-n-t`}>Stereo vs spatial audio</title>
+        <desc id={`${id}-n-d`}>{desc}</desc>
+        <StereoPanel kind="stereo" />
+        <line class="s-line" x1="20" y1="300" x2="320" y2="300" stroke-width="1" />
+        <StereoPanel kind="spatial" y={308} />
+      </svg>
+    )
+  }
+</Diagram>

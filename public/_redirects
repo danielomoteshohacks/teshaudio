@@ -1,0 +1,6 @@
+# Cloudflare Pages redirects. Permanent (301) so search engines and shared
+# links move to the new address.
+
+# Stage was renamed SoundStage.
+/projects/stage/ /projects/soundstage/ 301
+/projects/stage /projects/soundstage/ 301

@@ -1,0 +1,124 @@
+---
+/**
+ * Diagram: how your ears find direction. A sound on the listener's left and
+ * the three cues the essay names: timing (the near ear hears it first),
+ * loudness (the head casts an acoustic shadow over the far ear) and shape
+ * (the folds of the outer ear colour the sound).
+ *
+ * Wide: labels beside the drawing. Narrow: the drawing, then the three cues
+ * as numbered rows beneath it, so every label stays legible on a phone.
+ */
+import Diagram from './Diagram.astro';
+import ListenerHead from './ListenerHead.astro';
+
+const cues = [
+  { n: '1', title: 'Timing', line: 'The near ear hears it first' },
+  { n: '2', title: 'Loudness', line: 'Head shadow makes the far ear quieter' },
+  { n: '3', title: 'Shape', line: 'Outer-ear folds colour the sound' },
+];
+const desc =
+  'A listener seen from above with a sound source on their left. Timing: the sound takes a short path to the near ear and a longer path around the head to the far ear, so it arrives at the near ear first. Loudness: the head casts an acoustic shadow on the far side, so the far ear hears it slightly quieter. Shape: a close-up of the outer ear, whose folds colour the sound depending on where it comes from.';
+
+// The outer ear (pinna) seen from the side, drawn around (x, y).
+const pinna = (x: number, y: number) => [
+  `M${x + 10} ${y - 30} C ${x - 20} ${y - 38}, ${x - 32} ${y - 14}, ${x - 26} ${y + 6} C ${x - 21} ${y + 22}, ${x - 10} ${y + 32}, ${x + 2} ${y + 32} C ${x + 8} ${y + 32}, ${x + 9} ${y + 24}, ${x + 4} ${y + 20}`,
+  `M${x + 2} ${y - 16} C ${x - 12} ${y - 16}, ${x - 16} ${y - 2}, ${x - 10} ${y + 8} C ${x - 6} ${y + 14}, ${x} ${y + 12}, ${x} ${y + 6}`,
+];
+---
+
+<Diagram caption="Three clues your brain uses to place a sound: when it arrives at each ear, how loud it is at each ear, and how the outer ear shapes it. An HRTF captures all three.">
+  <svg viewBox="0 0 720 340" width="720" height="340" role="img" aria-labelledby="ears-w-t ears-w-d">
+    <title id="ears-w-t">How your ears find direction</title>
+    <desc id="ears-w-d">{desc}</desc>
+    <defs>
+      <linearGradient id="ears-w-shadow" x1="0" x2="1">
+        <stop offset="0" style="stop-color: var(--art-ink); stop-opacity: 0.14"></stop>
+        <stop offset="1" style="stop-color: var(--art-ink); stop-opacity: 0"></stop>
+      </linearGradient>
+    </defs>
+    {/* Head shadow on the far side. */}
+    <path d="M330 114 C 430 100, 500 120, 560 128 L 560 212 C 500 220, 430 240, 330 226 Z" fill="url(#ears-w-shadow)"></path>
+
+    {/* The source and its wavefronts. */}
+    <circle class="f-accent" cx="64" cy="170" r="6"></circle>
+    <g class="s-accent" stroke-width="1.25" stroke-linecap="round">
+      <path d="M84 152 q9 18 0 36" opacity="0.9"></path>
+      <path d="M98 142 q14 28 0 56" opacity="0.6"></path>
+      <path d="M112 132 q19 38 0 76" opacity="0.35"></path>
+    </g>
+    <text class="t t-small" x="64" y="214" text-anchor="middle">Sound</text>
+
+    {/* Cue 1: a short path and a longer one around the head. */}
+    <path class="s-accent" d="M128 170 H 262" stroke-width="1.5"></path>
+    <path class="s-accent" d="M128 160 C 190 70, 360 52, 392 158" stroke-width="1.5" stroke-dasharray="4 5"></path>
+
+    <ListenerHead x={330} y={170} r={56} />
+
+    {/* Cue 3: the outer ear, enlarged, linked to the near ear. */}
+    <path class="s-line" d="M266 186 L 196 262" stroke-width="1" stroke-dasharray="2 4"></path>
+    <circle class="s-line" cx="166" cy="284" r="38" stroke-width="1"></circle>
+    <g class="s-ink" stroke-width="1.5" stroke-linecap="round">
+      {pinna(168, 284).map((d) => <path d={d} />)}
+    </g>
+
+    {/* Labels. */}
+    <g>
+      <text class="t t-accent t-strong" x="178" y="58">1</text>
+      <text class="t t-strong" x="194" y="58">Timing</text>
+      <text class="t t-small" x="194" y="78">{cues[0].line}</text>
+
+      <text class="t t-accent t-strong" x="582" y="160">2</text>
+      <text class="t t-strong" x="598" y="160">Loudness</text>
+      <text class="t t-small" x="598" y="180">Head shadow makes</text>
+      <text class="t t-small" x="598" y="197">the far ear quieter</text>
+
+      <text class="t t-accent t-strong" x="222" y="292">3</text>
+      <text class="t t-strong" x="238" y="292">Shape</text>
+      <text class="t t-small" x="238" y="312">{cues[2].line}</text>
+    </g>
+  </svg>
+
+  <svg slot="narrow" viewBox="0 0 340 430" width="340" height="430" role="img" aria-labelledby="ears-n-t ears-n-d">
+    <title id="ears-n-t">How your ears find direction</title>
+    <desc id="ears-n-d">{desc}</desc>
+    <defs>
+      <linearGradient id="ears-n-shadow" x1="0" x2="1">
+        <stop offset="0" style="stop-color: var(--art-ink); stop-opacity: 0.14"></stop>
+        <stop offset="1" style="stop-color: var(--art-ink); stop-opacity: 0"></stop>
+      </linearGradient>
+    </defs>
+    <path d="M210 78 C 260 70, 300 80, 336 84 L 336 156 C 300 160, 260 170, 210 162 Z" fill="url(#ears-n-shadow)"></path>
+    <circle class="f-accent" cx="28" cy="120" r="5"></circle>
+    <g class="s-accent" stroke-width="1.25" stroke-linecap="round">
+      <path d="M44 106 q8 14 0 28" opacity="0.9"></path>
+      <path d="M56 98 q12 22 0 44" opacity="0.5"></path>
+    </g>
+    <path class="s-accent" d="M70 120 H 164" stroke-width="1.5"></path>
+    <path class="s-accent" d="M70 112 C 110 46, 236 34, 258 112" stroke-width="1.5" stroke-dasharray="4 5"></path>
+    <ListenerHead x={210} y={120} r={42} />
+    <text class="t t-accent t-strong" x="112" y="52" text-anchor="middle">1</text>
+    <text class="t t-accent t-strong" x="300" y="124" text-anchor="middle">2</text>
+
+    <path class="s-line" d="M168 132 L 112 196" stroke-width="1" stroke-dasharray="2 4"></path>
+    <circle class="s-line" cx="88" cy="222" r="34" stroke-width="1"></circle>
+    <g class="s-ink" stroke-width="1.5" stroke-linecap="round">
+      {pinna(90, 222).map((d) => <path d={d} />)}
+    </g>
+    <text class="t t-accent t-strong" x="140" y="236" text-anchor="middle">3</text>
+
+    <line class="s-line" x1="16" y1="282" x2="324" y2="282" stroke-width="1"></line>
+    {
+      cues.map((c, i) => (
+        <g transform={`translate(16 ${312 + i * 44})`}>
+          <text class="t t-accent t-strong">{c.n}</text>
+          <text class="t t-strong" x="18">
+            {c.title}
+          </text>
+          <text class="t t-small" x="18" y="19">
+            {c.line}
+          </text>
+        </g>
+      ))
+    }
+  </svg>
+</Diagram>

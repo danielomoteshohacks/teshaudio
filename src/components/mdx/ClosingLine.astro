@@ -1,0 +1,25 @@
+---
+/**
+ * ClosingLine (MDX): an essay's last line, set apart and centred, so the
+ * piece ends on its thought rather than trailing off into the footer.
+ *
+ *   <ClosingLine>The last sentence.</ClosingLine>
+ */
+---
+
+<p class="closing"><slot /></p>
+
+<style>
+  .closing {
+    margin-block: 2.6em 1.6em !important;
+    padding-top: 1.6em;
+    border-top: 1px solid var(--color-line);
+    font-family: var(--font-serif);
+    font-size: 1.15em;
+    font-style: normal;
+    line-height: 1.45;
+    text-align: center;
+    text-wrap: balance;
+    color: var(--color-text);
+  }
+</style>

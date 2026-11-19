@@ -1,0 +1,116 @@
+---
+/**
+ * Diagram: the intelligent mixer, a top-down stage around the listener,
+ * with a key that names the three ideas the essay uses (direction, distance,
+ * height) and the rule that never breaks (bass and lead vocal centred).
+ *
+ * The key is HTML, not SVG text, so it stays at body-copy size and wraps
+ * naturally at any width. The stage has a wide and a narrow drawing,
+ * swapped by the figure's width, so its labels stay legible on a phone.
+ */
+import Diagram from './Diagram.astro';
+import MixerStage from './MixerStage.astro';
+
+const key = [
+  { title: 'Direction', text: 'Where a sound sits around you: front, sides, behind.' },
+  { title: 'Distance', text: 'Close, in the room, or further back: the rings.' },
+  { title: 'Height', text: 'A ring around a dot means above you.' },
+  { title: 'Never moves', text: 'The bass (the dashed field around you) and the lead vocal stay centred.' },
+];
+const desc =
+  'A listener seen from above at the centre of three distance rings. The bass surrounds the listener and the lead vocal sits close and straight ahead. Drums sit further ahead, percussion to the front left and front right, pads raised at either side, backing vocals raised behind to each side, and reverb raised and far behind.';
+---
+
+<Diagram caption="The intelligent mixer places each stem by direction, height and distance. The bass and lead vocal stay centred; percussion, pads and effects open up around them.">
+  <div class="mixer">
+    <div class="mixer__stage">
+      <svg class="mixer__wide" viewBox="0 0 452 452" width="452" height="452" role="img" aria-labelledby="mixer-w-t mixer-w-d">
+        <title id="mixer-w-t">The intelligent mixer</title>
+        <desc id="mixer-w-d">{desc}</desc>
+        <MixerStage cx={226} cy={226} rings={[66, 124, 176]} />
+      </svg>
+      <svg class="mixer__narrow" viewBox="0 0 340 380" width="340" height="380" role="img" aria-labelledby="mixer-n-t mixer-n-d">
+        <title id="mixer-n-t">The intelligent mixer</title>
+        <desc id="mixer-n-d">{desc}</desc>
+        <MixerStage cx={170} cy={196} rings={[52, 98, 140]} compact />
+      </svg>
+    </div>
+    <dl class="mixer__key">
+      {
+        key.map((k) => (
+          <div>
+            <dt>{k.title}</dt>
+            <dd>{k.text}</dd>
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+</Diagram>
+
+<style>
+  .mixer {
+    display: grid;
+    gap: var(--space-6);
+    font-family: var(--font-sans);
+  }
+
+  /* Scoped under .mixer so these outrank Diagram's "svg { display: block }",
+     which would otherwise show both drawings. */
+  .mixer .mixer__narrow {
+    display: none;
+  }
+
+  .mixer__key {
+    display: grid;
+    gap: var(--space-4) var(--space-6);
+    margin: 0;
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--color-line);
+  }
+
+  .mixer__key dt {
+    font-size: var(--step--1);
+    font-weight: var(--weight-semibold);
+    color: var(--color-text);
+  }
+
+  .mixer__key dd {
+    margin: var(--space-1) 0 0;
+    font-size: var(--step--1);
+    line-height: var(--leading-snug);
+    color: var(--color-text-2);
+  }
+
+  @container (max-width: 34rem) {
+    .mixer .mixer__wide {
+      display: none;
+    }
+
+    .mixer .mixer__narrow {
+      display: block;
+    }
+  }
+
+  /* Wide figures: the stage on the left, the key beside it. */
+  @container (min-width: 44rem) {
+    .mixer {
+      grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+      align-items: center;
+      gap: var(--space-10);
+    }
+
+    .mixer__key {
+      padding: 0 0 0 var(--space-8);
+      border-top: 0;
+      border-left: 1px solid var(--color-line);
+      gap: var(--space-6);
+    }
+  }
+
+  @container (min-width: 22rem) and (max-width: 43.99rem) {
+    .mixer__key {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+</style>

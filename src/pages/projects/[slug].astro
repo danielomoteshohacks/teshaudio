@@ -1,19 +1,17 @@
 ---
 /**
- * Project detail: tagline, overview, facts (role, tech, dates), links, media
- * gallery and an optional longer write-up. Anything not set is simply not
- * shown: no "coming soon" panels, so the page is only real content.
+ * Project page: a wide artwork header, then status, title and the one-line
+ * tagline, the summary as the lead paragraph, any longer write-up from the
+ * entry body, the facts (tech, links) and related writing. Anything not set
+ * is simply not shown.
  */
 import { render } from 'astro:content';
-import { Image } from 'astro:assets';
 import BaseLayout from '../../layouts/BaseLayout.astro';
-import Section from '../../components/Section.astro';
-import Container from '../../components/Container.astro';
 import Button from '../../components/Button.astro';
-import Badge from '../../components/Badge.astro';
-import Card from '../../components/Card.astro';
-import { getPublishedLab, getPublishedProjects, isEmptyBody } from '../../lib/content';
-import { formatDate, statusLabel } from '../../lib/format';
+import Status from '../../components/Status.astro';
+import ProjectArt from '../../components/art/ProjectArt.astro';
+import { getPublishedProjects, getPublishedWriting, isEmptyBody } from '../../lib/content';
+import { formatDate, isoDate, readingTime } from '../../lib/format';
 import '../../styles/prose.css';
 
 export async function getStaticPaths() {
@@ -22,306 +20,213 @@ export async function getStaticPaths() {
 }
 
 const { project } = Astro.props;
-const { title, tagline, summary, note, status, role, tech, repoUrl, liveUrl, startDate, gallery } =
-  project.data;
+const { title, tagline, summary, note, status, tech, repoUrl, liveUrl } = project.data;
 const { Content } = await render(project);
 const hasWriteUp = !isEmptyBody(project);
-const labEntries = (await getPublishedLab()).filter((e) => e.data.relatedProject?.id === project.id);
-
-// Status is already shown as the badge above the title, so it is not repeated here.
-const facts = [
-  role && { label: 'Role', value: role },
-  startDate && { label: 'Started', value: formatDate(startDate) },
-].filter(Boolean) as { label: string; value: string }[];
+const writing = (await getPublishedWriting()).filter((w) => w.data.relatedProject?.id === project.id);
 ---
 
 <BaseLayout title={title} description={tagline ?? summary}>
   <article>
-    <header class="project-header">
-      <Container>
-        <a class="back" href="/projects/">
-          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M11 7H3M6.5 3.5L3 7l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-          All work
-        </a>
-        <div class="project-header__grid">
-          <div class="project-header__text glow">
-            <Badge tone={status === 'active' || status === 'shipped' ? 'accent' : 'neutral'} dot>
-              {statusLabel[status]}
-            </Badge>
-            <h1 class="project-header__title">{title}</h1>
-            <p class="project-header__lead">{tagline ?? summary}</p>
-            {
-              (repoUrl || liveUrl) && (
-                <div class="project-header__links">
-                  {liveUrl && <Button href={liveUrl} rel="noopener">Try it live</Button>}
+    <div class="wrap">
+      <a class="back slide-link" href="/projects/">&larr; All work</a>
+      <div class="art enter">
+        <ProjectArt id={project.id} />
+      </div>
+    </div>
+
+    <div class="wrap wrap--text">
+      <header class="head">
+        <Status status={status} />
+        <h1 class="head__title">{title}</h1>
+        {tagline && <p class="head__tagline">{tagline}</p>}
+      </header>
+
+      <div class="prose body">
+        <p class="body__summary">{summary}</p>
+        {hasWriteUp && <Content />}
+        {note && <p class="body__note">{note}</p>}
+      </div>
+
+      {
+        (tech.length > 0 || repoUrl || liveUrl) && (
+          <dl class="facts">
+            {tech.length > 0 && (
+              <div>
+                <dt>Built with</dt>
+                <dd>{tech.join(', ')}</dd>
+              </div>
+            )}
+            {(repoUrl || liveUrl) && (
+              <div>
+                <dt>Links</dt>
+                <dd class="facts__links">
                   {repoUrl && (
                     <Button href={repoUrl} variant="secondary" rel="noopener">
                       View on GitHub
                     </Button>
                   )}
-                </div>
-              )
-            }
-          </div>
-
-          <dl class="facts">
-            {
-              facts.map((fact) => (
-                <div class="facts__row">
-                  <dt class="meta">{fact.label}</dt>
-                  <dd>{fact.value}</dd>
-                </div>
-              ))
-            }
-            {
-              tech.length > 0 && (
-                <div class="facts__row">
-                  <dt class="meta">Tech</dt>
-                  <dd>
-                    <ul class="facts__tech">
-                      {tech.map((item) => (
-                        <li>{item}</li>
-                      ))}
-                    </ul>
-                  </dd>
-                </div>
-              )
-            }
-          </dl>
-        </div>
-      </Container>
-    </header>
-
-    <Section aria-labelledby="overview-title" spacing="flush-top">
-      <Container>
-        <div class="overview reveal">
-          <h2 id="overview-title" class="section-label meta">Overview</h2>
-          {/* Shown only when there is a separate tagline; otherwise the summary
-              is already the lead above. */}
-          {tagline && <p class="overview__text">{summary}</p>}
-          {note && <p class="overview__note">{note}</p>}
-          {
-            hasWriteUp && (
-              <div class="prose overview__writeup">
-                <Content />
+                  {liveUrl && (
+                    <Button href={liveUrl} variant="secondary" rel="noopener">
+                      Try it live
+                    </Button>
+                  )}
+                </dd>
               </div>
-            )
-          }
-        </div>
-      </Container>
-    </Section>
+            )}
+          </dl>
+        )
+      }
 
-    {
-      gallery.length > 0 && (
-        <Section aria-labelledby="media-title" spacing="flush-top">
-          <Container>
-            <h2 id="media-title" class="section-label meta">Media</h2>
-            <ul class="gallery">
-              {gallery.map((item) => (
+      {
+        writing.length > 0 && (
+          <section class="related" aria-labelledby="related-title">
+            <h2 id="related-title" class="related__title">Writing about {title}</h2>
+            <ul class="related__list">
+              {writing.map((entry) => (
                 <li>
-                  <figure>
-                    <Image
-                      src={item.src}
-                      alt={item.alt}
-                      widths={[480, 800, 1200]}
-                      sizes="(min-width: 48rem) 50vw, 100vw"
-                    />
-                    {item.caption && <figcaption class="meta">{item.caption}</figcaption>}
-                  </figure>
+                  <a class="related__link" href={`/writing/${entry.id}/`}>
+                    <span class="related__name">{entry.data.title}</span>
+                    <span class="label">
+                      <time datetime={isoDate(entry.data.pubDate)}>{formatDate(entry.data.pubDate)}</time> · {readingTime(entry.body)}
+                    </span>
+                  </a>
                 </li>
               ))}
             </ul>
-          </Container>
-        </Section>
-      )
-    }
-
-    {
-      labEntries.length > 0 && (
-        <Section theme="dark" aria-labelledby="lab-title">
-          <Container>
-            <h2 id="lab-title" class="section-label meta">In the lab</h2>
-            <ul class="lab-links">
-              {labEntries.map((entry) => (
-                <li>
-                  <Card href={`/lab/${entry.id}/`}>
-                    <Badge dot>{statusLabel[entry.data.status]}</Badge>
-                    <h3 class="lab-links__title">{entry.data.title}</h3>
-                    <p class="lab-links__summary">{entry.data.summary}</p>
-                  </Card>
-                </li>
-              ))}
-            </ul>
-          </Container>
-        </Section>
-      )
-    }
+          </section>
+        )
+      }
+    </div>
   </article>
 </BaseLayout>
 
 <style>
-  .project-header {
-    padding-block: var(--space-10) clamp(var(--space-12), 7vw, var(--space-20));
-  }
-
   .back {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 44px;
-    margin-bottom: clamp(var(--space-8), 5vw, var(--space-16));
+    display: inline-block;
+    margin-block: var(--space-8) var(--space-6);
     font-size: var(--step--1);
     font-weight: var(--weight-medium);
-    color: var(--color-text-muted);
-    text-decoration: none;
+    color: var(--color-text-2);
   }
 
-  .back:hover {
-    color: var(--color-text);
+  /* The artwork, wide, in a panel one tonal step above the page. */
+  .art {
+    aspect-ratio: 8 / 5;
+    padding: clamp(var(--space-4), 4vw, var(--space-12));
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-xl);
+    background-color: var(--color-bg-2);
   }
 
-  .project-header__grid {
-    display: grid;
-    gap: var(--space-12);
-  }
-
-  @media (min-width: 64rem) {
-    .project-header__grid {
-      grid-template-columns: minmax(0, 1fr) 20rem;
-      align-items: end;
-      gap: var(--space-20);
+  @media (min-width: 48rem) {
+    .art {
+      aspect-ratio: 2 / 1;
     }
   }
 
-  .project-header__text {
+  .head {
     display: grid;
     justify-items: start;
-    gap: var(--space-5);
+    gap: var(--space-4);
+    padding-block: clamp(var(--space-10), 6vw, var(--space-16)) var(--space-8);
   }
 
-  .project-header__title {
-    font-size: var(--step-6);
+  .head__title {
+    font-size: var(--step-5);
+    font-weight: var(--weight-display);
     line-height: var(--leading-display);
-    letter-spacing: var(--tracking-display);
+    letter-spacing: var(--tracking-hero);
   }
 
-  .project-header__lead {
-    max-width: 38rem;
-    font-size: var(--step-1);
+  .head__tagline {
+    font-size: var(--step-2);
+    font-weight: var(--weight-medium);
     line-height: var(--leading-snug);
-    color: var(--color-text-muted);
+    letter-spacing: var(--tracking-tight);
+    color: var(--color-text-2);
   }
 
-  .project-header__links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    margin-top: var(--space-2);
+  .body__summary {
+    color: var(--color-text);
+  }
+
+  .body__note {
+    font-size: var(--step-0);
+    color: var(--color-text-3);
   }
 
   .facts {
     display: grid;
-    border-top: 1px solid var(--color-border);
+    gap: var(--space-6);
+    margin-top: var(--space-12);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-line);
   }
 
-  .facts__row {
+  .facts div {
     display: grid;
-    grid-template-columns: 6rem minmax(0, 1fr);
-    gap: var(--space-4);
-    padding-block: var(--space-4);
-    border-bottom: 1px solid var(--color-border);
+    gap: var(--space-2);
+  }
+
+  @media (min-width: 40rem) {
+    .facts div {
+      grid-template-columns: 9rem 1fr;
+      align-items: baseline;
+    }
   }
 
   .facts dt {
-    padding-top: 0.2em;
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
+    font-size: var(--step--1);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-3);
   }
 
   .facts dd {
     margin: 0;
   }
 
-  .facts__tech {
+  .facts__links {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--space-1) var(--space-3);
-    padding: 0;
-    list-style: none;
+    gap: var(--space-3);
   }
 
-  .section-label {
-    margin-bottom: var(--space-5);
-    font-weight: var(--weight-regular);
-    letter-spacing: var(--tracking-wide);
-    text-transform: uppercase;
+  .related {
+    margin-top: var(--space-12);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-line);
   }
 
-  .gallery {
-    display: grid;
-    gap: var(--space-4);
-    padding: 0;
-    list-style: none;
-  }
-
-  @media (min-width: 48rem) {
-    .gallery {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-
-  .gallery :global(img) {
-    width: 100%;
-    height: auto;
-    border-radius: var(--radius-lg);
-  }
-
-  .gallery figcaption {
-    margin-top: var(--space-2);
-  }
-
-  .overview {
-    display: grid;
-    gap: var(--space-6);
-    max-width: var(--measure);
-  }
-
-  .overview__text {
-    font-size: var(--step-1);
-    line-height: 1.55;
-  }
-
-  /* A quiet caveat (e.g. "not a medical device"), set apart with the warm
-     accent so it is noticed without shouting. */
-  .overview__note {
-    padding: var(--space-4) var(--space-5);
-    border-left: 2px solid var(--color-warm);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    background-color: color-mix(in oklab, var(--color-warm) 7%, transparent);
+  .related__title {
     font-size: var(--step--1);
-    color: var(--color-text-muted);
+    font-weight: var(--weight-medium);
+    color: var(--color-text-3);
+    letter-spacing: 0;
   }
 
-  .lab-links {
-    display: grid;
-    gap: var(--space-4);
+  .related__list {
+    margin-top: var(--space-4);
     padding: 0;
     list-style: none;
   }
 
-  @media (min-width: 48rem) {
-    .lab-links {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+  .related__link {
+    display: grid;
+    gap: var(--space-1);
+    color: var(--color-text);
+    text-decoration: none;
   }
 
-  .lab-links__title {
-    margin-top: var(--space-4);
+  .related__name {
     font-size: var(--step-2);
+    font-weight: var(--weight-semibold);
+    line-height: var(--leading-tight);
+    letter-spacing: var(--tracking-tight);
+    transition: color var(--duration-fast) var(--ease-out);
   }
 
-  .lab-links__summary {
-    margin-top: var(--space-2);
-    color: var(--color-text-muted);
+  .related__link:hover .related__name {
+    color: var(--color-accent);
   }
 </style>

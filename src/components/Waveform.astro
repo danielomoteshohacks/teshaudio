@@ -1,0 +1,118 @@
+---
+/**
+ * Waveform: the site's signature line.
+ *
+ * A single hairline drawn like a sound on an oscilloscope: quiet, then a
+ * phrase, then quiet again. A short stretch is drawn in the accent, like a
+ * selected region in a DAW. Used sparingly: in the hero, as a divider before
+ * the beliefs band, and in the footer.
+ *
+ * The shape is generated at build time from a seed, so each use differs
+ * slightly but never changes between builds. With `draw`, it reveals once
+ * from left to right when the page loads (clip-path, so no layout work); it
+ * is simply present under reduced motion.
+ */
+interface Props {
+  seed?: number;
+  draw?: boolean;
+  class?: string;
+}
+
+const { seed = 1, draw = false, class: className } = Astro.props;
+
+const W = 1200;
+const H = 56;
+const mid = H / 2;
+
+// Deterministic pseudo-noise, so the line is identical on every build.
+const rand = (i: number) => {
+  const v = Math.sin(i * 12.9898 + seed * 78.233) * 43758.5453;
+  return v - Math.floor(v);
+};
+
+// Two or three phrases along the line: smooth bumps in loudness.
+const phrases = [0, 1, 2].map((k) => ({
+  at: 0.18 + k * 0.3 + (rand(k + 10) - 0.5) * 0.12,
+  width: 0.06 + rand(k + 20) * 0.07,
+  level: 0.45 + rand(k + 30) * 0.55,
+}));
+const envelope = (t: number) =>
+  0.06 + phrases.reduce((sum, p) => sum + p.level * Math.exp(-(((t - p.at) / p.width) ** 2)), 0);
+
+const step = 3;
+let d = '';
+for (let x = 0; x <= W; x += step) {
+  const t = x / W;
+  // Two detuned sines give the line the irregular look of real audio.
+  const wave = Math.sin(x * 0.21 + seed) * 0.7 + Math.sin(x * 0.067 + seed * 2) * 0.3;
+  const y = mid - Math.min(1, envelope(t)) * (mid - 3) * wave;
+  d += `${x === 0 ? 'M' : 'L'}${x} ${y.toFixed(1)}`;
+}
+
+// The accent region sits over the loudest phrase.
+const loudest = phrases.reduce((a, b) => (b.level > a.level ? b : a));
+const regionStart = Math.max(0, (loudest.at - loudest.width * 0.9) * W);
+const regionWidth = loudest.width * 1.8 * W;
+const clipId = `wave-region-${seed}`;
+---
+
+<svg
+  class:list={['waveform', { 'waveform--draw': draw }, className]}
+  viewBox={`0 0 ${W} ${H}`}
+  width={W}
+  height={H}
+  preserveAspectRatio="none"
+  aria-hidden="true"
+  focusable="false"
+>
+  <defs>
+    <clipPath id={clipId}>
+      <rect x={regionStart} y="0" width={regionWidth} height={H}></rect>
+    </clipPath>
+  </defs>
+  <path class="waveform__line" d={d}></path>
+  <path class="waveform__region" d={d} clip-path={`url(#${clipId})`}></path>
+</svg>
+
+<style>
+  .waveform {
+    display: block;
+    width: 100%;
+    height: clamp(2.25rem, 4vw, 3.5rem);
+    overflow: visible;
+  }
+
+  .waveform path {
+    fill: none;
+    stroke-width: 1.25;
+    stroke-linejoin: round;
+    /* Keeps the stroke a true hairline even though the SVG is stretched to
+       any width (preserveAspectRatio="none"). */
+    vector-effect: non-scaling-stroke;
+  }
+
+  .waveform__line {
+    stroke: var(--color-line-strong);
+  }
+
+  .waveform__region {
+    stroke: var(--color-accent);
+    stroke-width: 1.5;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .waveform--draw {
+      animation: draw 1.6s var(--ease-out) 0.25s both;
+    }
+  }
+
+  @keyframes draw {
+    from {
+      clip-path: inset(0 100% 0 0);
+    }
+
+    to {
+      clip-path: inset(0 0 0 0);
+    }
+  }
+</style>

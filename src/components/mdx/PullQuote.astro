@@ -1,0 +1,33 @@
+---
+/**
+ * PullQuote (MDX): one line from the article, set large in the sans.
+ *
+ *   <PullQuote>A line from the text.</PullQuote>
+ *
+ * Used in place of the paragraph it quotes, never as a repeat of it, so a
+ * screen reader hears the sentence once, in its place in the argument. One
+ * per article at most: it is the moment the essay turns.
+ */
+---
+
+<blockquote class="pull">
+  <p><slot /></p>
+</blockquote>
+
+<style>
+  .pull {
+    margin-block: 2em !important;
+    padding-left: var(--space-6);
+    border-left: 2px solid var(--color-accent);
+    font-family: var(--font-sans);
+    font-size: var(--step-3);
+    font-weight: var(--weight-semibold);
+    line-height: 1.18;
+    letter-spacing: var(--tracking-display);
+    color: var(--color-text);
+  }
+
+  .pull p {
+    text-wrap: balance;
+  }
+</style>

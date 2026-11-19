@@ -1,0 +1,21 @@
+---
+/**
+ * ProjectArt: the original artwork for a project, by project id. Projects
+ * without artwork render nothing, so pages simply leave the space out.
+ * To give a new project artwork, add a component here and map its id.
+ */
+import SoundStageArt from './SoundStageArt.astro';
+import DecibelArt from './DecibelArt.astro';
+
+interface Props {
+  id: string;
+}
+
+const art: Record<string, typeof SoundStageArt> = {
+  soundstage: SoundStageArt,
+  'beyond-the-decibel': DecibelArt,
+};
+const Art = art[Astro.props.id];
+---
+
+{Art && <Art />}
