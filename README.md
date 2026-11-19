@@ -34,7 +34,7 @@ Node 22.23.4 or newer. Cloudflare builds with the version in `.node-version`.
 - `src/styles/tokens.css` design tokens, `global.css` base styles and the
   SVG palette classes, `prose.css` long-form text
 - `src/assets/portrait.jpg` the portrait (made from `src/assets/source/portrait-original.jpg`)
-- `docs/design-direction.md` visual direction; `CLAUDE.md` rules for AI-assisted sessions
+- `docs/design-direction.md` visual direction; `docs/guidelines.md` project rules
 
 ## How to update content
 

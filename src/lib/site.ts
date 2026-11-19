@@ -1,7 +1,7 @@
 /**
  * Single source of truth for facts about Tesh and the site.
  *
- * Rules (see CLAUDE.md): never invent biography, credits or project details,
+ * Rules (see docs/guidelines.md): never invent biography, credits or project details,
  * and never describe Tesh as an engineer. Tesh is a music producer and
  * composer, building audio software, and studying Electrical/Electronic
  * Engineering at the University of Lagos.

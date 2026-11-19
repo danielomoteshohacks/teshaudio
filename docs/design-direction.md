@@ -70,5 +70,5 @@ Self-hosted through Fontsource: `@fontsource-variable/inter/opsz.css` and
 ## Boundaries
 
 All values live in `src/styles/tokens.css`. Every choice must meet the
-quality bar in `CLAUDE.md`: WCAG AA contrast, keyboard access, reduced
+quality bar in `docs/guidelines.md`: WCAG AA contrast, keyboard access, reduced
 motion, Lighthouse 95+.

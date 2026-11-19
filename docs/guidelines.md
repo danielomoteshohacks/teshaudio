@@ -1,6 +1,6 @@
-# CLAUDE.md
+# Project guidelines
 
-Rules for every session working in this repository. They are not optional.
+Rules for all work in this repository. They are not optional.
 
 ## Project
 
