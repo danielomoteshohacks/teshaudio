@@ -1,0 +1,41 @@
+/*
+ * Design tokens.
+ *
+ * Every visual decision (colour, type, spacing, radius, motion) lives here as
+ * a CSS custom property, so components reference names like --space-4 rather
+ * than raw values. Changing the design then means editing one file.
+ *
+ * Intentionally empty: the design PR fills these sections in, following
+ * docs/design-direction.md.
+ */
+
+:root {
+  /* ----- Color ------------------------------------------------------------
+   * Surface, text, border and accent roles for light and dark sections.
+   * All text/background pairs must meet WCAG AA contrast.
+   */
+
+  /* ----- Type -------------------------------------------------------------
+   * Font families (sans for prose, mono for technical labels), size scale,
+   * line heights, weights and letter spacing.
+   */
+
+  /* ----- Space ------------------------------------------------------------
+   * Spacing scale for padding, margins and gaps, plus layout widths.
+   */
+
+  /* ----- Radius -----------------------------------------------------------
+   * Corner radii for cards, inputs and pill buttons.
+   */
+
+  /* ----- Motion -----------------------------------------------------------
+   * Durations and easing curves. Must collapse to near-zero under
+   * prefers-reduced-motion (see the media query below).
+   */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    /* Motion overrides go here. */
+  }
+}
