@@ -2,17 +2,21 @@
 /**
  * Portrait
  *
- * Tesh's portrait from src/assets/portrait.jpg (prepared from the original
- * by scripts/prepare-portrait.mjs), as AVIF and WebP at several widths, in
- * a rounded frame with a hairline edge. No filters or effects: the photo is
- * shown as it is.
+ * Tesh's portrait as AVIF and WebP at several widths, in a rounded frame.
+ * Every width is prepared ahead of time by scripts/prepare-portrait.mjs
+ * (src/assets/portrait/<crop>-<width>.jpg): the striped shirt aliases into
+ * moire if a width is resampled carelessly, so each one is resampled once,
+ * checked by eye, and the build only re-encodes it at its own width.
  *
  * size:
- *   "hero"   large and tall, with the static key light behind it (Home, About)
- *   "small"  a round avatar for bylines and the author note
+ *   "hero"   4:5, large, with the studio key light behind it (Home, About).
+ *            It morphs between Home and About as a shared element (the
+ *            view transition name "portrait"), and drifts a few pixels
+ *            inside its frame as the page scrolls (motion.ts).
+ *   "small"  a round avatar, tight on the face, for bylines and the author note
  */
-import { Picture } from 'astro:assets';
-import portrait from '../assets/portrait.jpg';
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
 import { site } from '../lib/site';
 
 interface Props {
@@ -26,19 +30,48 @@ interface Props {
 
 const { size = 'hero', sizes, priority = false, class: className } = Astro.props;
 const small = size === 'small';
+const crop = small ? 'avatar' : 'hero';
+
+// The prepared files for this crop, by width. Only the widths a use needs:
+// the 440px avatar exists for the share images, not for the page.
+const files = import.meta.glob<{ default: ImageMetadata }>('../assets/portrait/*.jpg', { eager: true });
+const masters = Object.entries(files)
+  .map(([path, mod]) => ({ name: path.split('/').pop()!, image: mod.default }))
+  .filter(({ name }) => name.startsWith(`${crop}-`))
+  .map(({ image }) => image)
+  .filter((image) => !small || image.width <= 192)
+  .sort((a, b) => a.width - b.width);
+
+const quality = small ? 70 : 78;
+// Each master is encoded at its own width: no second resample.
+const encode = (format: 'avif' | 'webp') =>
+  Promise.all(masters.map((src) => getImage({ src, width: src.width, format, quality })));
+const [avif, webp] = await Promise.all([encode('avif'), encode('webp')]);
+const srcset = (images: typeof avif) => images.map((img, i) => `${img.src} ${masters[i].width}w`).join(', ');
+
+const largest = masters[masters.length - 1];
+const fallback = webp[Math.min(1, webp.length - 1)];
+const sizesAttr = sizes ?? (small ? '48px' : '(min-width: 64rem) 30rem, 100vw');
 ---
 
-<div class:list={['portrait', `portrait--${size}`, className]}>
-  <Picture
-    src={portrait}
-    alt={small ? '' : `Portrait of ${site.fullName} (${site.name}) in a blue embroidered native outfit`}
-    formats={['avif', 'webp']}
-    widths={small ? [96, 192] : [480, 720, 960, 1280, 1600]}
-    sizes={sizes ?? (small ? '48px' : '(min-width: 64rem) 32rem, 100vw')}
-    quality={small ? 70 : 80}
-    loading={priority ? 'eager' : 'lazy'}
-    fetchpriority={priority ? 'high' : 'auto'}
-  />
+<div
+  class:list={['portrait', `portrait--${size}`, className]}
+  transition:name={small ? undefined : 'portrait'}
+  data-parallax={small ? undefined : ''}
+>
+  <picture>
+    <source type="image/avif" srcset={srcset(avif)} sizes={sizesAttr} />
+    <source type="image/webp" srcset={srcset(webp)} sizes={sizesAttr} />
+    <img
+      src={fallback.src}
+      width={largest.width}
+      height={largest.height}
+      alt={small ? '' : `Portrait of ${site.fullName} (${site.name}) in a striped shirt`}
+      loading={priority ? 'eager' : 'lazy'}
+      fetchpriority={priority ? 'high' : 'auto'}
+      decoding={priority ? 'sync' : 'async'}
+    />
+  </picture>
 </div>
 
 <style>
@@ -47,26 +80,43 @@ const small = size === 'small';
     isolation: isolate;
   }
 
-  .portrait :global(img) {
+  .portrait img {
     width: 100%;
     height: 100%;
     object-fit: cover;
   }
 
-  .portrait--hero :global(picture) {
+  .portrait--hero picture {
     display: block;
     overflow: hidden;
     aspect-ratio: 4 / 5;
     border-radius: var(--radius-xl);
-    /* A hairline of light on the frame edge, like a print behind glass. */
-    outline: 1px solid color-mix(in oklab, var(--color-text) 10%, transparent);
-    outline-offset: -1px;
     background-color: var(--color-bg-3);
   }
 
-  /* The one static light: a soft studio key light behind and above the
-     frame, as if the portrait were lit from the top left. A plain radial
-     gradient: no animation, no blur filter. */
+  /* The image is a touch larger than its frame, so the scroll drift
+     (--parallax, a few pixels, set by motion.ts) never shows an edge. */
+  .portrait--hero img {
+    transform: translate3d(0, var(--parallax, 0px), 0) scale(1.04);
+  }
+
+  /* The frame edge, drawn over the photo. Light mode: a hairline in the
+     strong line colour, so the off-white wall in the photo does not melt
+     into the off-white page. Dark mode: a faint light edge, like a print
+     behind glass. */
+  .portrait--hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border: 1px solid var(--portrait-edge);
+    border-radius: var(--radius-xl);
+    pointer-events: none;
+  }
+
+  /* The studio key light: a soft light behind and above the frame, as if
+     the portrait were lit from the top left. In dark mode it is what makes
+     the bright photo look lit on purpose rather than like a hole in the
+     page. A static radial gradient: no animation, no blur filter. */
   .portrait--hero::before {
     content: '';
     position: absolute;
@@ -82,16 +132,12 @@ const small = size === 'small';
     height: 2.5rem;
   }
 
-  /* The face sits in the upper half of the 4:5 photo. */
-  .portrait--small :global(img) {
-    object-position: 50% 28%;
-  }
-
-  .portrait--small :global(picture) {
+  .portrait--small picture {
     display: block;
     width: 100%;
     height: 100%;
     overflow: hidden;
     border-radius: var(--radius-pill);
+    box-shadow: 0 0 0 1px var(--portrait-edge);
   }
 </style>
