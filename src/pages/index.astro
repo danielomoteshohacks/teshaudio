@@ -21,6 +21,7 @@ import Lights from '../components/Lights.astro';
 import WorkWithMe from '../components/WorkWithMe.astro';
 import SerifItalicFont from '../components/SerifItalicFont.astro';
 import StereoVsSpatial from '../components/diagrams/StereoVsSpatial.astro';
+import CochleaMap from '../components/diagrams/CochleaMap.astro';
 import { copy, site } from '../lib/site';
 import { personSchema } from '../lib/schema';
 import { formatDate, isoDate, kindLabel, readingTime } from '../lib/format';
@@ -28,8 +29,19 @@ import { getPublishedProjects, getPublishedWriting } from '../lib/content';
 import { beliefHref, firstSentence, getBelief, type BeliefId } from '../lib/beliefs';
 
 const projects = (await getPublishedProjects()).filter((p) => p.data.featured);
+const essays = (await getPublishedWriting()).filter((entry) => entry.data.kind === 'essay');
 // The featured story is the newest essay.
-const story = (await getPublishedWriting()).find((entry) => entry.data.kind === 'essay');
+const story = essays[0];
+// Each essay's own opening drawing, as the featured story's cover artwork.
+const storyArt: Record<string, 'svs' | 'cochlea'> = {
+  'spatial-audio-for-every-phone': 'svs',
+  'your-ears-dont-read-decibels': 'cochlea',
+};
+// The newest essay about each project, linked from its panel.
+const projectStory = (projectId: string) => {
+  const essay = essays.find((e) => e.data.relatedProject?.id === projectId);
+  return essay ? { href: `/writing/${essay.id}/`, title: essay.data.title } : undefined;
+};
 
 // The belief that explains each project, quoted under its panel's summary.
 const panelBeliefs: Record<string, BeliefId> = {
@@ -75,7 +87,7 @@ const spiritual = getBelief('spiritual');
       <section class="story wrap" aria-labelledby="story-title" data-reveal>
         <a class="story__panel" href={`/writing/${story.id}/`}>
           <div class="story__art">
-            <StereoVsSpatial bare id="home-svs" />
+            {storyArt[story.id] === 'cochlea' ? <CochleaMap artwork /> : storyArt[story.id] === 'svs' ? <StereoVsSpatial bare id="home-svs" /> : null}
           </div>
           <div class="story__body">
             <p class="label">
@@ -109,7 +121,7 @@ const spiritual = getBelief('spiritual');
         <ul class="work__grid" data-reveal-group>
           {projects.map((project) => (
             <li data-reveal-item>
-              <ProjectPanel project={project} belief={panelBelief(project.id)} />
+              <ProjectPanel project={project} belief={panelBelief(project.id)} story={projectStory(project.id)} />
             </li>
           ))}
         </ul>

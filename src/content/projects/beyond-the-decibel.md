@@ -1,11 +1,17 @@
 ---
 title: Beyond the Decibel
 tagline: How sound really affects the ear, beyond a single decibel number.
-summary: "Standard noise meters squeeze your hearing into one A-weighted number. But the cochlea is a row of frequency-specific sensors that wear out unevenly, and the 3 to 6 kHz region, where the ear canal naturally boosts sound, usually goes first. Beyond the Decibel runs a mix through a gammatone filterbank modelled on the basilar membrane, tracks exposure band by band over time, and turns that into practical advice for producers: when to switch from headphones to monitors, how much to turn down, and when to take a break."
-note: A research and prediction tool, not a medical device.
+summary: "A sound meter gives you one number, but your ears experience much more than that. Beyond the Decibel is my research into how sound really affects the ear: where the energy sits across frequencies, how long you listen, the shape of the sound, damage a standard hearing test can miss, and how much people differ. I read the science carefully and explain what I find in plain language."
+note: Not medical advice. If you’re worried about your hearing, please see a professional.
 status: research
-tech: ['Python', 'NumPy', 'SciPy', 'librosa']
 featured: true
 order: 2
-# TODO: liveUrl (the Hugging Face Space) and repoUrl, once Tesh shares them.
 ---
+
+What the research covers:
+
+- **Frequency.** The ear canal boosts sound roughly between 2 and 5 kHz before it reaches the inner ear, and noise damage often shows up first around 3 to 6 kHz.
+- **Time.** The ear responds to dose: how loud, for how long. Under the NIOSH guideline, every 3 dB louder halves the safe listening time.
+- **The shape of the sound.** Steady noise and sound with sudden peaks can share an average level without having the same effect.
+- **Hidden damage.** Connections between the inner hair cells and the hearing nerve can be lost while a standard hearing test still looks normal.
+- **Individual differences.** Genetics, age, health and past exposure all change how vulnerable each person’s ears are.

@@ -77,7 +77,11 @@ article gets a share card (`/og/writing/<slug>.png`) and the author note.
 Inside the body, without imports: `<PullQuote>A line from the text</PullQuote>`
 (use it in place of that paragraph, once per article), `<ClosingLine>The last
 line</ClosingLine>`, `<Sidenote>...</Sidenote>`, `<Figure caption="...">...</Figure>`,
-and `$math$`. Diagrams in `src/components/diagrams/` are imported at the top of
+and `$math$`. Imported where needed: `<Disclaimer>` (a small, muted note
+after the closing line) and `<References>` (wraps a numbered Markdown list
+under a `## References` heading, set smaller). Markdown tables restack into
+rows on phones. The project an essay belongs to (`relatedProject`) gets a
+"Read the story" button on its page and a link on its Home panel. Diagrams in `src/components/diagrams/` are imported at the top of
 the article that uses them; a figure placed first in the body becomes the
 wide opening figure under the header. The contents rail lists the `##`
 headings when there are three or more.

@@ -1,7 +1,8 @@
 ---
 /**
  * Project page: a wide artwork header, then status, title and the one-line
- * tagline, the summary as the lead paragraph, any longer write-up from the
+ * tagline, a "Read the story" button when an essay is written about the
+ * project, the summary as the lead paragraph, any longer write-up from the
  * entry body, the facts (tech, links) and related writing. Anything not set
  * is simply not shown.
  */
@@ -24,6 +25,8 @@ const { title, tagline, summary, note, status, tech, repoUrl, liveUrl } = projec
 const { Content } = await render(project);
 const hasWriteUp = !isEmptyBody(project);
 const writing = (await getPublishedWriting()).filter((w) => w.data.relatedProject?.id === project.id);
+// The newest essay about the project is its story, linked from the header.
+const story = writing.find((w) => w.data.kind === 'essay');
 ---
 
 <BaseLayout title={title} description={tagline ?? summary}>
@@ -40,6 +43,13 @@ const writing = (await getPublishedWriting()).filter((w) => w.data.relatedProjec
         <Status status={status} />
         <h1 class="head__title">{title}</h1>
         {tagline && <p class="head__tagline">{tagline}</p>}
+        {
+          story && (
+            <Button class="head__story" size="lg" href={`/writing/${story.id}/`}>
+              Read the story
+            </Button>
+          )
+        }
       </header>
 
       <div class="prose body">
@@ -145,6 +155,10 @@ const writing = (await getPublishedWriting()).filter((w) => w.data.relatedProjec
     line-height: var(--leading-snug);
     letter-spacing: var(--tracking-tight);
     color: var(--color-text-2);
+  }
+
+  .head :global(.head__story) {
+    margin-top: var(--space-2);
   }
 
   .body__summary {
