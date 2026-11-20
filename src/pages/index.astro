@@ -46,7 +46,7 @@ const spiritual = getBelief('spiritual');
 ---
 
 <BaseLayout jsonLd={personSchema()}>
-  <Fragment slot="head"><SerifItalicFont priority="low" /></Fragment>
+  <Fragment slot="head"><SerifItalicFont preload={false} /></Fragment>
 
   <!-- Hero -->
   <section class="hero wrap has-lights" aria-labelledby="hero-title">

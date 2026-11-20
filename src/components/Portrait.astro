@@ -42,10 +42,11 @@ const masters = Object.entries(files)
   .filter((image) => !small || image.width <= 192)
   .sort((a, b) => a.width - b.width);
 
-const quality = small ? 70 : 78;
+// AVIF holds the stripes well at a lower setting than WebP needs.
+const quality = (format: 'avif' | 'webp') => (small ? 70 : format === 'avif' ? 58 : 76);
 // Each master is encoded at its own width: no second resample.
 const encode = (format: 'avif' | 'webp') =>
-  Promise.all(masters.map((src) => getImage({ src, width: src.width, format, quality })));
+  Promise.all(masters.map((src) => getImage({ src, width: src.width, format, quality: quality(format) })));
 const [avif, webp] = await Promise.all([encode('avif'), encode('webp')]);
 const srcset = (images: typeof avif) => images.map((img, i) => `${img.src} ${masters[i].width}w`).join(', ');
 

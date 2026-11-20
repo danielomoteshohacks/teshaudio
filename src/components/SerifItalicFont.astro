@@ -10,9 +10,13 @@ import latin from '@fontsource-variable/source-serif-4/files/source-serif-4-lati
 
 interface Props {
   priority?: 'auto' | 'low';
+  /** false: load the font only when the text that uses it is laid out, for
+      pages whose italic lines are all below the fold (Home), so it never
+      competes with the portrait for bandwidth. */
+  preload?: boolean;
 }
 
-const { priority = 'auto' } = Astro.props;
+const { priority = 'auto', preload = true } = Astro.props;
 ---
 
-<link rel="preload" href={latin} as="font" type="font/woff2" crossorigin fetchpriority={priority} />
+{preload && <link rel="preload" href={latin} as="font" type="font/woff2" crossorigin fetchpriority={priority} />}
