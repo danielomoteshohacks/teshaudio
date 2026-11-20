@@ -74,6 +74,104 @@
   margin-top: 0.8em;
 }
 
+/* Sub-sections (a numbered run of points under one H2): sans, a step
+   smaller than H2, with clear space above so each point starts visibly on
+   a phone. */
+.prose--read h3 {
+  margin-top: 1.9em;
+  font-size: var(--step-2);
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+}
+
+.prose--read h3 + * {
+  margin-top: 0.6em;
+}
+
+/* A paragraph that opens with a bold line (a myth, then its answer): the
+   bold line sits on its own, so a list of them scans like headings. */
+.prose--read > p:has(> strong:first-child) > strong:first-child {
+  display: block;
+  margin-bottom: 0.3em;
+  font-family: var(--font-sans);
+  font-size: 0.92em;
+  line-height: var(--leading-snug);
+}
+
+.prose--read > p:has(> strong:first-child) + p:has(> strong:first-child) {
+  margin-top: 1.4em;
+}
+
+/* Tables: hairline rules, no boxes, sans for the labels. */
+.prose--read table {
+  width: 100%;
+  margin-block: 1.6em;
+  border-collapse: collapse;
+  font-size: 0.86em;
+  line-height: var(--leading-snug);
+}
+
+.prose--read th {
+  padding: 0 1em 0.7em 0;
+  border-bottom: 1px solid var(--color-line-strong);
+  font-family: var(--font-sans);
+  font-size: var(--step--1);
+  font-weight: var(--weight-medium);
+  text-align: left;
+  color: var(--color-text-3);
+}
+
+.prose--read td {
+  padding: 0.85em 1em 0.85em 0;
+  border-bottom: 1px solid var(--color-line);
+  vertical-align: top;
+}
+
+.prose--read td:first-child {
+  width: 36%;
+  font-family: var(--font-sans);
+  font-size: 0.92em;
+  font-weight: var(--weight-semibold);
+  color: var(--color-text);
+}
+
+/* Phones: each row restacks into a label over its text, so nothing is
+   squeezed into a narrow column and the page never scrolls sideways. The
+   column headings are then redundant and are hidden visually only. */
+@media (max-width: 33.99rem) {
+  .prose--read thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+
+  .prose--read :is(table, tbody, tr, td) {
+    display: block;
+    width: auto;
+  }
+
+  .prose--read tr {
+    padding-block: 0.9em;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .prose--read tbody tr:first-child {
+    border-top: 1px solid var(--color-line-strong);
+  }
+
+  .prose--read td {
+    padding: 0;
+    border: 0;
+  }
+
+  .prose--read td:first-child {
+    width: auto;
+    margin-bottom: 0.25em;
+  }
+}
+
 .prose--read strong {
   font-weight: 650;
 }
@@ -99,7 +197,7 @@
 }
 
 /* The call to action after a closing line follows its centred setting. */
-.prose--read > .closing + p {
+.prose--read > .closing + p:not(.disclaimer) {
   margin-top: 0;
   font-family: var(--font-sans);
   font-size: var(--step-0);
