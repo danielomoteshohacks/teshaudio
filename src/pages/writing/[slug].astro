@@ -16,6 +16,7 @@
 import { render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Portrait from '../../components/Portrait.astro';
+import SerifFont from '../../components/SerifFont.astro';
 import Sidenote from '../../components/mdx/Sidenote.astro';
 import Figure from '../../components/mdx/Figure.astro';
 import PullQuote from '../../components/mdx/PullQuote.astro';
@@ -24,8 +25,6 @@ import { getProject, getPublishedWriting } from '../../lib/content';
 import { formatDate, isoDate, kindLabel, readingTime } from '../../lib/format';
 import { site } from '../../lib/site';
 import '../../styles/prose.css';
-import '@fontsource-variable/source-serif-4/opsz.css';
-import serifLatin from '@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-normal.woff2?url';
 // Linked only on articles with math, so KaTeX's CSS and fonts never load
 // on pages that do not need them.
 import katexCss from 'katex/dist/katex.min.css?url';
@@ -58,9 +57,9 @@ const articleSchema = {
 
 <BaseLayout title={title} description={description} noindex={unlisted} ogType="article" jsonLd={articleSchema}>
   {remarkPluginFrontmatter.hasMath && <link slot="head" rel="stylesheet" href={katexCss} />}
-  {/* The serif is the body face: fetch it alongside the CSS rather than
-      after, so the first paragraph does not reflow when it arrives. */}
-  <link slot="head" rel="preload" href={serifLatin} as="font" type="font/woff2" crossorigin />
+  {/* The serif is the body face; SerifFont preloads it with a metric-matched
+      fallback, so the first paragraph does not reflow when it arrives. */}
+  <Fragment slot="head"><SerifFont /></Fragment>
 
   <article class="article">
     <header class="head wrap wrap--text">

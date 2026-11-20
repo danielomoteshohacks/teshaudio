@@ -123,17 +123,6 @@ const comparisons = defineCollection({
   }),
 });
 
-const philosophy = defineCollection({
-  loader: markdown('philosophy'),
-  schema: z.object({
-    title: z.string(),
-    // The part's one-line position, set large above the essay text.
-    thesis: z.string().optional(),
-    order: z.number(),
-    draft: z.boolean().default(false),
-  }),
-});
-
 const lab = defineCollection({
   loader: markdown('lab'),
   schema: z.object({
@@ -148,4 +137,4 @@ const lab = defineCollection({
   }),
 });
 
-export const collections = { projects, writing, tracks, comparisons, philosophy, lab };
+export const collections = { projects, writing, tracks, comparisons, lab };

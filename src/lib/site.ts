@@ -28,9 +28,6 @@ export const site = {
   intro:
     'I’m a music producer and composer, building SoundStage, a spatial audio engine for any song on any phone, while studying Electrical/Electronic Engineering at the University of Lagos.',
 
-  // The one line in the "What I believe" band on Home.
-  belief: 'Your ears are the one piece of gear you can’t replace.',
-
   // Author note at the end of every article.
   authorNote: 'Daniel Omotesho is a music producer and composer from Lagos, building SoundStage.',
 
@@ -49,7 +46,9 @@ export const copy = {
     workCta: 'See the work',
     workTitle: 'Work',
     storyLabel: 'Featured story',
-    beliefLink: 'More about how I think',
+    // The beliefs quoted on Home (a headline and a few lines) live in
+    // src/lib/beliefs.ts, with About's full text.
+    beliefLink: 'What I believe',
   },
   projects: {
     title: 'Work',

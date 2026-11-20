@@ -4,26 +4,46 @@
  *
  * Four movements, each with its own layout: a split hero (name and intro
  * beside a large portrait), a wide featured story panel, the work as two
- * large artwork panels, and a single line of belief set large. Every section
- * renders only when it has real content.
+ * large artwork panels, and one belief set large as a full stop. Three lines
+ * from Tesh's beliefs appear on this page, no more: the band, and one under
+ * each project panel's summary. All three are read from src/lib/beliefs.ts
+ * and link to their row on About. Every section renders only when it has
+ * real content.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Button from '../components/Button.astro';
 import Portrait from '../components/Portrait.astro';
 import Waveform from '../components/Waveform.astro';
 import ProjectPanel from '../components/ProjectPanel.astro';
+import SerifItalicFont from '../components/SerifItalicFont.astro';
 import StereoVsSpatial from '../components/diagrams/StereoVsSpatial.astro';
 import { copy, site } from '../lib/site';
 import { personSchema } from '../lib/schema';
 import { formatDate, isoDate, kindLabel, readingTime } from '../lib/format';
 import { getPublishedProjects, getPublishedWriting } from '../lib/content';
+import { beliefHref, firstSentence, getBelief, type BeliefId } from '../lib/beliefs';
 
 const projects = (await getPublishedProjects()).filter((p) => p.data.featured);
 // The featured story is the newest essay.
 const story = (await getPublishedWriting()).find((entry) => entry.data.kind === 'essay');
+
+// The belief that explains each project, quoted under its panel's summary.
+const panelBeliefs: Record<string, BeliefId> = {
+  soundstage: 'budget',
+  'beyond-the-decibel': 'deafness',
+};
+const panelBelief = (projectId: string) => {
+  const id = panelBeliefs[projectId];
+  return id ? { text: getBelief(id).headline, href: beliefHref(id) } : undefined;
+};
+
+// The band: the belief that opens the list, with its first sentence.
+const spiritual = getBelief('spiritual');
 ---
 
 <BaseLayout jsonLd={personSchema()}>
+  <Fragment slot="head"><SerifItalicFont priority="low" /></Fragment>
+
   <!-- Hero -->
   <section class="hero wrap" aria-labelledby="hero-title">
     <div class="hero__text">
@@ -80,7 +100,7 @@ const story = (await getPublishedWriting()).find((entry) => entry.data.kind === 
         <ul class="work__grid">
           {projects.map((project) => (
             <li>
-              <ProjectPanel project={project} />
+              <ProjectPanel project={project} belief={panelBelief(project.id)} />
             </li>
           ))}
         </ul>
@@ -92,8 +112,11 @@ const story = (await getPublishedWriting()).find((entry) => entry.data.kind === 
   <section class="belief band-last" aria-labelledby="belief-title">
     <div class="wrap">
       <h2 id="belief-title" class="visually-hidden">What I believe</h2>
-      <p class="belief__line">{site.belief}</p>
-      <a class="belief__link" href="/about/#beliefs"><span class="slide-link">{copy.home.beliefLink}</span> &rarr;</a>
+      <p class="belief__line voice">{spiritual.headline}</p>
+      <p class="belief__sentence voice">{firstSentence(spiritual)}</p>
+      <a class="belief__link" href={beliefHref('spiritual')}>
+        <span class="slide-link">{copy.home.beliefLink}</span> <span aria-hidden="true">&rarr;</span>
+      </a>
     </div>
   </section>
 </BaseLayout>
@@ -345,37 +368,49 @@ const story = (await getPublishedWriting()).find((entry) => entry.data.kind === 
   }
 
   /* ===== Belief ============================================================
-   * One full-bleed band, one tonal step deeper, the line set large and
-   * centred: the one place the page slows right down.
+   * A full stop between the work and the footer: one belief, very large,
+   * with its first sentence beneath and a quiet link, and nothing else. The
+   * band is one tonal step deeper than the page and wrapped in generous
+   * space, so the page slows right down here. No motion.
    */
   .belief {
     margin-top: var(--section-gap);
-    padding-block: clamp(var(--space-20), 12vw, var(--space-32));
+    padding-block: clamp(var(--space-24), 16vw, 13rem);
     border-block: 1px solid var(--color-line);
     background-color: var(--color-bg-2);
     text-align: center;
   }
 
   .belief__line {
-    max-width: 52rem;
+    max-width: 14em;
     margin-inline: auto;
-    font-size: var(--step-5);
-    font-weight: var(--weight-display);
-    line-height: 1.02;
+    font-size: var(--step-quote);
+    line-height: 1;
     letter-spacing: var(--tracking-display);
     text-wrap: balance;
     color: var(--color-text);
   }
 
+  .belief__sentence {
+    max-width: 28em;
+    margin: var(--space-8) auto 0;
+    font-size: var(--step-2);
+    line-height: var(--leading-snug);
+    color: var(--color-text-2);
+    text-wrap: balance;
+  }
+
   .belief__link {
     display: inline-block;
-    margin-top: var(--space-8);
+    margin-top: var(--space-12);
+    font-size: var(--step--1);
     font-weight: var(--weight-semibold);
     text-decoration: none;
     color: var(--color-text);
   }
 
-  .belief__link:hover .slide-link {
+  .belief__link:hover .slide-link,
+  .belief__link:focus-visible .slide-link {
     background-size: 100% 1px;
   }
 </style>

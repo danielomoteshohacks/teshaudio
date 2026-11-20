@@ -25,8 +25,13 @@ newsroom pages, Linear's site, Teenage Engineering's site.
   on, so headlines get Inter's display letterforms automatically.
 - Very large, tight-tracked display headings (`--step-hero`, `--step-5`);
   comfortable body sizes; small labels in sentence case, never shouted.
-- Source Serif 4 (variable, opsz) for article body only, 18px on phones and
-  20px on desktop, line height 1.65, 680px measure. Loaded only on articles.
+- Source Serif 4 (variable, opsz) is the one serif. Articles set their body in
+  it (18px on phones, 20px on desktop, line height 1.65, 680px measure).
+  About sets the beliefs in it: headlines at display size, text at reading
+  size. Home sets Tesh's quoted lines in its italic (the "voice"): italic
+  separates a person's voice from the Inter interface type. Each page loads
+  only the file it uses, preloaded, with a Georgia fallback scaled to
+  Source Serif's metrics (`serif-fallback.css`), so the swap moves nothing.
 
 ## Signature
 
@@ -37,8 +42,16 @@ once on load.
 ## Layout
 
 - Home: split hero (type and a large portrait), a wide cover-story panel with
-  the essay's own diagram as artwork, two large artwork panels for the work,
-  then one line of belief set large in a full-bleed band.
+  the essay's own diagram as artwork, two large artwork panels for the work
+  (each with one belief quoted under its summary), then one belief, "Music is
+  spiritual.", set very large in a full-bleed band as a full stop. Exactly
+  three belief lines on Home; none in the hero, story or footer; never
+  rotated, cycled or set in quotation marks.
+- About's beliefs are the emotional centre: one row each between hairlines,
+  never cards. Desktop: number, headline and text on one baseline. Phones:
+  stacked, with at least 56px of space around every row. The belief about
+  the ear is the one emphasised row, with a faint cochlea echo (desktop
+  only). No motion beyond the page's load fade.
 - Never a column of identical cards. Panels are large, one tonal step above
   the page, with hairline borders and big radii.
 - Articles: centred text column; figures break slightly out of it on wide

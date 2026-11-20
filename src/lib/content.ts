@@ -41,10 +41,6 @@ export async function getPublishedComparisons() {
   return (await published('comparisons')).sort(byOrder);
 }
 
-export async function getPhilosophySections() {
-  return (await published('philosophy')).sort(byOrder);
-}
-
 export async function getPublishedLab() {
   return (await published('lab')).sort(byOrder);
 }
