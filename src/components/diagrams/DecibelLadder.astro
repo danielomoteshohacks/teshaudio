@@ -1,0 +1,163 @@
+---
+/**
+ * Diagram: the decibel ladder. A vertical scale from 0 to 120 dB with
+ * everyday examples beside it, and two limits drawn across it: the NIOSH
+ * 8-hour limit (85 dBA) and the WHO venue limit (100 dB averaged over any
+ * 15 minutes). The scale is neutral up to 85 and fades into amber above.
+ *
+ * The everyday levels are typical, approximate figures (they vary a lot
+ * with distance and setting), and the drawing says so.
+ *
+ * Wide and narrow share one layout scaled to each width: examples to the
+ * right of the scale, limit labels set just above their lines at the right
+ * edge, so nothing collides at either size.
+ */
+import Diagram from './Diagram.astro';
+
+const examples = [
+  { db: 0, label: 'Threshold of hearing' },
+  { db: 30, label: 'Whisper' },
+  { db: 60, label: 'Conversation' },
+  { db: 82.5, label: 'Busy traffic (80–85)', range: [80, 85] },
+  { db: 100, label: 'Concert / club' },
+  { db: 107, label: 'Earbuds at max volume (100+)', range: [100, 114] },
+  { db: 120, label: 'Right next to a big speaker stack' },
+];
+const limits = [
+  { db: 85, label: 'NIOSH 8-hour limit' },
+  { db: 100, label: 'WHO venue limit (15-min average)' },
+];
+
+function layout(o: { top: number; bottom: number; axis: number }) {
+  const y = (db: number) => o.bottom - (db / 120) * (o.bottom - o.top);
+  return { ...o, y };
+}
+const W = layout({ top: 70, bottom: 430, axis: 120 });
+const N = layout({ top: 74, bottom: 520, axis: 64 });
+
+const desc =
+  'A vertical decibel scale from 0 to 120 dB with approximate everyday examples: threshold of hearing at about 0 dB, a whisper about 30, conversation about 60, busy traffic about 80 to 85, a concert or club about 100, earbuds at maximum volume above 100, and right next to a big speaker stack about 120. A line at 85 dB marks the NIOSH 8-hour limit, and a line at 100 dB marks the WHO venue limit, averaged over 15 minutes. The scale turns amber above 85 dB.';
+---
+
+<Diagram caption="Every 3 dB doubles the energy. Every 10 dB sounds about twice as loud.">
+  <svg viewBox="0 0 720 470" width="720" height="470" role="img" aria-labelledby="ladder-w-t ladder-w-d">
+    <title id="ladder-w-t">The decibel ladder</title>
+    <desc id="ladder-w-d">{desc}</desc>
+    <defs>
+      <linearGradient id="ladder-w-zone" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0" style="stop-color: var(--art-warm); stop-opacity: 0"></stop>
+        <stop offset="1" style="stop-color: var(--art-warm); stop-opacity: 0.16"></stop>
+      </linearGradient>
+      <linearGradient id="ladder-w-bar" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0" style="stop-color: var(--art-line)"></stop>
+        <stop offset={85 / 120} style="stop-color: var(--art-line)"></stop>
+        <stop offset="1" style="stop-color: var(--art-warm)"></stop>
+      </linearGradient>
+    </defs>
+    <rect x={W.axis} y={W.y(120) - 12} width={700 - W.axis} height={W.y(85) - W.y(120) + 12} fill="url(#ladder-w-zone)"></rect>
+    <rect x={W.axis - 5} y={W.y(120)} width="5" height={W.y(0) - W.y(120)} fill="url(#ladder-w-bar)" rx="2"></rect>
+    {
+      [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120].map((db) => (
+        <g>
+          <path class="s-line" d={`M${W.axis - 12} ${W.y(db)} H ${W.axis - 6}`} stroke-width="1" />
+          {db % 20 === 0 && (
+            <text class="t t-small" x={W.axis - 18} y={W.y(db) + 4} text-anchor="end">
+              {db}
+            </text>
+          )}
+        </g>
+      ))
+    }
+    <text class="t t-small" x={W.axis - 18} y={W.y(120) - 24} text-anchor="end">dB</text>
+    <text class="t t-small" x="700" y="30" text-anchor="end">Everyday levels are approximate</text>
+
+    {
+      limits.map((l) => (
+        <g>
+          <path class="s-warm" d={`M${W.axis} ${W.y(l.db)} H 700`} stroke-width="1" stroke-dasharray="5 4" />
+          <text class="t t-warm t-strong" x="700" y={W.y(l.db) - 7} text-anchor="end">
+            {l.label}
+          </text>
+        </g>
+      ))
+    }
+    {
+      examples.map((e) => (
+        <g>
+          {e.range ? (
+            <path class="s-ink" d={`M${W.axis + 10} ${W.y(e.range[0])} V ${W.y(e.range[1])}`} stroke-width="2" stroke-linecap="round" />
+          ) : (
+            <circle class="f-ink" cx={W.axis + 10} cy={W.y(e.db)} r="2.5" />
+          )}
+          <text class:list={['t', 't-halo', { 't-warm': e.db > 85 }]} x={W.axis + 24} y={W.y(e.db) + 5}>
+            {e.label}
+          </text>
+        </g>
+      ))
+    }
+  </svg>
+
+  <svg slot="narrow" viewBox="0 0 340 560" width="340" height="560" role="img" aria-labelledby="ladder-n-t ladder-n-d">
+    <title id="ladder-n-t">The decibel ladder</title>
+    <desc id="ladder-n-d">{desc}</desc>
+    <defs>
+      <linearGradient id="ladder-n-zone" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0" style="stop-color: var(--art-warm); stop-opacity: 0"></stop>
+        <stop offset="1" style="stop-color: var(--art-warm); stop-opacity: 0.16"></stop>
+      </linearGradient>
+      <linearGradient id="ladder-n-bar" x1="0" y1="1" x2="0" y2="0">
+        <stop offset="0" style="stop-color: var(--art-line)"></stop>
+        <stop offset={85 / 120} style="stop-color: var(--art-line)"></stop>
+        <stop offset="1" style="stop-color: var(--art-warm)"></stop>
+      </linearGradient>
+    </defs>
+    <rect x={N.axis} y={N.y(120) - 12} width={330 - N.axis} height={N.y(85) - N.y(120) + 12} fill="url(#ladder-n-zone)"></rect>
+    <rect x={N.axis - 5} y={N.y(120)} width="5" height={N.y(0) - N.y(120)} fill="url(#ladder-n-bar)" rx="2"></rect>
+    {
+      [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120].map((db) => (
+        <g>
+          <path class="s-line" d={`M${N.axis - 12} ${N.y(db)} H ${N.axis - 6}`} stroke-width="1" />
+          {db % 20 === 0 && (
+            <text class="t t-small" x={N.axis - 16} y={N.y(db) + 4} text-anchor="end">
+              {db}
+            </text>
+          )}
+        </g>
+      ))
+    }
+    <text class="t t-small" x={N.axis - 16} y={N.y(120) - 24} text-anchor="end">dB</text>
+    <text class="t t-small" x="330" y="26" text-anchor="end">Everyday levels are approximate</text>
+    {
+      limits.map((l) => (
+        <g>
+          <path class="s-warm" d={`M${N.axis} ${N.y(l.db)} H 330`} stroke-width="1" stroke-dasharray="5 4" />
+          {/* On a phone the 100 dB row is crowded, so the WHO limit's label
+              sits under "Concert / club" instead of on the right. */}
+          {l.db === 100 ? (
+            <text class="t t-small t-warm" x={N.axis + 20} y={N.y(l.db) + 25}>
+              {l.label}
+            </text>
+          ) : (
+            <text class="t t-small t-warm" x="330" y={N.y(l.db) - 6} text-anchor="end">
+              {l.label}
+            </text>
+          )}
+        </g>
+      ))
+    }
+    {
+      examples.map((e) => (
+        <g>
+          {e.range ? (
+            <path class="s-ink" d={`M${N.axis + 9} ${N.y(e.range[0])} V ${N.y(e.range[1])}`} stroke-width="2" stroke-linecap="round" />
+          ) : (
+            <circle class="f-ink" cx={N.axis + 9} cy={N.y(e.db)} r="2.5" />
+          )}
+          <text class:list={['t', 't-halo', { 't-warm': e.db > 85 }]} x={N.axis + 20} y={N.y(e.db) + 5}>
+            {e.label}
+          </text>
+        </g>
+      ))
+    }
+  </svg>
+</Diagram>

@@ -1,0 +1,174 @@
+---
+/**
+ * Diagram: the journey of sound. A simplified cross-section, read left to
+ * right: the outer ear and its canal, the eardrum, the three middle-ear
+ * bones, the cochlea, and the hearing nerve on its way to the brain, under
+ * the three stages (outer, middle, inner).
+ *
+ * Simplified on purpose: proportions are schematic, not anatomical, so the
+ * order of the parts and the stage each belongs to read at a glance.
+ *
+ * Wide: one horizontal run with labels above and below. Narrow: the three
+ * stages as rows, each drawing beside its labels, so text stays legible on a
+ * 360px phone.
+ */
+import Diagram from './Diagram.astro';
+
+// ----- Parts, drawn once in local coordinates around the canal's axis
+// (y = 0). x runs from the outer ear (about -52) to the nerve (about 520).
+
+// The outer ear (pinna): a flap opening toward the canal, with one inner fold.
+const pinna = [
+  'M0 -22 C -8 -60, -30 -84, -44 -70 C -60 -52, -50 -8, -40 22 C -30 50, -18 70, 0 72',
+  'M-6 -46 C -26 -42, -32 -12, -24 10',
+];
+// The skin line of the head, broken by the canal opening.
+const head = ['M0 -96 V -22', 'M0 22 V 96'];
+// The ear canal: a short tube, narrowing slightly toward the eardrum.
+const canal = ['M0 -18 C 70 -20, 140 -12, 200 -13', 'M0 18 C 70 20, 140 13, 200 13'];
+// The eardrum: a thin cone at the end of the canal.
+const eardrum = 'M199 -20 Q 214 0 199 20';
+// The middle-ear cavity, faint.
+const cavity = 'M204 -24 C 230 -64, 300 -66, 330 -40 M204 24 C 236 58, 302 58, 330 36';
+// The three bones: malleus (attached to the eardrum), incus, stapes (on the
+// oval window of the cochlea).
+// Outlines, not dots: the malleus a handle on the eardrum ending in a
+// rounded head, the incus an anvil with a long process reaching down, the
+// stapes a stirrup whose footplate sits in the oval window.
+const malleus = 'M207 4 L 226 -24 C 226 -34, 232 -42, 240 -42 C 246 -42, 248 -34, 242 -28 L 229 -20';
+const incus = 'M242 -40 C 250 -48, 262 -46, 264 -36 C 266 -28, 262 -24, 266 -8 M252 -30 L 244 -22';
+const stapes = ['M266 -6 C 282 -10, 300 -17, 314 -17', 'M266 -6 C 282 -2, 300 6, 314 6', 'M314 -20 V 9'];
+
+// The cochlea: a spiral tube (two coils), starting at the oval window.
+function spiral(cx: number, cy: number, r0: number, r1: number, turns: number, start: number) {
+  const n = 220;
+  const k = Math.log(r0 / r1) / (turns * 2 * Math.PI);
+  let d = '';
+  for (let i = 0; i <= n; i++) {
+    const th = (i / n) * turns * 2 * Math.PI;
+    const r = r0 * Math.exp(-k * th);
+    const a = start + th;
+    d += `${i ? 'L' : 'M'}${(cx + r * Math.cos(a)).toFixed(1)} ${(cy + r * Math.sin(a)).toFixed(1)}`;
+  }
+  return d;
+}
+const cochlea = [spiral(384, 0, 62, 8, 2.4, Math.PI), spiral(384, 0, 46, 5, 2.2, Math.PI)];
+// The hearing nerve: a bundle of fibres leaving the cochlea's core.
+const nerve = [
+  'M392 6 C 430 16, 470 -6, 512 -40',
+  'M394 12 C 434 24, 476 0, 518 -34',
+  'M396 18 C 438 32, 482 6, 524 -28',
+];
+
+const desc =
+  'A simplified cross-section of the ear, read from left to right. Outer ear: the visible ear and the ear canal, which boosts roughly 2 to 5 kHz. Middle ear: the eardrum and three tiny bones, the malleus, incus and stapes. Inner ear: the coiled cochlea, from which the hearing nerve carries signals to the brain.';
+---
+
+<Diagram caption="Sound passes through three stages before your brain hears anything.">
+  <svg viewBox="0 0 720 300" width="720" height="300" role="img" aria-labelledby="journey-w-t journey-w-d">
+    <title id="journey-w-t">The journey of sound</title>
+    <desc id="journey-w-d">{desc}</desc>
+
+    {/* The three stages, as brackets across the top. */}
+    <g>
+      <text class="t t-strong" x="164" y="34" text-anchor="middle">Outer ear</text>
+      <path class="s-line" d="M40 46 V 52 H 286 V 46" stroke-width="1"></path>
+      <text class="t t-strong" x="356" y="34" text-anchor="middle">Middle ear</text>
+      <path class="s-line" d="M294 46 V 52 H 418 V 46" stroke-width="1"></path>
+      <text class="t t-strong" x="540" y="34" text-anchor="middle">Inner ear</text>
+      <path class="s-line" d="M426 46 V 52 H 660 V 46" stroke-width="1"></path>
+    </g>
+
+    <g transform="translate(90 160)">
+      {/* Incoming sound. */}
+      <g class="s-accent" stroke-width="1.25" stroke-linecap="round">
+        <path d="M-74 -14 q8 14 0 28" opacity="0.4"></path>
+        <path d="M-64 -22 q12 22 0 44" opacity="0.7"></path>
+      </g>
+      <g class="s-line" stroke-width="1">{head.map((d) => <path d={d} />)}</g>
+      <path class="s-line" d={cavity} stroke-width="1" stroke-dasharray="3 4"></path>
+      <g class="s-ink" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        {pinna.map((d) => <path d={d} />)}
+        {canal.map((d) => <path d={d} />)}
+        <path d={eardrum}></path>
+        <path d={malleus}></path>
+        <path d={incus}></path>
+        {stapes.map((d) => <path d={d} />)}
+        {cochlea.map((d) => <path d={d} />)}
+      </g>
+      <g class="s-accent" stroke-width="1.25" stroke-linecap="round">{nerve.map((d) => <path d={d} />)}</g>
+      <path class="s-accent" d="M530 -46 l 14 -8 l -4 15" stroke-width="1.25" stroke-linejoin="round"></path>
+    </g>
+
+    {/* Labels and leaders. */}
+    <g>
+      <path class="s-line" d="M190 182 V 238" stroke-width="1"></path>
+      <text class="t" x="190" y="256" text-anchor="middle">Ear canal</text>
+      <text class="t t-small" x="190" y="275" text-anchor="middle">Boosts roughly 2–5 kHz</text>
+
+      <path class="s-line" d="M292 136 V 96" stroke-width="1"></path>
+      <text class="t" x="292" y="86" text-anchor="middle">Eardrum</text>
+
+      <path class="s-line" d="M362 184 V 238" stroke-width="1"></path>
+      <text class="t" x="362" y="256" text-anchor="middle">Three tiny bones</text>
+      <text class="t t-small" x="362" y="275" text-anchor="middle">Malleus, incus, stapes</text>
+
+      <path class="s-line" d="M474 230 V 238" stroke-width="1"></path>
+      <text class="t" x="490" y="256" text-anchor="middle">Cochlea</text>
+
+      <text class="t" x="634" y="70" text-anchor="middle">Hearing nerve</text>
+      <text class="t t-small" x="634" y="89" text-anchor="middle">to the brain</text>
+    </g>
+  </svg>
+
+  <svg slot="narrow" viewBox="0 0 340 560" width="340" height="560" role="img" aria-labelledby="journey-n-t journey-n-d">
+    <title id="journey-n-t">The journey of sound</title>
+    <desc id="journey-n-d">{desc}</desc>
+
+    {/* Row 1: outer ear. */}
+    <g transform="translate(46 100) scale(0.5)">
+      <g class="s-accent" stroke-width="2.5" stroke-linecap="round">
+        <path d="M-74 -14 q8 14 0 28" opacity="0.4"></path>
+        <path d="M-64 -22 q12 22 0 44" opacity="0.7"></path>
+      </g>
+      <g class="s-line" stroke-width="2">{head.map((d) => <path d={d} />)}</g>
+      <g class="s-ink" stroke-width="3" stroke-linecap="round">
+        {pinna.map((d) => <path d={d} />)}
+        {canal.map((d) => <path d={d} />)}
+      </g>
+    </g>
+    <text class="t t-strong" x="178" y="84">Outer ear</text>
+    <text class="t" x="178" y="106">Ear canal</text>
+    <text class="t t-small" x="178" y="125">Boosts roughly 2–5 kHz</text>
+
+    <path class="s-accent" d="M86 170 V 196 m -5 -7 l 5 7 l 5 -7" stroke-width="1.25" fill="none"></path>
+
+    {/* Row 2: middle ear. */}
+    <g transform="translate(-130 278) scale(0.8)">
+      <path class="s-line" d={cavity} stroke-width="1.25" stroke-dasharray="3 4"></path>
+      <g class="s-ink" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M150 -13 C 170 -13, 185 -13, 200 -13 M150 13 C 170 13, 185 13, 200 13"></path>
+        <path d={eardrum}></path>
+        <path d={malleus}></path>
+        <path d={incus}></path>
+        {stapes.map((d) => <path d={d} />)}
+      </g>
+    </g>
+    <text class="t t-strong" x="178" y="262">Middle ear</text>
+    <text class="t" x="178" y="284">Eardrum</text>
+    <text class="t t-small" x="178" y="303">Three tiny bones: malleus,</text>
+    <text class="t t-small" x="178" y="320">incus, stapes</text>
+
+    <path class="s-accent" d="M86 352 V 378 m -5 -7 l 5 7 l 5 -7" stroke-width="1.25" fill="none"></path>
+
+    {/* Row 3: inner ear. */}
+    <g transform="translate(-180 466) scale(0.62)">
+      <g class="s-ink" stroke-width="2.4" stroke-linecap="round">{cochlea.map((d) => <path d={d} />)}</g>
+      <g class="s-accent" stroke-width="2" stroke-linecap="round">{nerve.map((d) => <path d={d} />)}</g>
+      <path class="s-accent" d="M530 -46 l 14 -8 l -4 15" stroke-width="2" fill="none" stroke-linejoin="round"></path>
+    </g>
+    <text class="t t-strong" x="178" y="448">Inner ear</text>
+    <text class="t" x="178" y="470">Cochlea</text>
+    <text class="t t-small" x="178" y="489">Hearing nerve to the brain</text>
+  </svg>
+</Diagram>

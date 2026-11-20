@@ -23,7 +23,7 @@ const { caption, numbered = true, class: className } = Astro.props;
 const hasNarrow = Astro.slots.has('narrow');
 ---
 
-<figure class:list={['diagram', className]}>
+<figure class:list={['diagram', { 'diagram--unnumbered': !numbered }, className]}>
   <div class="diagram__media">
     {
       hasNarrow ? (
@@ -53,6 +53,12 @@ const hasNarrow = Astro.slots.has('narrow');
   .diagram {
     counter-increment: figure;
     container-type: inline-size;
+  }
+
+  /* Artwork reuse (an opening figure, a Home panel) does not take a number,
+     so the captioned figures in the text still count from 1. */
+  .diagram--unnumbered {
+    counter-increment: none;
   }
 
   .diagram__media {

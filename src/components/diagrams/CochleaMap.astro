@@ -1,0 +1,227 @@
+---
+/**
+ * Diagram: your cochlea is a frequency map. The cochlea unrolled into one
+ * long strip (the basilar membrane), narrow and stiff at the base, wide and
+ * floppy at the apex, drawn subtly like a piano keyboard because, like a
+ * keyboard, every pitch has its own place along it.
+ *
+ * Positions are real, not decorative: each frequency mark sits where
+ * Greenwood's frequency-position function for the human cochlea puts it,
+ *   f = 165.4 * (10^(2.1 * p) - 0.88),
+ * where p runs from 0 at the apex to 1 at the base. The 3 to 6 kHz zone,
+ * which noise damage often reaches first, is the one amber region.
+ *
+ * Wide: a horizontal strip, base on the left. Narrow: a vertical strip, base
+ * at the top, labels to its right.
+ *
+ * artwork: the opening figure of the article. No caption or number, hidden
+ * from screen readers (the captioned figure in the text describes it), and
+ * on phones a short horizontal strip so it opens the page without filling
+ * the screen.
+ */
+import Diagram from './Diagram.astro';
+
+interface Props {
+  artwork?: boolean;
+}
+
+const { artwork = false } = Astro.props;
+const id = artwork ? 'cochlea-art' : 'cochlea';
+
+// Distance from the base (0) to the apex (1) for a frequency in Hz.
+const fromBase = (f: number) => 1 - Math.log10(f / 165.4 + 0.88) / 2.1;
+
+const marks = [
+  { f: 8000, label: '8 kHz' },
+  { f: 4000, label: '4 kHz' },
+  { f: 1000, label: '1 kHz' },
+  { f: 250, label: '250 Hz' },
+];
+const zone = { from: fromBase(6000), to: fromBase(3000) };
+
+/**
+ * A tapering strip from (x0, y) to (x1, y), `w0` thick at the base and `w1`
+ * at the apex, with keyboard divisions. horizontal: base left, apex right;
+ * otherwise base at the top (x and y swapped).
+ */
+function strip(o: { a0: number; a1: number; mid: number; w0: number; w1: number; keys: number; vertical: boolean }) {
+  const at = (t: number) => o.a0 + (o.a1 - o.a0) * t;
+  const half = (t: number) => (o.w0 + (o.w1 - o.w0) * t) / 2;
+  const pt = (along: number, across: number) =>
+    o.vertical ? `${across.toFixed(1)} ${along.toFixed(1)}` : `${along.toFixed(1)} ${across.toFixed(1)}`;
+  const outline = `M${pt(o.a0, o.mid - half(0))} L${pt(o.a1, o.mid - half(1))} L${pt(o.a1, o.mid + half(1))} L${pt(o.a0, o.mid + half(0))} Z`;
+  let keys = '';
+  let black: string[] = [];
+  // Black keys in the 2-then-3 pattern of a piano octave (7 white keys).
+  const blackAfter = [0, 1, 3, 4, 5];
+  for (let i = 1; i < o.keys; i++) {
+    const t = i / o.keys;
+    keys += `M${pt(at(t), o.mid - half(t))} L${pt(at(t), o.mid + half(t))}`;
+  }
+  for (let i = 0; i < o.keys - 1; i++) {
+    if (!blackAfter.includes(i % 7)) continue;
+    const t = (i + 1) / o.keys;
+    const kw = ((o.a1 - o.a0) / o.keys) * 0.55;
+    const h = half(t) * 2 * 0.58;
+    const top = o.mid - half(t);
+    black.push(
+      o.vertical
+        ? `M${top.toFixed(1)} ${(at(t) - kw / 2).toFixed(1)} h${h.toFixed(1)} v${kw.toFixed(1)} h${(-h).toFixed(1)} Z`
+        : `M${(at(t) - kw / 2).toFixed(1)} ${top.toFixed(1)} h${kw.toFixed(1)} v${h.toFixed(1)} h${(-kw).toFixed(1)} Z`,
+    );
+  }
+  const zoneD = (() => {
+    const [t0, t1] = [zone.from, zone.to];
+    return `M${pt(at(t0), o.mid - half(t0))} L${pt(at(t1), o.mid - half(t1))} L${pt(at(t1), o.mid + half(t1))} L${pt(at(t0), o.mid + half(t0))} Z`;
+  })();
+  return { outline, keys, black: black.join(''), zone: zoneD, at, half };
+}
+
+// Wide: base at x 60, apex at x 660, centred on y 116.
+const W = strip({ a0: 60, a1: 660, mid: 116, w0: 22, w1: 62, keys: 42, vertical: false });
+// Narrow: base at y 96, apex at y 500, centred on x 66.
+const N = strip({ a0: 96, a1: 500, mid: 66, w0: 18, w1: 52, keys: 35, vertical: true });
+// Artwork on phones: a short horizontal strip.
+const A = strip({ a0: 20, a1: 320, mid: 64, w0: 14, w1: 40, keys: 28, vertical: false });
+
+const desc =
+  'The cochlea unrolled into a long tapering strip, drawn like a piano keyboard. The narrow, stiff end is the base, which responds to high frequencies, about 20 kHz. The wide end is the apex, which responds to low frequencies, about 20 Hz. Marks along the strip show 8 kHz, 4 kHz, 1 kHz and 250 Hz. The zone from 3 to 6 kHz is highlighted as the region often damaged first.';
+---
+
+<Diagram
+  caption={artwork ? undefined : 'Like a piano keyboard rolled into a spiral: every pitch has its own spot.'}
+  numbered={!artwork}
+>
+  <svg
+    viewBox="0 0 720 244"
+    width="720"
+    height="244"
+    role={artwork ? undefined : 'img'}
+    aria-hidden={artwork ? 'true' : undefined}
+    aria-labelledby={artwork ? undefined : `${id}-w-t ${id}-w-d`}
+  >
+    {
+      !artwork && (
+        <>
+          <title id={`${id}-w-t`}>Your cochlea is a frequency map</title>
+          <desc id={`${id}-w-d`}>{desc}</desc>
+        </>
+      )
+    }
+    {/* The amber zone, above the strip, with its note. */}
+    <path class="f-warm" d={W.zone} opacity="0.22"></path>
+    <text class="t t-warm t-strong" x={W.at((zone.from + zone.to) / 2)} y="44" text-anchor="middle">3–6 kHz</text>
+    <text class="t t-warm" x={W.at((zone.from + zone.to) / 2)} y="63" text-anchor="middle">Often damaged first</text>
+    <path class="s-warm" d={`M${W.at((zone.from + zone.to) / 2)} 72 V ${116 - W.half((zone.from + zone.to) / 2) - 4}`} stroke-width="1"></path>
+
+    <path class="f-ink" d={W.black} opacity="0.16"></path>
+    <path class="s-line" d={W.keys} stroke-width="1"></path>
+    <path class="s-ink" d={W.outline} stroke-width="1.25" stroke-linejoin="round"></path>
+    <path class="s-warm" d={W.zone} stroke-width="1.25" stroke-linejoin="round"></path>
+
+    {/* Frequency marks, below the strip. */}
+    {
+      marks.map((m) => {
+        const t = fromBase(m.f);
+        const x = W.at(t);
+        const y = 116 + W.half(t);
+        return (
+          <g>
+            <path class="s-accent" d={`M${x} ${y + 4} V ${y + 14}`} stroke-width="1.5" />
+            <circle class="f-accent" cx={x} cy={y + 2} r="2.5" />
+            <text class="t t-accent" x={x} y={y + 31} text-anchor="middle">
+              {m.label}
+            </text>
+          </g>
+        );
+      })
+    }
+
+    {/* The two ends. */}
+    <text class="t t-strong" x="60" y="196">High frequencies (~20 kHz)</text>
+    <text class="t t-small" x="60" y="215">Base: narrow and stiff</text>
+    <text class="t t-strong" x="660" y="210" text-anchor="end">Low frequencies (~20 Hz)</text>
+    <text class="t t-small" x="660" y="229" text-anchor="end">Apex: wide and floppy</text>
+  </svg>
+
+  {
+    artwork ? (
+      <svg slot="narrow" viewBox="0 0 340 150" width="340" height="150" aria-hidden="true" focusable="false">
+        <path class="f-warm" d={A.zone} opacity="0.22" />
+        <path class="f-ink" d={A.black} opacity="0.16" />
+        <path class="s-line" d={A.keys} stroke-width="1" />
+        <path class="s-ink" d={A.outline} stroke-width="1.25" stroke-linejoin="round" />
+        <path class="s-warm" d={A.zone} stroke-width="1.25" stroke-linejoin="round" />
+        <text class="t t-warm t-strong" x={A.at((zone.from + zone.to) / 2)} y="28" text-anchor="middle">
+          3–6 kHz
+        </text>
+        <text class="t t-small" x="20" y="116">
+          ~20 kHz
+        </text>
+        <text class="t t-small" x="320" y="116" text-anchor="end">
+          ~20 Hz
+        </text>
+        <text class="t t-small" x="20" y="134">
+          Base
+        </text>
+        <text class="t t-small" x="320" y="134" text-anchor="end">
+          Apex
+        </text>
+      </svg>
+    ) : (
+      <svg slot="narrow" viewBox="0 0 340 560" width="340" height="560" role="img" aria-labelledby={`${id}-n-t ${id}-n-d`}>
+        <title id={`${id}-n-t`}>Your cochlea is a frequency map</title>
+        <desc id={`${id}-n-d`}>{desc}</desc>
+        <text class="t t-strong" x="16" y="34">
+          High frequencies (~20 kHz)
+        </text>
+        <text class="t t-small" x="16" y="53">
+          Base: narrow and stiff
+        </text>
+
+        <path class="f-warm" d={N.zone} opacity="0.22" />
+        <path class="f-ink" d={N.black} opacity="0.16" />
+        <path class="s-line" d={N.keys} stroke-width="1" />
+        <path class="s-ink" d={N.outline} stroke-width="1.25" stroke-linejoin="round" />
+        <path class="s-warm" d={N.zone} stroke-width="1.25" stroke-linejoin="round" />
+
+        {marks.map((m) => {
+          const t = fromBase(m.f);
+          const y = N.at(t);
+          const x = 66 + N.half(t);
+          return (
+            <g>
+              <circle class="f-accent" cx={x + 2} cy={y} r="2.5" />
+              <path class="s-accent" d={`M${x + 4} ${y} H ${x + 14}`} stroke-width="1.5" />
+              <text class="t t-accent" x={x + 20} y={y + 5}>
+                {m.label}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* The amber zone's note, to the right of the marks. */}
+        <g>
+          <path
+            class="s-warm"
+            d={`M198 ${N.at(zone.from)} H 206 V ${N.at(zone.to)} H 198`}
+            stroke-width="1"
+          />
+          <text class="t t-warm t-strong" x="214" y={N.at((zone.from + zone.to) / 2) - 4}>
+            3–6 kHz
+          </text>
+          <text class="t t-small t-warm" x="214" y={N.at((zone.from + zone.to) / 2) + 15}>
+            Often damaged first
+          </text>
+        </g>
+
+        <text class="t t-strong" x="16" y="530">
+          Low frequencies (~20 Hz)
+        </text>
+        <text class="t t-small" x="16" y="549">
+          Apex: wide and floppy
+        </text>
+      </svg>
+    )
+  }
+</Diagram>
