@@ -1,25 +1,28 @@
 ---
 /**
- * About: portrait and bio, what Tesh does, what Tesh believes about sound
- * (the four philosophy entries, rendered here as one readable section), and
- * education. Every word comes from src/data/about.ts, site.ts and the
- * philosophy collection; this page only lays it out.
+ * About: portrait and bio, what Tesh does, what Tesh believes about sound,
+ * and education. Every word comes from src/data/about.ts, src/lib/beliefs.ts
+ * and site.ts; this page only lays it out.
+ *
+ * The beliefs are the emotional centre of the site, so they are set like a
+ * page in a fine book: one belief per row between hairline rules, never
+ * cards; the headline in the serif at display size, the text in the serif at
+ * reading size; generous space; no motion beyond the page's load fade.
  */
-import { render } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Portrait from '../components/Portrait.astro';
+import Waveform from '../components/Waveform.astro';
+import SerifFont from '../components/SerifFont.astro';
+import DecibelArt from '../components/art/DecibelArt.astro';
 import { about } from '../data/about';
+import { beliefId, beliefs } from '../lib/beliefs';
 import { copy, site } from '../lib/site';
 import { personSchema } from '../lib/schema';
-import { getPhilosophySections } from '../lib/content';
-import '../styles/prose.css';
-
-const beliefs = await Promise.all(
-  (await getPhilosophySections()).map(async (entry) => ({ entry, Content: (await render(entry)).Content })),
-);
 ---
 
 <BaseLayout title="About" description={copy.about.description} jsonLd={personSchema()}>
+  <Fragment slot="head"><SerifFont priority="low" /></Fragment>
+
   <section class="intro wrap" aria-labelledby="about-title">
     <div class="intro__portrait enter">
       <Portrait priority sizes="(min-width: 64rem) 32rem, (min-width: 48rem) 40vw, calc(100vw - 2.5rem)" />
@@ -46,27 +49,32 @@ const beliefs = await Promise.all(
     </ul>
   </section>
 
-  {
-    beliefs.length > 0 && (
-      <section id="beliefs" class="block wrap" aria-labelledby="believe-title">
-        <h2 id="believe-title" class="block__title">{copy.about.believeTitle}</h2>
-        <ol class="beliefs">
-          {beliefs.map(({ entry, Content }, i) => (
-            <li class="belief">
-              <p class="belief__index">{String(i + 1).padStart(2, '0')}</p>
-              <div class="belief__body">
-                <h3 class="belief__title">{entry.data.title}</h3>
-                {entry.data.thesis && <p class="belief__thesis">{entry.data.thesis}</p>}
-                <div class="prose belief__text">
-                  <Content />
+  <section id="beliefs" class="beliefs wrap" aria-labelledby="believe-title">
+    <header class="beliefs__opener">
+      <h2 id="believe-title" class="beliefs__label">{copy.about.believeTitle}</h2>
+      <div class="beliefs__wave"><Waveform seed={5} /></div>
+    </header>
+    {/* role="list" keeps the list announced as a list in Safari, which drops
+        list semantics when list-style is none. */}
+    <ol class="beliefs__list" role="list">
+      {
+        beliefs.map((belief) => (
+          <li id={beliefId(belief.id)} class:list={['belief', { 'belief--feature': belief.id === 'ears' }]}>
+            <p class="belief__number" aria-hidden="true">{belief.number}</p>
+            <h3 class="belief__headline">{belief.headline}</h3>
+            <p class="belief__body">{belief.body}</p>
+            {
+              belief.id === 'ears' && (
+                <div class="belief__echo">
+                  <DecibelArt quiet />
                 </div>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </section>
-    )
-  }
+              )
+            }
+          </li>
+        ))
+      }
+    </ol>
+  </section>
 
   <section class="block wrap" aria-labelledby="education-title">
     <h2 id="education-title" class="block__title">{copy.about.educationTitle}</h2>
@@ -197,56 +205,139 @@ const beliefs = await Promise.all(
     color: var(--color-text-2);
   }
 
-  /* ----- What I believe: numbered, the thesis set large ----- */
+  /* ===== What I believe about sound ======================================
+   * The opener: a small uppercase label over a short static waveform, the
+   * site's signature. Then seven rows between 1px hairlines: no cards, no
+   * boxes. Phones stack number, headline, text. From 1024px the number and
+   * headline sit in the left columns and the text in the right, all on one
+   * baseline, like a page in a book.
+   */
   .beliefs {
+    margin-top: var(--section-gap);
+  }
+
+  .beliefs__opener {
     display: grid;
-    gap: var(--space-12);
+    gap: var(--space-5);
+    margin-bottom: clamp(var(--space-12), 6vw, var(--space-20));
+  }
+
+  .beliefs__label {
+    font-family: var(--font-sans);
+    font-size: var(--step--1);
+    font-weight: var(--weight-medium);
+    letter-spacing: var(--tracking-caps);
+    text-transform: uppercase;
+    color: var(--color-text-2);
+  }
+
+  .beliefs__wave {
+    max-width: 18rem;
+  }
+
+  .beliefs__list {
+    margin: 0;
     padding: 0;
     list-style: none;
+    border-top: 1px solid var(--color-line);
   }
 
   .belief {
     display: grid;
-    grid-template-columns: 2.5rem minmax(0, 1fr);
-    gap: var(--space-4);
+    gap: var(--space-3);
+    padding-block: var(--space-16);
+    border-bottom: 1px solid var(--color-line);
+    /* Links from Home land on the row. The page already clears the sticky
+       header (scroll-padding-top in global.css); this keeps a little more
+       air above the rule so the hairline shows. */
+    scroll-margin-top: var(--space-2);
   }
 
-  .belief + .belief {
-    padding-top: var(--space-12);
-    border-top: 1px solid var(--color-line);
-  }
-
-  .belief__index {
-    padding-top: 0.2em;
+  /* Small tabular figures in the accent: 01 to 07 line up in any font. */
+  .belief__number {
+    font-family: var(--font-sans);
     font-size: var(--step--1);
-    font-weight: var(--weight-semibold);
+    font-weight: var(--weight-medium);
+    letter-spacing: 0.04em;
     font-variant-numeric: tabular-nums;
     color: var(--color-accent);
   }
 
-  .belief__body {
-    display: grid;
-    gap: var(--space-3);
-  }
-
-  .belief__title {
-    font-size: var(--step-0);
-    font-weight: var(--weight-medium);
-    color: var(--color-text-3);
-    letter-spacing: 0;
-  }
-
-  .belief__thesis {
-    font-size: var(--step-3);
-    font-weight: var(--weight-semibold);
-    line-height: var(--leading-tight);
-    letter-spacing: var(--tracking-display);
+  .belief__headline {
+    max-width: 16em;
+    font-family: var(--font-serif);
+    font-size: var(--step-belief);
+    font-weight: 500;
+    font-optical-sizing: auto;
+    line-height: 1.08;
+    letter-spacing: var(--tracking-tight);
     text-wrap: balance;
+    color: var(--color-text);
   }
 
-  .belief__text {
-    max-width: 38rem;
+  .belief__body {
+    max-width: 34em;
     margin-top: var(--space-2);
+    font-family: var(--font-serif);
+    font-size: var(--step-belief-body);
+    line-height: 1.65;
+    color: var(--color-text-2);
+    text-wrap: pretty;
+  }
+
+  /* The faint cochlea beside the belief about the ear: desktop only, and
+     nowhere else. The line colour at low opacity, so it is felt more than
+     seen. */
+  .belief__echo {
+    display: none;
+  }
+
+  @media (min-width: 64rem) {
+    .belief {
+      grid-template-columns: 3.5rem minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-areas: 'number headline body';
+      column-gap: clamp(var(--space-8), 5vw, var(--space-20));
+      row-gap: 0;
+      /* The number, the headline and the text share their first baseline. */
+      align-items: first baseline;
+      padding-block: clamp(var(--space-20), 8vw, var(--space-32));
+    }
+
+    .belief__number {
+      grid-area: number;
+    }
+
+    .belief__headline {
+      grid-area: headline;
+    }
+
+    .belief__body {
+      grid-area: body;
+      margin-top: 0;
+    }
+
+    /* The emphasised row: a larger headline, and room for the echo beneath it. */
+    .belief--feature {
+      grid-template-areas:
+        'number headline body'
+        '. echo body';
+    }
+
+    .belief--feature .belief__headline {
+      font-size: calc(var(--step-belief) * 1.14);
+      max-width: none;
+    }
+
+    .belief--feature .belief__echo {
+      grid-area: echo;
+      align-self: start;
+      display: block;
+      width: min(100%, 17rem);
+      /* Pulled left by the drawing's own padding, so the spiral's outer edge
+         lines up with the headline above it. */
+      margin: var(--space-12) 0 0 -1.35rem;
+      opacity: 0.36;
+    }
   }
 
   /* ----- Education ----- */

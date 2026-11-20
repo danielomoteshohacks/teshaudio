@@ -4,9 +4,9 @@ Rules for all work in this repository. They are not optional.
 
 ## Project
 
-Personal site for Daniel ("Tesh"): music producer, composer, mix and mastering
-engineer, spatial audio software engineer and audio experience designer.
-Astro (static output), TypeScript strict, MDX, plain CSS with design tokens.
+Personal site for Daniel ("Tesh"): music producer and composer, building
+audio software, and studying Electrical/Electronic Engineering at the
+University of Lagos. Astro (static output), TypeScript strict, MDX, plain CSS with design tokens.
 Deployed to Cloudflare: build command `npm run build`, output folder `dist`.
 
 ## Hard rules (from Tesh)

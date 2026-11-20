@@ -21,7 +21,7 @@
    * only for article body text.
    */
   --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-serif: 'Source Serif 4 Variable', 'Iowan Old Style', Charter, Georgia, serif;
+  --font-serif: 'Source Serif 4 Variable', 'Source Serif 4 Fallback', serif;
 
   /* Fluid scale from a 360px phone to a 1440px desktop. The display steps
    * grow much faster than body text: confident on desktop, still fitting on
@@ -49,6 +49,15 @@
   /* Article body: 18px on phones, 20px on desktop. */
   --step-read: clamp(1.125rem, 1.083rem + 0.185vw, 1.25rem);
 
+  /* The beliefs on About, in the serif. Phones: 30px headline over 18px
+     text. Tablets: 34px. From 1024px the headline runs 40 to 48px and the
+     text is 20px (see the media queries at the end of this file). */
+  --step-belief: 1.875rem;
+  --step-belief-body: 1.125rem;
+
+  /* The one belief set very large on Home, as a full stop between sections. */
+  --step-quote: clamp(3rem, 1.5rem + 6.6vw, 7.5rem);
+
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
@@ -66,6 +75,8 @@
   --tracking-display: -0.035em;
   --tracking-tight: -0.02em;
   --tracking-label: 0.08em;
+  /* Small uppercase labels ("What I believe about sound"). */
+  --tracking-caps: 0.16em;
 
   /* ----- Space (4px base) ----------------------------------------------- */
   --space-1: 0.25rem;
@@ -176,6 +187,21 @@
   --art-line: #3b3f4b;
   --art-accent: #8ea2ff;
   --art-warm: #ffa45c;
+}
+
+/* The belief type steps up with the viewport: they are display type on desktop
+   and must still fit a 360px phone. */
+@media (min-width: 48rem) {
+  :root {
+    --step-belief: 2.125rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --step-belief: clamp(2.5rem, 1.2rem + 2.2vw, 3rem);
+    --step-belief-body: 1.25rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -1,0 +1,18 @@
+---
+/**
+ * SerifItalicFont: the italic of the serif, for pages that set text in italic
+ * (Home's quoted lines). Same arrangement as SerifFont.astro; Home loads only
+ * this file, never the upright one.
+ */
+import '@fontsource-variable/source-serif-4/opsz-italic.css';
+import '../styles/serif-fallback.css';
+import latin from '@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-italic.woff2?url';
+
+interface Props {
+  priority?: 'auto' | 'low';
+}
+
+const { priority = 'auto' } = Astro.props;
+---
+
+<link rel="preload" href={latin} as="font" type="font/woff2" crossorigin fetchpriority={priority} />

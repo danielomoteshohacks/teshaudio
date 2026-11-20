@@ -27,6 +27,7 @@ Node 22.23.4 or newer. Cloudflare builds with the version in `.node-version`.
   and `/writing/<slug>/`, `/about/`, plus `/rss.xml`, `/og/*.png` and the 404.
 - `src/lib/site.ts` identity, contact, Home lines and page copy (one file for site facts)
 - `src/data/about.ts` bio, "What I do" and education on About
+- `src/lib/beliefs.ts` the seven beliefs: set in full on About, quoted on Home
 - `src/content` Markdown/MDX entries, with schemas in `src/content.config.ts`
 - `src/lib/content.ts` the only way pages read collections (filters drafts)
 - `src/components/art/` original project artwork (SVG)
@@ -83,9 +84,19 @@ headings when there are three or more.
 ### About
 
 `src/data/about.ts`: `bio` (one string per paragraph), `skills` ("What I do":
-title and a short note each) and `education`. "What I believe about sound" is
-the four files in `src/content/philosophy/` (`title`, `thesis` and the body),
-in `order`.
+title and a short note each) and `education`.
+
+### What I believe about sound
+
+`src/lib/beliefs.ts` is the one source for the seven beliefs. Each has an `id`,
+a `number` ("01" to "07"), a `headline` and a `body`, in Tesh's own words:
+never edit the wording unless Tesh asks. About sets all seven in order, each
+with the anchor `/about/#belief-<id>` (for example `#belief-spiritual`).
+Home quotes three of them, read from the same file so they can never drift:
+`spiritual` in the large band, and `budget` and `deafness` under the
+SoundStage and Beyond the Decibel panels (the pairing is `panelBeliefs` at
+the top of `src/pages/index.astro`). To quote a different belief, change the
+id there; every Home line links to its row on About automatically.
 
 ### Identity, contact and Home lines
 
