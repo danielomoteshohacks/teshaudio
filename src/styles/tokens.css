@@ -6,8 +6,9 @@
  *
  * Direction: docs/design-direction.md. Rich but restrained: deep blue-black
  * surfaces layered in small tonal steps with hairline borders, very large
- * tight-tracked type, one cobalt accent and amber used sparingly. No grain,
- * no animated gradients, no heavy shadows.
+ * tight-tracked type, one cobalt accent and amber used sparingly. A few
+ * soft lights in the background that drift only with scroll. No grain, no
+ * looping animation, no heavy shadows.
  *
  * Mode: data-mode on <html> ("light" or "dark"), set before first paint by
  * BaseLayout from the visitor's choice or their OS setting.
@@ -18,7 +19,7 @@
    * Inter for everything; its optical-size axis (opsz) switches to the
    * tighter "Display" letterforms automatically at large sizes, which is
    * what makes the big headlines look cut rather than scaled. The serif is
-   * only for article body text.
+   * for article text and for the beliefs.
    */
   --font-sans: 'Inter Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --font-serif: 'Source Serif 4 Variable', 'Source Serif 4 Fallback', serif;
@@ -35,7 +36,11 @@
    *   3       26px    40px     h2
    *   4       34px    60px     section display
    *   5       44px    88px     page titles
-   *   hero    54px    124px    the name on Home
+   *   hero    44px    124px    the name on Home
+   *
+   * The hero step is tuned so "Omotesho" stays on one line at 360px: the
+   * word is about 4.6em wide in Inter Display at this tracking, and a 360px
+   * phone has 320px between the gutters.
    */
   --step--1: clamp(0.875rem, 0.854rem + 0.093vw, 0.9375rem);
   --step-0: clamp(1rem, 0.979rem + 0.093vw, 1.0625rem);
@@ -44,19 +49,24 @@
   --step-3: clamp(1.625rem, 1.333rem + 1.296vw, 2.5rem);
   --step-4: clamp(2.125rem, 1.583rem + 2.407vw, 3.75rem);
   --step-5: clamp(2.75rem, 1.833rem + 4.074vw, 5.5rem);
-  --step-hero: clamp(3.375rem, 1.5rem + 8.333vw, 7.75rem);
+  --step-hero: clamp(2.75rem, 0.6rem + 9.6vw, 7.75rem);
 
   /* Article body: 18px on phones, 20px on desktop. */
   --step-read: clamp(1.125rem, 1.083rem + 0.185vw, 1.25rem);
 
-  /* The beliefs on About, in the serif. Phones: 30px headline over 18px
-     text. Tablets: 34px. From 1024px the headline runs 40 to 48px and the
-     text is 20px (see the media queries at the end of this file). */
-  --step-belief: 1.875rem;
+  /* The beliefs on About, in the serif. Phones: a 29px headline over 18px
+     text. From 834px, where the rows go two-column, 34 to 40px; from
+     1024px, 40 to 48px over 20px text (see the media queries at the end of
+     this file). */
+  --step-belief: clamp(1.75rem, 1.6rem + 0.6vw, 1.875rem);
   --step-belief-body: 1.125rem;
 
   /* The one belief set very large on Home, as a full stop between sections. */
   --step-quote: clamp(3rem, 1.5rem + 6.6vw, 7.5rem);
+
+  /* "Work with me": the heading sits between a section title and a page
+     title. */
+  --step-invite: clamp(2.25rem, 1.4rem + 3.8vw, 4.5rem);
 
   --weight-regular: 400;
   --weight-medium: 500;
@@ -97,9 +107,13 @@
      its own movement, but not a full screen of nothing on a phone. */
   --section-gap: clamp(4.5rem, 2.5rem + 8vw, 10rem);
 
-  /* ----- Layout --------------------------------------------------------- */
-  --gutter: clamp(1.25rem, 0.75rem + 2.5vw, 3rem);
-  --width-wide: 76rem;    /* 1216px: Home, panels, footer */
+  /* ----- Layout ---------------------------------------------------------
+   * Side padding grows from 20px on a 360px phone to 48px from about
+   * 1440px. Content stops at 1200px and centres; full-bleed bands and the
+   * background lights carry on to the edges of very wide screens.
+   */
+  --gutter: clamp(1.25rem, 0.667rem + 2.593vw, 3rem);
+  --width-wide: 75rem;    /* 1200px: Home, panels, footer */
   --width-text: 42.5rem;  /*  680px: reading measure */
   --width-figure: 52rem;  /*  832px: article figures breaking out of the text */
   --header-height: 4rem;
@@ -113,12 +127,17 @@
   --radius-pill: 999px;
 
   /* ----- Motion ---------------------------------------------------------
-   * Quiet and purposeful: colour transitions on hover, one fade-and-rise on
-   * the hero, the page crossfade. All collapse under reduced motion (below).
+   * One easing curve and one duration scale for everything that moves:
+   * hovers and presses (fast, base), reveals and page changes (slow, enter).
+   * The curve starts quickly and settles softly, so motion feels responsive
+   * but never bouncy. All of it collapses under reduced motion (below).
    */
-  --duration-fast: 150ms;
-  --duration-base: 250ms;
-  --duration-enter: 900ms;
+  --duration-fast: 160ms;
+  --duration-base: 280ms;
+  --duration-slow: 480ms;
+  --duration-enter: 640ms;
+  --stagger: 70ms;
+  --rise: 16px;
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
 
   /* ----- Fixed colours -------------------------------------------------
@@ -130,28 +149,36 @@
 }
 
 /* ----- Light mode (default before the script runs) -------------------------
- * Warm off-white paper, near-black ink. Contrast on --color-bg, and on the
- * deepest panel tone (--color-bg-3) in brackets:
- *   text 18.1 (15.5), text-2 7.9 (6.8), text-3 5.8 (5.0), accent 6.1 (5.2),
- *   warm 6.4 (5.5). Every text colour passes AA on every surface.
+ * Warm off-white paper, near-black ink, a shade warmer than pure white so
+ * it sits with the cream wall in the portrait. Contrast on --color-bg, and
+ * on the deepest panel tone (--color-bg-3) in brackets:
+ *   text 17.9 (15.4), text-2 7.9 (6.8), text-3 5.7 (4.9), accent 6.0 (5.2),
+ *   warm 6.3 (5.4). Every text colour passes AA on every surface.
  */
 :root {
   color-scheme: light;
 
-  --color-bg: #fafaf8;
-  --color-bg-2: #f3f2ee;       /* one step deeper: bands, panels */
-  --color-bg-3: #ebe9e3;       /* two steps: hover, artwork wells */
+  --color-bg: #faf9f6;
+  --color-bg-deep: #f6f4ef;    /* the page's static tonal shift, further down */
+  --color-bg-2: #f3f1ec;       /* one step deeper: bands, panels */
+  --color-bg-3: #ebe8e1;       /* two steps: hover, artwork wells */
   --color-text: #111113;
   --color-text-2: #4d4e55;     /* secondary text */
   --color-text-3: #626369;     /* captions, meta */
   --color-line: #e2e0da;       /* hairlines */
   --color-line-strong: #c9c6be;
   --color-accent: #2f4fe0;
-  --color-accent-contrast: #fafaf8;
+  --color-accent-contrast: #faf9f6;
   --color-warm: #9a4208;
   --color-focus: #2f4fe0;
   /* The static key light behind the hero portrait. */
   --key-light: color-mix(in srgb, var(--cobalt-500) 16%, transparent);
+  /* The portrait's frame edge: a visible hairline, so the photo's pale wall
+     does not dissolve into the pale page. */
+  --portrait-edge: var(--color-line-strong);
+  /* The background lights: warmer and fainter than in dark mode. */
+  --light-cobalt: color-mix(in srgb, var(--cobalt-500) 7%, transparent);
+  --light-amber: color-mix(in srgb, var(--amber-400) 11%, transparent);
 
   /* Artwork (SVG) colours. */
   --art-ink: #2a2b31;
@@ -161,45 +188,52 @@
 }
 
 /* ----- Dark mode -----------------------------------------------------------
- * A near-black with a hint of blue, layered in small tonal steps so panels
- * read as depth rather than boxes. Contrast on --color-bg (and --color-bg-3):
- *   text 17.3 (15.3), text-2 9.6 (8.4), text-3 6.1 (5.3), accent 8.2 (7.2),
- *   warm 10.0 (8.8).
+ * A studio at night, not flat black: a deep blue-black that shifts a touch
+ * bluer further down the page, surfaces one and two tonal steps up, and
+ * hairlines as translucent white so they pick up whatever sits beneath.
+ * Contrast on --color-bg (and on --color-bg-3, the deepest surface):
+ *   text 16.8 (14.8), text-2 7.6 (6.6), text-3 6.3 (5.5), accent 6.2 (5.4),
+ *   warm 10.7 (9.4). Every text colour passes AA on every surface.
  */
 :root[data-mode='dark'] {
   color-scheme: dark;
 
-  --color-bg: #0b0c10;
-  --color-bg-2: #111318;
-  --color-bg-3: #181b22;
-  --color-text: #f2f1ed;
-  --color-text-2: #b4b5bc;
-  --color-text-3: #8d8f97;
-  --color-line: #22252d;
-  --color-line-strong: #353945;
-  --color-accent: #8ea2ff;
-  --color-accent-contrast: #0b0c10;
-  --color-warm: #ffa45c;
-  --color-focus: #8ea2ff;
-  --key-light: color-mix(in srgb, var(--cobalt-500) 26%, transparent);
+  --color-bg: #0a0c12;
+  --color-bg-deep: #0d1018;
+  --color-bg-2: #11141c;       /* surface: panels, bands */
+  --color-bg-3: #171b26;       /* raised: hover */
+  --color-text: #eceef3;
+  --color-text-2: #9aa1b2;
+  --color-text-3: #8b92a3;
+  --color-line: rgb(255 255 255 / 0.08);
+  --color-line-strong: rgb(255 255 255 / 0.14);
+  --color-accent: #5b8cff;
+  --color-accent-contrast: #0a0c12;
+  --color-warm: #f2b45a;
+  --color-focus: #5b8cff;
+  --key-light: color-mix(in srgb, #5b8cff 30%, transparent);
+  --portrait-edge: rgb(255 255 255 / 0.1);
+  --light-cobalt: color-mix(in srgb, #5b8cff 13%, transparent);
+  --light-amber: color-mix(in srgb, #f2b45a 6%, transparent);
 
-  --art-ink: #e8e7e3;
-  --art-line: #3b3f4b;
-  --art-accent: #8ea2ff;
-  --art-warm: #ffa45c;
+  --art-ink: #e4e7ee;
+  --art-line: #343a4a;
+  --art-accent: #5b8cff;
+  --art-warm: #f2b45a;
 }
 
-/* The belief type steps up with the viewport: they are display type on desktop
-   and must still fit a 360px phone. */
-@media (min-width: 48rem) {
+/* The belief type steps up with the viewport: display type on desktop, and
+   still fitting a 360px phone. */
+@media (min-width: 52.125rem) {
   :root {
-    --step-belief: 2.125rem;
+    --step-belief: clamp(2.125rem, 0.5rem + 3.1vw, 2.5rem);
+    --step-belief-body: 1.1875rem;
   }
 }
 
 @media (min-width: 64rem) {
   :root {
-    --step-belief: clamp(2.5rem, 1.2rem + 2.2vw, 3rem);
+    --step-belief: clamp(2.5rem, 1.4rem + 1.72vw, 3rem);
     --step-belief-body: 1.25rem;
   }
 }

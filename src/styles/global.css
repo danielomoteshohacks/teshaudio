@@ -30,6 +30,10 @@ body {
   min-height: 100vh;
   font-size: var(--step-0);
   line-height: var(--leading-body);
+  /* A very slight, static tonal shift down the whole page (deeper and a
+     touch bluer at the bottom in dark mode), so long pages feel lit from
+     above rather than painted one flat colour. */
+  background: linear-gradient(var(--color-bg) 0, var(--color-bg) 30rem, var(--color-bg-deep) 100%);
   background-color: var(--color-bg);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
@@ -137,7 +141,9 @@ main:focus {
 }
 
 .slide-link:hover,
-.slide-link:focus-visible {
+.slide-link:focus-visible,
+.slide-link:active,
+a:active > .slide-link {
   background-size: 100% 1px;
 }
 
@@ -172,22 +178,139 @@ main:focus {
   transform: none;
 }
 
-/* ----- The one entrance --------------------------------------------------
- * A single gentle fade-and-rise when a hero first loads, staggered by
- * --order. Starts at 1% opacity rather than 0 so the browser still counts
- * the element as painted for Largest Contentful Paint.
+/* ----- Entrance -------------------------------------------------------------
+ * A short fade-and-rise when a page's header first loads, staggered by
+ * --order (0 to 3, so the whole hero settles in well under 900ms). Pure
+ * CSS, so it runs without JavaScript too. Starts at 1% opacity rather than
+ * 0 so the browser still counts the element as painted for Largest
+ * Contentful Paint.
  */
 @media (prefers-reduced-motion: no-preference) {
   .enter {
     animation: enter var(--duration-enter) var(--ease-out) both;
-    animation-delay: calc(var(--order, 0) * 90ms);
+    animation-delay: calc(var(--order, 0) * var(--stagger));
   }
 }
 
 @keyframes enter {
   from {
     opacity: 0.01;
-    transform: translateY(14px);
+    transform: translateY(var(--rise));
+  }
+}
+
+/* ----- Scroll reveals ---------------------------------------------------------
+ * Sections and panels fade and rise once as they enter the viewport
+ * (motion.ts adds .is-in), never animating out or replaying.
+ *   data-reveal         the element itself reveals
+ *   data-reveal-group   its data-reveal-item children reveal, one after
+ *                       another (--i, the stagger index, is set by motion.ts)
+ * Content is only hidden when the head script has set data-motion="on" on
+ * <html>, which it does only with JavaScript running and motion allowed:
+ * without JavaScript, or with reduced motion, everything is simply there.
+ * Opacity and transform only, so nothing shifts layout.
+ */
+:root[data-motion='on'] [data-reveal]:not(.is-in),
+:root[data-motion='on'] [data-reveal-group]:not(.is-in) [data-reveal-item] {
+  opacity: 0;
+  transform: translate3d(0, var(--rise), 0);
+}
+
+:root[data-motion='on'] [data-reveal],
+:root[data-motion='on'] [data-reveal-item] {
+  transition:
+    opacity var(--duration-slow) var(--ease-out),
+    transform var(--duration-enter) var(--ease-out);
+  transition-delay: calc(var(--i, 0) * var(--stagger));
+}
+
+/* A section with background lights (Lights.astro) behind its content. */
+.has-lights {
+  position: relative;
+  isolation: isolate;
+}
+
+/* ----- Press -----------------------------------------------------------------
+ * Anything pressable gives under the finger. :active works on touch screens,
+ * where hover effects never fire.
+ */
+.press {
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+
+.press:active {
+  transform: scale(0.98);
+}
+
+/* ----- Page transitions --------------------------------------------------------
+ * The ClientRouter runs page changes through the View Transitions API. The
+ * header and footer stay put (root, a plain crossfade); the main content
+ * fades out quickly and the new page fades in with a slight upward settle;
+ * the hero portrait (view-transition-name "portrait") morphs between Home
+ * and About as one element.
+ */
+main {
+  view-transition-name: page;
+}
+
+::view-transition-group(portrait) {
+  animation-duration: var(--duration-enter);
+  animation-timing-function: var(--ease-out);
+}
+
+::view-transition-old(page) {
+  animation: var(--duration-base) var(--ease-out) both page-out;
+}
+
+::view-transition-new(page) {
+  animation: var(--duration-enter) var(--ease-out) 60ms both page-in;
+}
+
+@keyframes page-out {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+/* The theme toggle's circular reveal (BaseLayout): the whole page changes
+   as one picture, the new theme drawn over the old in a growing circle, so
+   the page and portrait are not captured separately and the root's default
+   crossfade is switched off. */
+:root[data-theme-switch] main,
+:root[data-theme-switch] [data-parallax] {
+  view-transition-name: none !important;
+}
+
+:root[data-theme-switch]::view-transition-old(root),
+:root[data-theme-switch]::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Without View Transitions, the toggle crossfades colours instead. */
+:root[data-theme-fade] *,
+:root[data-theme-fade] *::before,
+:root[data-theme-fade] *::after {
+  transition:
+    background-color var(--duration-slow) var(--ease-out),
+    border-color var(--duration-slow) var(--ease-out),
+    color var(--duration-slow) var(--ease-out),
+    fill var(--duration-slow) var(--ease-out),
+    stroke var(--duration-slow) var(--ease-out) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }
 
@@ -231,10 +354,10 @@ main:focus {
 .t-warm { fill: var(--color-warm); }
 
 /* ----- The serif voice -------------------------------------------------------
- * Tesh's own lines, quoted from his beliefs on Home, in the article serif:
+ * My own lines, quoted from the beliefs on Home, in the article serif:
  * a human voice among the Inter. One style for all three lines (the big one
  * in the band and the two under the project panels), so they read as one
- * voice. Italic, because it sets Tesh's voice apart from the Inter around it
+ * voice. Italic, because it sets my voice apart from the Inter around it
  * and sits quietly under a summary; needs <SerifItalicFont> in the page's
  * head slot (Home loads only the italic file).
  */

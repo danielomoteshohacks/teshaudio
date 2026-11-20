@@ -65,15 +65,20 @@ const ogImage = new URL(`/og/${ogKey}.png`, Astro.site);
     {noindex && <meta name="robots" content="noindex" />}
     {/* Both schemes are supported; the inline script below picks one. */}
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#fafaf8" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0b0c10" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#faf9f6" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a0c12" media="(prefers-color-scheme: dark)" />
     {/* Sets data-mode on <html> before first paint, so there is never a flash
         of the wrong theme. Order: the visitor's saved choice, else their OS
-        setting. Inline and render-blocking on purpose: it is tiny, and it
-        must run before the body is drawn. ClientRouter replaces <html>
-        attributes on every navigation, so it re-applies after each swap. The
-        header toggle (SiteHeader.astro) is wired here too, with one delegated
-        listener, because the header is re-rendered on every page. */}
+        setting. It also sets data-motion="on" when motion is allowed, which
+        is what lets scroll reveals hide content until it enters (so without
+        JavaScript nothing is ever hidden). Inline and render-blocking on
+        purpose: it is tiny, and it must run before the body is drawn.
+        ClientRouter replaces <html> attributes on every navigation, so it
+        re-applies after each swap. The header toggle (SiteHeader.astro) is
+        wired here too, with one delegated listener, because the header is
+        re-rendered on every page. The toggle reveals the new theme in a
+        circle growing from the button (View Transitions), or crossfades
+        colours where that API is missing. */}
     <script is:inline>
       (() => {
         const key = 'tesh-mode';
@@ -86,9 +91,13 @@ const ogImage = new URL(`/og/${ogKey}.png`, Astro.site);
           }
         };
         const current = () => saved() || (media.matches ? 'dark' : 'light');
+        const still = matchMedia('(prefers-reduced-motion: reduce)');
+        const root = document.documentElement;
         const apply = () => {
           const mode = current();
-          document.documentElement.dataset.mode = mode;
+          root.dataset.mode = mode;
+          if (still.matches) delete root.dataset.motion;
+          else root.dataset.motion = 'on';
           document.querySelectorAll('[data-mode-toggle]').forEach((button) => {
             button.setAttribute('aria-pressed', String(mode === 'dark'));
           });
@@ -101,13 +110,37 @@ const ogImage = new URL(`/og/${ogKey}.png`, Astro.site);
         media.addEventListener('change', () => {
           if (!saved()) apply();
         });
+        still.addEventListener('change', apply);
         document.addEventListener('click', (event) => {
-          if (!event.target.closest('[data-mode-toggle]')) return;
-          const next = document.documentElement.dataset.mode === 'dark' ? 'light' : 'dark';
-          try {
-            localStorage.setItem(key, next);
-          } catch {}
-          apply();
+          const button = event.target.closest('[data-mode-toggle]');
+          if (!button) return;
+          const next = root.dataset.mode === 'dark' ? 'light' : 'dark';
+          const toggle = () => {
+            try {
+              localStorage.setItem(key, next);
+            } catch {}
+            apply();
+          };
+          if (still.matches) return toggle();
+          if (!document.startViewTransition) {
+            root.dataset.themeFade = '';
+            toggle();
+            setTimeout(() => delete root.dataset.themeFade, 520);
+            return;
+          }
+          const box = button.getBoundingClientRect();
+          const x = box.left + box.width / 2;
+          const y = box.top + box.height / 2;
+          const r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
+          root.dataset.themeSwitch = '';
+          const transition = document.startViewTransition(toggle);
+          transition.ready.then(() => {
+            root.animate(
+              { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] },
+              { duration: 560, easing: 'cubic-bezier(0.22, 1, 0.36, 1)', pseudoElement: '::view-transition-new(root)' },
+            );
+          });
+          transition.finished.finally(() => delete root.dataset.themeSwitch);
         });
       })();
     </script>
@@ -131,7 +164,6 @@ const ogImage = new URL(`/og/${ogKey}.png`, Astro.site);
 
     {jsonLd && <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />}
     <slot name="head" />
-    <meta name="generator" content={Astro.generator} />
     <ClientRouter />
   </head>
   <body>
@@ -141,5 +173,8 @@ const ogImage = new URL(`/og/${ogKey}.png`, Astro.site);
       <slot />
     </main>
     <SiteFooter />
+    <script>
+      import '../scripts/motion';
+    </script>
   </body>
 </html>

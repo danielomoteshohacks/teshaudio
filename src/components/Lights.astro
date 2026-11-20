@@ -1,0 +1,132 @@
+---
+/**
+ * Lights: two or three very large, soft, low-opacity radial lights behind a
+ * section, like the spill of studio lamps. Cobalt with a hint of amber in
+ * dark mode; warmer and fainter in light mode (the colours are tokens).
+ *
+ * They run full-bleed to the edges of the window, so a very wide screen
+ * never looks like a box floating in nothing, and sit behind the content
+ * (the section needs position: relative and isolation: isolate; .has-lights
+ * in global.css sets both).
+ *
+ * Motion: none on their own. As the section scrolls through the window they
+ * drift a few percent and brighten slightly, through a CSS scroll-driven
+ * animation (view timeline), or, in browsers without one, through --p set
+ * by motion.ts. Transform and opacity only. Off under reduced motion.
+ *
+ * variant picks the arrangement: "hero" (top left and lower right) or
+ * "work" (right, with a low amber glow on the left).
+ */
+interface Props {
+  variant?: 'hero' | 'work';
+}
+
+const { variant = 'hero' } = Astro.props;
+---
+
+<div class:list={['lights', `lights--${variant}`]} data-lights aria-hidden="true">
+  <span class="light light--a"></span>
+  <span class="light light--b"></span>
+  {variant === 'hero' && <span class="light light--c" />}
+</div>
+
+<style>
+  .lights {
+    position: absolute;
+    z-index: -1;
+    inset: -12rem calc(50% - 50vw);
+    pointer-events: none;
+    overflow: hidden;
+    /* The fallback's scroll position (motion.ts); the CSS timeline ignores it. */
+    --p: 0.5;
+  }
+
+  .light {
+    position: absolute;
+    width: var(--size);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, var(--color) 0%, transparent 100%);
+    /* A few percent of drift and a slight brightening across the section's
+       pass through the window. */
+    transform: translate3d(calc((var(--p) - 0.5) * var(--dx)), calc((var(--p) - 0.5) * var(--dy)), 0);
+    opacity: calc(0.85 + var(--p) * 0.15);
+    will-change: transform, opacity;
+  }
+
+  .lights--hero .light--a {
+    --size: min(110vw, 68rem);
+    --color: var(--light-cobalt);
+    --dx: 4%;
+    --dy: 8%;
+    top: 0;
+    left: -30%;
+  }
+
+  .lights--hero .light--b {
+    --size: min(90vw, 54rem);
+    --color: var(--light-amber);
+    --dx: -4%;
+    --dy: 6%;
+    bottom: 0;
+    right: -22%;
+  }
+
+  .lights--hero .light--c {
+    --size: min(70vw, 42rem);
+    --color: var(--light-cobalt);
+    --dx: -3%;
+    --dy: -5%;
+    top: 12%;
+    right: 5%;
+  }
+
+  .lights--work .light--a {
+    --size: min(110vw, 66rem);
+    --color: var(--light-cobalt);
+    --dx: -5%;
+    --dy: 8%;
+    top: 10%;
+    right: -30%;
+  }
+
+  .lights--work .light--b {
+    --size: min(80vw, 48rem);
+    --color: var(--light-amber);
+    --dx: 4%;
+    --dy: -6%;
+    bottom: 0;
+    left: -20%;
+  }
+
+  /* Where scroll-driven animations exist, the browser drives the drift off
+     the main thread; --p then comes from the keyframes instead of script. */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .light {
+        animation: drift linear both;
+        animation-timeline: view();
+        animation-range: cover;
+      }
+    }
+  }
+
+  @keyframes drift {
+    from {
+      transform: translate3d(calc(-0.5 * var(--dx)), calc(-0.5 * var(--dy)), 0);
+      opacity: 0.85;
+    }
+
+    to {
+      transform: translate3d(calc(0.5 * var(--dx)), calc(0.5 * var(--dy)), 0);
+      opacity: 1;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .light {
+      transform: none;
+      opacity: 1;
+    }
+  }
+</style>

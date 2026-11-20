@@ -11,8 +11,10 @@
  * belief link sits above the stretched one (z-index) so it takes its own
  * clicks.
  *
- * Hover lifts the panel one tonal step and slides in the underline on "View
- * project"; no movement, no shadow.
+ * Hover lifts the panel slightly (2px and one tonal step) with a soft
+ * highlight on its border, and slides in the underline on "View project".
+ * On touch screens, where hover never fires, the same happens while the
+ * panel is pressed, and a press gives slightly (scale 0.99). No shadow.
  */
 import type { CollectionEntry } from 'astro:content';
 import ProjectArt from './art/ProjectArt.astro';
@@ -63,12 +65,27 @@ const { title, tagline, summary, status } = project.data;
     color: var(--color-text);
     transition:
       background-color var(--duration-base) var(--ease-out),
-      border-color var(--duration-base) var(--ease-out);
+      border-color var(--duration-base) var(--ease-out),
+      transform var(--duration-base) var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .panel:hover {
+  @media (hover: hover) {
+    .panel:hover {
+      border-color: var(--color-line-strong);
+      background-color: var(--color-bg-3);
+      transform: translateY(-2px);
+    }
+
+    .panel:hover .slide-link {
+      background-size: 100% 1px;
+    }
+  }
+
+  .panel:active {
     border-color: var(--color-line-strong);
     background-color: var(--color-bg-3);
+    transform: scale(0.99);
   }
 
   /* The title link covers the whole panel. */
@@ -134,6 +151,10 @@ const { title, tagline, summary, status } = project.data;
   .panel__belief a {
     position: relative;
     z-index: 1;
+    /* A comfortable tap target without changing how the line sits. */
+    display: inline-block;
+    padding-block: 0.6rem;
+    margin-block: -0.6rem;
     color: inherit;
     text-decoration: underline;
     text-decoration-thickness: 1px;
@@ -153,7 +174,7 @@ const { title, tagline, summary, status } = project.data;
     font-weight: var(--weight-semibold);
   }
 
-  .panel:hover .slide-link {
+  .panel:active .slide-link {
     background-size: 100% 1px;
   }
 </style>

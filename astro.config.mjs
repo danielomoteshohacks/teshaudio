@@ -42,6 +42,10 @@ export default defineConfig({
       defaultColor: false,
     },
   },
+  vite: {
+    // No source maps in production: the site ships only what visitors need.
+    build: { sourcemap: false },
+  },
   integrations: [
     mdx(),
     sitemap({
