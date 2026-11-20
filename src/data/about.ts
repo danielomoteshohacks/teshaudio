@@ -1,6 +1,6 @@
 /**
  * Everything on the About page, as structured data in one file.
- * Facts here come only from Tesh. The site is strictly about audio, and Tesh
+ * Facts here are only ever true ones. The site is strictly about audio, and Tesh
  * is never described as an engineer (see docs/guidelines.md).
  */
 

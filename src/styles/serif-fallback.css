@@ -1,0 +1,52 @@
+/*
+ * Metric-matched fallbacks for the serif (Source Serif 4).
+ *
+ * While the web font loads (font-display: swap), text shows in a system
+ * serif. If that serif's letters or line metrics differ, every paragraph
+ * re-wraps when the real font arrives and the page jumps. These faces are
+ * Georgia, scaled and re-spaced to sit where Source Serif sits, so the swap
+ * moves nothing noticeable. They are used by --font-serif in tokens.css.
+ *
+ * Where the numbers come from: measured, not looked up. Published font
+ * tables suggest Georgia needs enlarging by about 7%, but on the site's real
+ * text that is wrong (it would add a line to a paragraph). So each
+ * size-adjust was measured on the actual belief text in the browser, using
+ * Gelasio, which has Georgia's exact letter widths, against the Source Serif
+ * files this site ships:
+ *   - upright, 18 to 20px text: Source Serif is 1.032 and 1.010 of Georgia's
+ *     width, so 102.1%.
+ *   - italic, 16 to 28px text: 0.946 to 0.903, so 93%.
+ * Source Serif's optical-size axis narrows its letters as the type grows, so
+ * no single number is exact at every size; these are tuned for reading
+ * sizes, where re-wrapping does the damage. Display sizes are short lines in
+ * a column with room to spare.
+ *
+ * The ascent and descent overrides put the first baseline where Source
+ * Serif's is (Source Serif: ascent 1.036, descent 0.335, divided by the
+ * size-adjust, because the browser scales the overrides by it).
+ *
+ * Check: across 30 italic and 18 upright wraps at 260 to 680px, the italic
+ * fallback matched Source Serif's line count in 28 of 30 cases and its total
+ * line count exactly; unadjusted Georgia matched in 15 of 30 and ran 8% long.
+ *
+ * Devices without Georgia (Android, Linux) skip these faces and use the
+ * generic serif.
+ */
+@font-face {
+  font-family: 'Source Serif 4 Fallback';
+  src: local('Georgia');
+  size-adjust: 102.1%;
+  ascent-override: 101.47%;
+  descent-override: 32.81%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Source Serif 4 Fallback';
+  font-style: italic;
+  src: local('Georgia Italic'), local('Georgia-Italic');
+  size-adjust: 93%;
+  ascent-override: 111.4%;
+  descent-override: 36.02%;
+  line-gap-override: 0%;
+}

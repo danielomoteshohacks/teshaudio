@@ -5,7 +5,7 @@
  * Set like a publication: a large title, the subtitle, a byline row (small
  * portrait, name, date, reading time), then the body in the reading serif
  * at a 680px measure. Figures break slightly out of the text column on
- * wide screens. From 80rem a quiet contents rail sits to the right of the
+ * wide screens. From 1180px a quiet contents rail sits to the right of the
  * text; below that there is no contents list, so a phone reader starts
  * reading immediately. It ends with a short author note.
  *
@@ -16,6 +16,7 @@
 import { render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Portrait from '../../components/Portrait.astro';
+import SerifFont from '../../components/SerifFont.astro';
 import Sidenote from '../../components/mdx/Sidenote.astro';
 import Figure from '../../components/mdx/Figure.astro';
 import PullQuote from '../../components/mdx/PullQuote.astro';
@@ -24,8 +25,6 @@ import { getProject, getPublishedWriting } from '../../lib/content';
 import { formatDate, isoDate, kindLabel, readingTime } from '../../lib/format';
 import { site } from '../../lib/site';
 import '../../styles/prose.css';
-import '@fontsource-variable/source-serif-4/opsz.css';
-import serifLatin from '@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-normal.woff2?url';
 // Linked only on articles with math, so KaTeX's CSS and fonts never load
 // on pages that do not need them.
 import katexCss from 'katex/dist/katex.min.css?url';
@@ -58,9 +57,9 @@ const articleSchema = {
 
 <BaseLayout title={title} description={description} noindex={unlisted} ogType="article" jsonLd={articleSchema}>
   {remarkPluginFrontmatter.hasMath && <link slot="head" rel="stylesheet" href={katexCss} />}
-  {/* The serif is the body face: fetch it alongside the CSS rather than
-      after, so the first paragraph does not reflow when it arrives. */}
-  <link slot="head" rel="preload" href={serifLatin} as="font" type="font/woff2" crossorigin />
+  {/* The serif is the body face; SerifFont preloads it with a metric-matched
+      fallback, so the first paragraph does not reflow when it arrives. */}
+  <Fragment slot="head"><SerifFont /></Fragment>
 
   <article class="article">
     <header class="head wrap wrap--text">
@@ -208,7 +207,7 @@ const articleSchema = {
   /* ===== Body and contents rail ============================================
    * The text column is centred on the page. Figures break out of it up to
    * --width-figure (see the rule below); on a phone the breakout is zero.
-   * From 80rem the rail sits in the right-hand margin, far enough out that
+   * From 1180px the rail sits in the right-hand margin, far enough out that
    * a breaking-out figure never runs under it.
    */
   .layout {
@@ -224,7 +223,7 @@ const articleSchema = {
     display: none;
   }
 
-  @media (min-width: 80rem) {
+  @media (min-width: 73.75rem) {
     .layout--toc {
       display: grid;
       grid-template-columns: minmax(0, 1fr) var(--width-text) minmax(0, 1fr);
@@ -242,7 +241,7 @@ const articleSchema = {
       position: sticky;
       top: calc(var(--header-height) + var(--space-12));
       align-self: start;
-      max-width: 15rem;
+      max-width: 14rem;
       margin-left: 6rem;
     }
   }

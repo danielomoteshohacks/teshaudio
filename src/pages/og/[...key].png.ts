@@ -13,8 +13,8 @@ const kickerLine = `${site.name} · ${site.city}`;
 
 export const getStaticPaths = (async () => {
   const pages = [
-    { key: 'home', eyebrow: kickerLine, title: site.fullName },
-    { key: 'about', eyebrow: 'About', title: `${site.fullName}, known as ${site.name}` },
+    { key: 'home', eyebrow: kickerLine, title: site.fullName, portrait: true },
+    { key: 'about', eyebrow: 'About', title: `${site.fullName}, known as ${site.name}`, portrait: true },
     { key: 'projects', eyebrow: kickerLine, title: copy.projects.title },
     { key: 'writing', eyebrow: kickerLine, title: copy.writing.title },
   ];
@@ -34,12 +34,12 @@ export const getStaticPaths = (async () => {
   return [...pages, ...projects, ...writing].map(({ key, ...props }) => ({ params: { key }, props }));
 }) satisfies GetStaticPaths;
 
-type Props = { eyebrow: string; title: string; article?: { subtitle: string; meta: string } };
+type Props = { eyebrow: string; title: string; portrait?: boolean; article?: { subtitle: string; meta: string } };
 
 export const GET: APIRoute = async ({ props }) => {
-  const { eyebrow, title, article } = props as Props;
+  const { eyebrow, title, portrait, article } = props as Props;
   const png = article
     ? await renderArticleOgImage({ eyebrow, title, ...article })
-    : await renderOgImage({ eyebrow, title });
+    : await renderOgImage({ eyebrow, title, portrait });
   return new Response(new Uint8Array(png), { headers: { 'Content-Type': 'image/png' } });
 };

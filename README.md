@@ -4,7 +4,7 @@ Personal site of Daniel Omotesho (Tesh): music producer and composer from
 Lagos, building SoundStage, a spatial audio engine for any song on any phone,
 while studying Electrical/Electronic Engineering at the University of Lagos.
 
-Built with Astro (static output), TypeScript, MDX and plain CSS.
+An Astro site (static output) in TypeScript, MDX and plain CSS.
 
 ## Requirements
 
@@ -19,21 +19,23 @@ Node 22.23.4 or newer. Cloudflare builds with the version in `.node-version`.
 | `npm run check`            | Type-check `.astro`, `.ts` and content schemas        |
 | `npm run build`            | Run the type check, then build the site into `dist/`  |
 | `npm run preview`          | Serve the production build locally                    |
-| `npm run prepare:portrait` | Re-crop and grade the portrait from the original photo |
+| `npm run prepare:portrait` | Re-crop every portrait size from the original photo   |
 
 ## Layout
 
 - Routes: `/` (Home), `/projects/` and `/projects/<slug>/` (Work), `/writing/`
   and `/writing/<slug>/`, `/about/`, plus `/rss.xml`, `/og/*.png` and the 404.
-- `src/lib/site.ts` identity, contact, Home lines and page copy (one file for site facts)
+- `src/lib/site.ts` identity, contact, "Work with me" and page copy (one file for site facts)
 - `src/data/about.ts` bio, "What I do" and education on About
+- `src/lib/beliefs.ts` the seven beliefs: set in full on About, quoted on Home
 - `src/content` Markdown/MDX entries, with schemas in `src/content.config.ts`
 - `src/lib/content.ts` the only way pages read collections (filters drafts)
 - `src/components/art/` original project artwork (SVG)
 - `src/components/diagrams/` article diagrams (SVG on design tokens)
 - `src/styles/tokens.css` design tokens, `global.css` base styles and the
   SVG palette classes, `prose.css` long-form text
-- `src/assets/portrait.jpg` the portrait (made from `src/assets/source/portrait-original.jpg`)
+- `src/assets/portrait/` the portrait at every served size (made from `src/assets/source/portrait-original.jpg`)
+- `src/scripts/motion.ts` scroll reveals, portrait drift, background-light fallback
 - `docs/design-direction.md` visual direction; `docs/guidelines.md` project rules
 
 ## How to update content
@@ -83,24 +85,40 @@ headings when there are three or more.
 ### About
 
 `src/data/about.ts`: `bio` (one string per paragraph), `skills` ("What I do":
-title and a short note each) and `education`. "What I believe about sound" is
-the four files in `src/content/philosophy/` (`title`, `thesis` and the body),
-in `order`.
+title and a short note each) and `education`.
 
-### Identity, contact and Home lines
+### What I believe about sound
 
-`src/lib/site.ts`: name, `intro` (the Home hero), `belief` (the Home band),
-`authorNote` (end of every article), `email` and `socials` (each renders only
-if present), and `copy` for page headings and search descriptions.
+`src/lib/beliefs.ts` is the one source for the seven beliefs. Each has an `id`,
+a `number` ("01" to "07"), a `headline` and a `body`. The wording is final. About sets all seven in order, each
+with the anchor `/about/#belief-<id>` (for example `#belief-spiritual`).
+Home quotes three of them, read from the same file so they can never drift:
+`spiritual` in the large band, and `budget` and `deafness` under the
+SoundStage and Beyond the Decibel panels (the pairing is `panelBeliefs` at
+the top of `src/pages/index.astro`). To quote a different belief, change the
+id there; every Home line links to its row on About automatically.
+
+### Identity, contact and "Work with me"
+
+`src/lib/site.ts`: name, `intro` (the Home hero), `authorNote` (end of every
+article), `email` (the "Email me" button and the footer) and `socials` (each
+renders only if present), `copy` for page headings and search descriptions,
+and `workWithMe`: the label, heading, intro, the four areas, the closing line
+and the button labels. Home shows all of it; About shows the label, heading,
+intro and buttons.
 
 ### Portrait
 
-The original photo is `src/assets/source/portrait-original.jpg`, never edited.
-`npm run prepare:portrait` crops it to a 4:5 head-and-shoulders frame with a
-gentle contrast and warmth grade and writes `src/assets/portrait.jpg`; the
-crop and grade are numbers at the top of `scripts/prepare-portrait.mjs`. For a
-new photo, replace the original (same name) and run the script, or replace
-`portrait.jpg` directly with any 4:5 JPEG at least 1600 px wide.
+The original photo is `src/assets/source/portrait-original.jpg`, stored
+upright with all metadata removed. `npm run prepare:portrait` writes every
+size the site uses to `src/assets/portrait/`: `hero-<width>.jpg` (4:5, face
+in the upper third, shoulders filling the bottom) and `avatar-<width>.jpg`
+(a tight square for round bylines and the share images). Each width is
+resampled once with Lanczos; widths where the shirt's stripes showed moire
+get a very slight blur first (`preBlur`). Crops, widths and blur are numbers
+at the top of `scripts/prepare-portrait.mjs`. For a new photo, replace the
+original (same name, metadata stripped), adjust the face position there,
+run the script and look at every output.
 
 ### Collections kept for later
 

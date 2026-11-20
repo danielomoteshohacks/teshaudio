@@ -52,8 +52,8 @@ const year = new Date().getFullYear();
           {
             site.email && (
               <li>
-                <a class="slide-link" href={`mailto:${site.email}`}>
-                  Email
+                <a class="slide-link footer__email" href={`mailto:${site.email}`}>
+                  {site.email}
                 </a>
               </li>
             )
@@ -97,7 +97,8 @@ const year = new Date().getFullYear();
     gap: var(--space-3);
   }
 
-  @media (min-width: 48rem) {
+  /* Three columns only once the address fits its column on one line. */
+  @media (min-width: 64rem) {
     .footer__grid {
       grid-template-columns: 2fr 1fr 1fr;
     }
@@ -139,6 +140,19 @@ const year = new Date().getFullYear();
     display: inline-block;
     padding-block: var(--space-2);
     line-height: 1.3;
+  }
+
+  /* The address is long. On narrow phones "Elsewhere" takes its own row so
+     the address stays on one line; it may still wrap rather than ever push
+     the page sideways. */
+  .footer__email {
+    overflow-wrap: anywhere;
+  }
+
+  @media (max-width: 29.99rem) {
+    .footer__col:last-child {
+      grid-column: 1 / -1;
+    }
   }
 
   .footer__base {

@@ -2,49 +2,77 @@
 /**
  * Home.
  *
- * Four movements, each with its own layout: a split hero (name and intro
+ * Five movements, each with its own layout: a split hero (name and intro
  * beside a large portrait), a wide featured story panel, the work as two
- * large artwork panels, and a single line of belief set large. Every section
- * renders only when it has real content.
+ * large artwork panels, an invitation to work together, and one belief set
+ * large as a full stop. Soft background lights sit behind the hero and the
+ * work, and sections rise into view once as they arrive. Three lines
+ * from the beliefs appear on this page, no more: the band, and one under
+ * each project panel's summary. All three are read from src/lib/beliefs.ts
+ * and link to their row on About. Every section renders only when it has
+ * real content.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Button from '../components/Button.astro';
 import Portrait from '../components/Portrait.astro';
 import Waveform from '../components/Waveform.astro';
 import ProjectPanel from '../components/ProjectPanel.astro';
+import Lights from '../components/Lights.astro';
+import WorkWithMe from '../components/WorkWithMe.astro';
+import SerifItalicFont from '../components/SerifItalicFont.astro';
 import StereoVsSpatial from '../components/diagrams/StereoVsSpatial.astro';
 import { copy, site } from '../lib/site';
 import { personSchema } from '../lib/schema';
 import { formatDate, isoDate, kindLabel, readingTime } from '../lib/format';
 import { getPublishedProjects, getPublishedWriting } from '../lib/content';
+import { beliefHref, firstSentence, getBelief, type BeliefId } from '../lib/beliefs';
 
 const projects = (await getPublishedProjects()).filter((p) => p.data.featured);
 // The featured story is the newest essay.
 const story = (await getPublishedWriting()).find((entry) => entry.data.kind === 'essay');
+
+// The belief that explains each project, quoted under its panel's summary.
+const panelBeliefs: Record<string, BeliefId> = {
+  soundstage: 'budget',
+  'beyond-the-decibel': 'deafness',
+};
+const panelBelief = (projectId: string) => {
+  const id = panelBeliefs[projectId];
+  return id ? { text: getBelief(id).headline, href: beliefHref(id) } : undefined;
+};
+
+// The band: the belief that opens the list, with its first sentence.
+const spiritual = getBelief('spiritual');
 ---
 
 <BaseLayout jsonLd={personSchema()}>
+  <Fragment slot="head"><SerifItalicFont preload={false} /></Fragment>
+
   <!-- Hero -->
-  <section class="hero wrap" aria-labelledby="hero-title">
+  <section class="hero wrap has-lights" aria-labelledby="hero-title">
+    <Lights variant="hero" />
     <div class="hero__text">
       <p class="hero__kicker enter">{site.name} · {site.city}</p>
       <h1 id="hero-title" class="hero__name enter" style="--order: 1">{site.fullName}</h1>
-      <p class="hero__intro enter" style="--order: 2">{site.intro}</p>
+      <p class="hero__intro enter" style="--order: 3">{site.intro}</p>
       <div class="hero__actions enter" style="--order: 3">
         {story && <Button size="lg" href={`/writing/${story.id}/`}>{copy.home.storyCta}</Button>}
         <Button size="lg" variant="secondary" href="/projects/">{copy.home.workCta}</Button>
       </div>
       <div class="hero__wave"><Waveform seed={3} draw /></div>
     </div>
-    <div class="hero__portrait enter" style="--order: 1">
-      <Portrait priority sizes="(min-width: 64rem) 30rem, (min-width: 48rem) 42vw, calc(100vw - 2.5rem)" />
+    <div class="hero__portrait enter" style="--order: 2">
+      <Portrait
+        priority
+        sizes="(min-width: 75rem) 30rem, (min-width: 64rem) 38vw, (min-width: 40rem) 40vw, (max-height: 32rem) 50vh, min(calc(100vw - 2.5rem), 24rem)"
+      />
     </div>
   </section>
 
   <!-- Featured story -->
   {
     story && (
-      <section class="story wrap" aria-labelledby="story-title">
+      <section class="story wrap" aria-labelledby="story-title" data-reveal>
         <a class="story__panel" href={`/writing/${story.id}/`}>
           <div class="story__art">
             <StereoVsSpatial bare id="home-svs" />
@@ -72,15 +100,16 @@ const story = (await getPublishedWriting()).find((entry) => entry.data.kind === 
   <!-- Work -->
   {
     projects.length > 0 && (
-      <section class="work wrap" aria-labelledby="work-title">
-        <div class="work__head">
+      <section class="work wrap has-lights" aria-labelledby="work-title">
+        <Lights variant="work" />
+        <div class="work__head" data-reveal>
           <h2 id="work-title" class="section-title">{copy.home.workTitle}</h2>
           <a class="slide-link work__all" href="/projects/">All work</a>
         </div>
-        <ul class="work__grid">
+        <ul class="work__grid" data-reveal-group>
           {projects.map((project) => (
-            <li>
-              <ProjectPanel project={project} />
+            <li data-reveal-item>
+              <ProjectPanel project={project} belief={panelBelief(project.id)} />
             </li>
           ))}
         </ul>
@@ -88,51 +117,71 @@ const story = (await getPublishedWriting()).find((entry) => entry.data.kind === 
     )
   }
 
+  <!-- Work with me -->
+  <div class="invite-wrap wrap">
+    <WorkWithMe />
+  </div>
+
   <!-- What I believe -->
   <section class="belief band-last" aria-labelledby="belief-title">
-    <div class="wrap">
+    <div class="wrap" data-reveal>
       <h2 id="belief-title" class="visually-hidden">What I believe</h2>
-      <p class="belief__line">{site.belief}</p>
-      <a class="belief__link" href="/about/#beliefs"><span class="slide-link">{copy.home.beliefLink}</span> &rarr;</a>
+      <p class="belief__line voice">{spiritual.headline}</p>
+      <p class="belief__sentence voice">{firstSentence(spiritual)}</p>
+      <a class="belief__link" href={beliefHref('spiritual')}>
+        <span class="slide-link">{copy.home.beliefLink}</span> <span aria-hidden="true">&rarr;</span>
+      </a>
     </div>
   </section>
 </BaseLayout>
 
 <style>
   /* ===== Hero ==============================================================
-   * Split on desktop: type on the left, a large portrait on the right with
-   * its static key light. Stacked on phones: kicker, name, portrait, intro,
-   * actions, so the face arrives right after the name.
+   * Three layouts, not one stretched:
+   *   phones      kicker, name, portrait, intro, actions, so the face arrives
+   *               right after the name. In landscape the portrait shrinks to
+   *               about half the screen height so the intro stays in view.
+   *   tablets     (640 to 1023px) the name runs across the full width, then
+   *               the portrait sits beside the intro and actions. Side by
+   *               side from the top, the name would have to shrink to fit a
+   *               half-width column; this keeps both large.
+   *   desktop     (1024px+) the classic split: type on the left, a large
+   *               portrait on the right with its key light.
    */
   .hero {
     display: grid;
-    gap: var(--space-10);
-    padding-block: clamp(var(--space-10), 6vw, var(--space-24)) 0;
+    gap: var(--space-6);
+    padding-block: clamp(var(--space-8), 5vw, var(--space-24)) 0;
   }
 
+  /* Phones and tablets place each piece of text in the hero's own grid. */
   .hero__text {
-    display: grid;
-    align-content: center;
-    gap: var(--space-6);
+    display: contents;
   }
 
   .hero__kicker {
+    grid-area: kicker;
     font-size: var(--step-0);
     font-weight: var(--weight-medium);
     color: var(--color-text-3);
   }
 
   .hero__name {
-    margin-top: calc(var(--space-2) * -1);
+    grid-area: name;
+    margin-top: calc(var(--space-3) * -1);
     font-size: var(--step-hero);
     font-weight: var(--weight-display);
     line-height: var(--leading-display);
     letter-spacing: var(--tracking-hero);
+    /* Words never break inside: "Omotesho" is sized to fit (tokens.css). */
+    overflow-wrap: normal;
+    hyphens: none;
     /* Optical alignment: very large type looks indented by its side bearing. */
     margin-left: -0.03em;
   }
 
   .hero__intro {
+    grid-area: intro;
     max-width: 34rem;
     font-size: var(--step-1);
     line-height: var(--leading-snug);
@@ -140,37 +189,36 @@ const story = (await getPublishedWriting()).find((entry) => entry.data.kind === 
   }
 
   .hero__actions {
+    grid-area: actions;
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-3);
-    margin-top: var(--space-2);
   }
 
   .hero__wave {
-    margin-top: var(--space-6);
+    grid-area: wave;
     max-width: 34rem;
   }
 
   .hero__portrait {
+    grid-area: portrait;
     width: 100%;
-    max-width: 30rem;
+    max-width: 24rem;
   }
 
-  @media (max-width: 47.99rem) {
-    /* Phones: let the portrait sit between the name and the intro. */
-    .hero__text {
-      display: contents;
-    }
+  .hero {
+    grid-template-areas:
+      'kicker'
+      'name'
+      'portrait'
+      'intro'
+      'actions'
+      'wave';
+  }
 
-    .hero__kicker { order: 1; }
-    .hero__name { order: 2; }
-    .hero__portrait { order: 3; justify-self: center; max-width: 24rem; }
-    .hero__intro { order: 4; }
-    .hero__actions { order: 5; }
-    .hero__wave { order: 6; margin-top: 0; }
-
-    .hero {
-      gap: var(--space-6);
+  @media (max-width: 39.99rem) {
+    .hero__portrait {
+      justify-self: center;
     }
 
     .hero__actions > :global(*) {
@@ -178,16 +226,97 @@ const story = (await getPublishedWriting()).find((entry) => entry.data.kind === 
     }
   }
 
-  @media (min-width: 48rem) {
+  /* Phones in landscape: a short screen. The portrait is held to about half
+     its height and sits beside the intro, so the hero never fills the
+     screen with photo alone. */
+  @media (max-width: 63.99rem) and (max-height: 32rem) and (orientation: landscape) {
+    .hero {
+      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-areas:
+        'kicker kicker'
+        'name name'
+        'portrait intro'
+        'portrait actions'
+        'portrait wave';
+      column-gap: var(--space-8);
+      align-items: start;
+    }
+
+    .hero__portrait {
+      width: calc(55svh * 0.8);
+      justify-self: start;
+    }
+
+    .hero__actions > :global(*) {
+      flex: 0 1 auto;
+    }
+  }
+
+  @media (min-width: 40rem) and (max-width: 63.99rem) {
+    .hero {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      /* The intro, actions and waveform sit centred against the portrait:
+         empty, equal rows above and below them. */
+      grid-template-rows: auto auto 1fr auto auto auto 1fr;
+      grid-template-areas:
+        'kicker kicker'
+        'name name'
+        'portrait .'
+        'portrait intro'
+        'portrait actions'
+        'portrait wave'
+        'portrait .';
+      column-gap: clamp(var(--space-8), 5vw, var(--space-12));
+      row-gap: var(--space-6);
+      padding-top: clamp(var(--space-12), 7vw, var(--space-20));
+    }
+
+    .hero__name {
+      margin-bottom: var(--space-4);
+    }
+
+    .hero__portrait {
+      max-width: none;
+    }
+
+  }
+
+  @media (min-width: 64rem) {
     .hero {
       grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+      grid-template-areas: 'text portrait';
       align-items: center;
       gap: clamp(var(--space-10), 6vw, var(--space-24));
       min-height: min(52rem, calc(100svh - var(--header-height)));
       padding-block: var(--space-12);
     }
 
+    .hero__text {
+      grid-area: text;
+      display: grid;
+      align-content: center;
+      gap: var(--space-6);
+    }
+
+    /* Inside the text column, the pieces simply stack. */
+    .hero__text > * {
+      grid-area: auto;
+    }
+
+    .hero__name {
+      margin-top: calc(var(--space-2) * -1);
+    }
+
+    .hero__actions {
+      margin-top: var(--space-2);
+    }
+
+    .hero__wave {
+      margin-top: var(--space-6);
+    }
+
     .hero__portrait {
+      max-width: 30rem;
       justify-self: end;
     }
   }
@@ -210,14 +339,28 @@ const story = (await getPublishedWriting()).find((entry) => entry.data.kind === 
     text-decoration: none;
     transition:
       background-color var(--duration-base) var(--ease-out),
-      border-color var(--duration-base) var(--ease-out);
+      border-color var(--duration-base) var(--ease-out),
+      transform var(--duration-base) var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .story__panel:hover {
+  @media (hover: hover) {
+    .story__panel:hover {
+      border-color: var(--color-line-strong);
+      transform: translateY(-2px);
+    }
+
+    .story__panel:hover .slide-link {
+      background-size: 100% 1px;
+    }
+  }
+
+  .story__panel:active {
     border-color: var(--color-line-strong);
+    transform: scale(0.995);
   }
 
-  .story__panel:hover .slide-link {
+  .story__panel:active .slide-link {
     background-size: 100% 1px;
   }
 
@@ -344,38 +487,55 @@ const story = (await getPublishedWriting()).find((entry) => entry.data.kind === 
     }
   }
 
+  /* ===== Work with me ==================================================== */
+  .invite-wrap {
+    margin-top: var(--section-gap);
+  }
+
   /* ===== Belief ============================================================
-   * One full-bleed band, one tonal step deeper, the line set large and
-   * centred: the one place the page slows right down.
+   * A full stop between the work and the footer: one belief, very large,
+   * with its first sentence beneath and a quiet link, and nothing else. The
+   * band is one tonal step deeper than the page and wrapped in generous
+   * space, so the page slows right down here. No motion.
    */
   .belief {
     margin-top: var(--section-gap);
-    padding-block: clamp(var(--space-20), 12vw, var(--space-32));
+    padding-block: clamp(var(--space-24), 16vw, 13rem);
     border-block: 1px solid var(--color-line);
     background-color: var(--color-bg-2);
     text-align: center;
   }
 
   .belief__line {
-    max-width: 52rem;
+    max-width: 14em;
     margin-inline: auto;
-    font-size: var(--step-5);
-    font-weight: var(--weight-display);
-    line-height: 1.02;
+    font-size: var(--step-quote);
+    line-height: 1;
     letter-spacing: var(--tracking-display);
     text-wrap: balance;
     color: var(--color-text);
   }
 
+  .belief__sentence {
+    max-width: 28em;
+    margin: var(--space-8) auto 0;
+    font-size: var(--step-2);
+    line-height: var(--leading-snug);
+    color: var(--color-text-2);
+    text-wrap: balance;
+  }
+
   .belief__link {
     display: inline-block;
-    margin-top: var(--space-8);
+    margin-top: var(--space-12);
+    font-size: var(--step--1);
     font-weight: var(--weight-semibold);
     text-decoration: none;
     color: var(--color-text);
   }
 
-  .belief__link:hover .slide-link {
+  .belief__link:hover .slide-link,
+  .belief__link:focus-visible .slide-link {
     background-size: 100% 1px;
   }
 </style>

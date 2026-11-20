@@ -36,13 +36,13 @@ const h = (type: string, style: Record<string, unknown>, children?: unknown): No
 // Token values repeated here because Satori cannot read CSS custom properties
 // (dark mode values from tokens.css).
 const color = {
-  bg: '#0b0c10',
-  text: '#f2f1ed',
-  text2: '#b4b5bc',
-  text3: '#8d8f97',
-  line: '#353945',
-  accent: '#8ea2ff',
-  warm: '#ffa45c',
+  bg: '#0a0c12',
+  text: '#eceef3',
+  text2: '#9aa1b2',
+  text3: '#8b92a3',
+  line: '#2a2e38',
+  accent: '#5b8cff',
+  warm: '#f2b45a',
 };
 
 /** The signature waveform as an SVG data URL (Satori renders it as an image). */
@@ -60,14 +60,19 @@ function waveform(width: number, height: number) {
 }
 
 let avatar: string | undefined;
+let portrait: string | undefined;
+// Read from the project root: at build time this module runs from a
+// compiled chunk. The files are the prepared portrait crops (see
+// scripts/prepare-portrait.mjs), inlined because Satori cannot fetch files.
+const portraitFile = (name: string) => join(process.cwd(), 'src', 'assets', 'portrait', name);
 async function loadAvatar() {
-  // Read from the project root: at build time this module runs from a
-  // compiled chunk. Cropped to the face and inlined, because Satori cannot
-  // fetch files.
-  const buffer = await sharp(join(process.cwd(), 'src', 'assets', 'portrait.jpg'))
-    .resize(220, 220, { fit: 'cover', position: 'top' })
-    .jpeg({ quality: 85 })
-    .toBuffer();
+  const buffer = await sharp(portraitFile('avatar-192.jpg')).resize(104, 104).jpeg({ quality: 88 }).toBuffer();
+  return `data:image/jpeg;base64,${buffer.toString('base64')}`;
+}
+async function loadPortrait() {
+  // The 480px hero crop is already resampled for the stripes; shown at
+  // 400 x 500 on the card, the small step down does not alias.
+  const buffer = await sharp(portraitFile('hero-480.jpg')).resize(400, 500).jpeg({ quality: 88 }).toBuffer();
   return `data:image/jpeg;base64,${buffer.toString('base64')}`;
 }
 
@@ -101,23 +106,45 @@ const kicker = (text: string) =>
     text,
   ]);
 
-const footer = (left: Node) =>
-  h('div', { display: 'flex', flexDirection: 'column', gap: '28px' }, [
-    { type: 'img', props: { src: waveform(1040, 44), width: 1040, height: 44 } },
+const footer = (left: Node, width = 1040) =>
+  h('div', { display: 'flex', flexDirection: 'column', gap: '28px', width: `${width}px` }, [
+    { type: 'img', props: { src: waveform(width, 44), width, height: 44 } },
     h('div', { display: 'flex', alignItems: 'center', justifyContent: 'space-between' }, [
       left,
       h('div', { display: 'flex', fontSize: '24px', color: color.text3 }, new URL(site.url).host),
     ]),
   ]);
 
-/** A page card: a kicker and a large title. */
-export async function renderOgImage({ eyebrow, title }: { eyebrow: string; title: string }) {
-  const size = title.length > 40 ? 76 : 96;
+/**
+ * A page card: a kicker and a large title. With `portrait` (Home, About),
+ * the portrait stands on the right in a rounded frame, lit from behind like
+ * the hero on the site.
+ */
+export async function renderOgImage({ eyebrow, title, portrait: withPortrait = false }: { eyebrow: string; title: string; portrait?: boolean }) {
+  const size = title.length > 40 ? (withPortrait ? 64 : 76) : withPortrait ? 84 : 96;
+  const card = frame([
+    kicker(eyebrow),
+    h('div', { display: 'flex', fontSize: `${size}px`, fontWeight: 600, lineHeight: 1, letterSpacing: '-0.045em', maxWidth: withPortrait ? '600px' : '1000px' }, title),
+    footer(h('div', { display: 'flex', fontSize: '26px', fontWeight: 600 }, site.fullName), withPortrait ? 620 : 1040),
+  ]);
+  if (!withPortrait) return toPng(card);
+  portrait ??= await loadPortrait();
   return toPng(
-    frame([
-      kicker(eyebrow),
-      h('div', { display: 'flex', fontSize: `${size}px`, fontWeight: 600, lineHeight: 1, letterSpacing: '-0.045em', maxWidth: '1000px' }, title),
-      footer(h('div', { display: 'flex', fontSize: '26px', fontWeight: 600 }, site.fullName)),
+    h('div', { width: '100%', height: '100%', display: 'flex', position: 'relative', backgroundColor: color.bg }, [
+      card,
+      h('div', {
+        position: 'absolute',
+        top: '40px',
+        right: '40px',
+        width: '440px',
+        height: '550px',
+        display: 'flex',
+        borderRadius: '28px',
+        border: `1px solid ${color.line}`,
+        overflow: 'hidden',
+        backgroundImage: `url(${portrait})`,
+        backgroundSize: '440px 550px',
+      }),
     ]),
   );
 }
@@ -145,7 +172,7 @@ export async function renderArticleOgImage({
       ]),
       footer(
         h('div', { display: 'flex', alignItems: 'center', gap: '18px' }, [
-          { type: 'img', props: { src: avatar, width: 52, height: 52, style: { borderRadius: '999px' } } },
+          { type: 'img', props: { src: avatar, width: 52, height: 52, style: { borderRadius: '999px', border: `1px solid ${color.line}` } } },
           h('div', { display: 'flex', fontSize: '24px', fontWeight: 600 }, site.fullName),
           h('div', { display: 'flex', fontSize: '24px', color: color.text3 }, meta),
         ]),

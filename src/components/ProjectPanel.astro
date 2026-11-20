@@ -1,9 +1,20 @@
 ---
 /**
- * ProjectPanel: a project as one large link panel, with its artwork above
- * the status, title and one line. The whole panel is the link (one focus
- * stop, one big tap target). Hover lifts the panel one tonal step and slides
- * in the underline on "View project"; no movement, no shadow.
+ * ProjectPanel: a project as one large panel, with its artwork above the
+ * status, title and one line, and optionally one of Tesh's beliefs quoted
+ * beneath the summary.
+ *
+ * The panel is still one big tap target and one focus stop for the project:
+ * the title is the link, stretched over the whole panel with a pseudo-element.
+ * It is built this way (not as one wrapping <a>) because the belief line is
+ * a second link, to its row on About, and a link cannot contain a link. The
+ * belief link sits above the stretched one (z-index) so it takes its own
+ * clicks.
+ *
+ * Hover lifts the panel slightly (2px and one tonal step) with a soft
+ * highlight on its border, and slides in the underline on "View project".
+ * On touch screens, where hover never fires, the same happens while the
+ * panel is pressed, and a press gives slightly (scale 0.99). No shadow.
  */
 import type { CollectionEntry } from 'astro:content';
 import ProjectArt from './art/ProjectArt.astro';
@@ -12,26 +23,38 @@ import Status from './Status.astro';
 interface Props {
   project: CollectionEntry<'projects'>;
   headingLevel?: 'h2' | 'h3';
+  /** A belief quoted under the summary, with the link to its row on About. */
+  belief?: { text: string; href: string };
 }
 
-const { project, headingLevel: Heading = 'h3' } = Astro.props;
+const { project, headingLevel: Heading = 'h3', belief } = Astro.props;
 const { title, tagline, summary, status } = project.data;
 ---
 
-<a class="panel" href={`/projects/${project.id}/`}>
+<article class="panel">
   <div class="panel__art">
     <ProjectArt id={project.id} />
   </div>
   <div class="panel__body">
     <Status status={status} />
-    <Heading class="panel__title">{title}</Heading>
+    <Heading class="panel__title">
+      <a class="panel__link" href={`/projects/${project.id}/`}>{title}</a>
+    </Heading>
     <p class="panel__line">{tagline ?? summary}</p>
+    {
+      belief && (
+        <p class="panel__belief voice">
+          <a href={belief.href}>{belief.text}</a>
+        </p>
+      )
+    }
     <span class="panel__more" aria-hidden="true"><span class="slide-link">View project</span> &rarr;</span>
   </div>
-</a>
+</article>
 
 <style>
   .panel {
+    position: relative;
     display: grid;
     grid-template-rows: auto 1fr;
     height: 100%;
@@ -40,18 +63,51 @@ const { title, tagline, summary, status } = project.data;
     border-radius: var(--radius-xl);
     background-color: var(--color-bg-2);
     color: var(--color-text);
-    text-decoration: none;
     transition:
       background-color var(--duration-base) var(--ease-out),
-      border-color var(--duration-base) var(--ease-out);
+      border-color var(--duration-base) var(--ease-out),
+      transform var(--duration-base) var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .panel:hover {
+  @media (hover: hover) {
+    .panel:hover {
+      border-color: var(--color-line-strong);
+      background-color: var(--color-bg-3);
+      transform: translateY(-2px);
+    }
+
+    .panel:hover .slide-link {
+      background-size: 100% 1px;
+    }
+  }
+
+  .panel:active {
     border-color: var(--color-line-strong);
     background-color: var(--color-bg-3);
+    transform: scale(0.99);
   }
 
-  .panel:focus-visible {
+  /* The title link covers the whole panel. */
+  .panel__link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .panel__link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  /* The focus ring goes round the whole panel, which is what the link covers,
+     not just the title text. */
+  .panel__link:focus-visible {
+    outline: none;
+  }
+
+  .panel:has(.panel__link:focus-visible) {
+    outline: 2px solid var(--color-focus);
     outline-offset: 4px;
   }
 
@@ -82,13 +138,43 @@ const { title, tagline, summary, status } = project.data;
     color: var(--color-text-2);
   }
 
+  /* A small serif line in the muted colour, under the summary. Its link sits
+     above the stretched title link. The faint underline says "link" without
+     colour; it firms up on hover. */
+  .panel__belief {
+    max-width: 30rem;
+    font-size: var(--step-0);
+    line-height: var(--leading-snug);
+    color: var(--color-text-3);
+  }
+
+  .panel__belief a {
+    position: relative;
+    z-index: 1;
+    /* A comfortable tap target without changing how the line sits. */
+    display: inline-block;
+    padding-block: 0.6rem;
+    margin-block: -0.6rem;
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.28em;
+    text-decoration-color: var(--color-line-strong);
+  }
+
+  .panel__belief a:hover,
+  .panel__belief a:focus-visible {
+    color: var(--color-text);
+    text-decoration-color: currentColor;
+  }
+
   .panel__more {
     margin-top: var(--space-4);
     font-size: var(--step--1);
     font-weight: var(--weight-semibold);
   }
 
-  .panel:hover .slide-link {
+  .panel:active .slide-link {
     background-size: 100% 1px;
   }
 </style>

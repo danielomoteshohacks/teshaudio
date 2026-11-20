@@ -1,0 +1,31 @@
+---
+/**
+ * SerifFont: loads the upright serif (Source Serif 4, self-hosted through
+ * Fontsource) with its metric-matched fallback (serif-fallback.css), and
+ * preloads the Latin file so it is fetched alongside the CSS instead of after
+ * it. Place it in the head slot of any page that sets text in --font-serif:
+ *
+ *   <Fragment slot="head"><SerifFont /></Fragment>
+ *
+ * priority="low": for pages whose serif text is far below the fold (About).
+ * The browser then fetches the portrait and the page's other critical
+ * resources first and the font after them.
+ *
+ * Only pages that use it carry or request the font. Fontsource splits the
+ * font by script and the browser fetches only the Latin file for Latin text,
+ * so no other subset is downloaded. The weight-only build is half the size
+ * but loses the optical-size axis, which is what gives large type its finer
+ * display shapes, so the optical-size build is used.
+ */
+import '@fontsource-variable/source-serif-4/opsz.css';
+import '../styles/serif-fallback.css';
+import latin from '@fontsource-variable/source-serif-4/files/source-serif-4-latin-opsz-normal.woff2?url';
+
+interface Props {
+  priority?: 'auto' | 'low';
+}
+
+const { priority = 'auto' } = Astro.props;
+---
+
+<link rel="preload" href={latin} as="font" type="font/woff2" crossorigin fetchpriority={priority} />

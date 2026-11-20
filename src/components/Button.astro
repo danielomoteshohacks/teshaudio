@@ -64,7 +64,14 @@ const classes = ['button', `button--${variant}`, `button--${size}`, className];
     transition:
       background-color var(--duration-fast) var(--ease-out),
       border-color var(--duration-fast) var(--ease-out),
-      color var(--duration-fast) var(--ease-out);
+      color var(--duration-fast) var(--ease-out),
+      transform var(--duration-fast) var(--ease-out);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Pressed: the button gives slightly under the finger or pointer. */
+  .button:active {
+    transform: scale(0.98);
   }
 
   .button--lg {
@@ -80,7 +87,7 @@ const classes = ['button', `button--${variant}`, `button--${size}`, className];
     color: var(--color-bg);
   }
 
-  .button--primary:hover {
+  .button--primary:is(:hover, :active) {
     background-color: color-mix(in oklab, var(--color-text) 86%, var(--color-bg));
   }
 
@@ -89,7 +96,7 @@ const classes = ['button', `button--${variant}`, `button--${size}`, className];
     color: var(--color-text);
   }
 
-  .button--secondary:hover {
+  .button--secondary:is(:hover, :active) {
     border-color: var(--color-text-3);
     background-color: var(--color-bg-2);
   }
@@ -99,7 +106,7 @@ const classes = ['button', `button--${variant}`, `button--${size}`, className];
     color: var(--color-text);
   }
 
-  .button--ghost:hover {
+  .button--ghost:is(:hover, :active) {
     color: var(--color-accent);
   }
 </style>
