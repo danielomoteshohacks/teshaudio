@@ -7,13 +7,16 @@
  * The beliefs are the emotional centre of the site, so they are set like a
  * page in a fine book: one belief per row between hairline rules, never
  * cards; the headline in the serif at display size, the text in the serif at
- * reading size; generous space; no motion beyond the page's load fade.
+ * reading size; generous space. Each row rises into view once as it
+ * arrives, like everything else on the site; nothing else moves. The page
+ * ends with the short "Work with me" invitation.
  */
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Portrait from '../components/Portrait.astro';
 import Waveform from '../components/Waveform.astro';
 import SerifFont from '../components/SerifFont.astro';
 import DecibelArt from '../components/art/DecibelArt.astro';
+import WorkWithMe from '../components/WorkWithMe.astro';
 import { about } from '../data/about';
 import { beliefId, beliefs } from '../lib/beliefs';
 import { copy, site } from '../lib/site';
@@ -25,7 +28,10 @@ import { personSchema } from '../lib/schema';
 
   <section class="intro wrap" aria-labelledby="about-title">
     <div class="intro__portrait enter">
-      <Portrait priority sizes="(min-width: 64rem) 32rem, (min-width: 48rem) 40vw, calc(100vw - 2.5rem)" />
+      <Portrait
+        priority
+        sizes="(min-width: 75rem) 28rem, (min-width: 48rem) 38vw, (max-height: 32rem) 50vh, min(calc(100vw - 2.5rem), 26rem)"
+      />
     </div>
     <div class="intro__text">
       <h1 id="about-title" class="intro__title enter" style="--order: 1">{site.fullName}, known as {site.name}</h1>
@@ -35,7 +41,7 @@ import { personSchema } from '../lib/schema';
     </div>
   </section>
 
-  <section class="block wrap" aria-labelledby="do-title">
+  <section class="block wrap" aria-labelledby="do-title" data-reveal>
     <h2 id="do-title" class="block__title">{copy.about.doTitle}</h2>
     <ul class="skills">
       {
@@ -50,7 +56,7 @@ import { personSchema } from '../lib/schema';
   </section>
 
   <section id="beliefs" class="beliefs wrap" aria-labelledby="believe-title">
-    <header class="beliefs__opener">
+    <header class="beliefs__opener" data-reveal>
       <h2 id="believe-title" class="beliefs__label">{copy.about.believeTitle}</h2>
       <div class="beliefs__wave"><Waveform seed={5} /></div>
     </header>
@@ -59,7 +65,7 @@ import { personSchema } from '../lib/schema';
     <ol class="beliefs__list" role="list">
       {
         beliefs.map((belief) => (
-          <li id={beliefId(belief.id)} class:list={['belief', { 'belief--feature': belief.id === 'ears' }]}>
+          <li id={beliefId(belief.id)} class:list={['belief', { 'belief--feature': belief.id === 'ears' }]} data-reveal>
             <p class="belief__number" aria-hidden="true">{belief.number}</p>
             <h3 class="belief__headline">{belief.headline}</h3>
             <p class="belief__body">{belief.body}</p>
@@ -76,10 +82,14 @@ import { personSchema } from '../lib/schema';
     </ol>
   </section>
 
-  <section class="block wrap" aria-labelledby="education-title">
+  <section class="block wrap" aria-labelledby="education-title" data-reveal>
     <h2 id="education-title" class="block__title">{copy.about.educationTitle}</h2>
     <p class="education">{about.education}</p>
   </section>
+
+  <div class="invite wrap">
+    <WorkWithMe variant="short" />
+  </div>
 </BaseLayout>
 
 <style>
@@ -122,26 +132,70 @@ import { personSchema } from '../lib/schema';
     color: var(--color-text);
   }
 
-  @media (max-width: 47.99rem) {
-    /* Phones: the name first, then the portrait, then the bio. */
-    .intro__text {
-      display: contents;
+  /* Phones: the name, then the portrait, then the bio. Tablets (640 to
+     1023px): the name across the full width, then the portrait beside the
+     bio, so the title never squeezes into a narrow column. Desktop: the
+     portrait on the left, the name and bio on the right. Phones in
+     landscape hold the portrait to about half the screen height. */
+  .intro__text {
+    display: contents;
+  }
+
+  .intro {
+    grid-template-areas: 'title' 'portrait' 'bio';
+    gap: var(--space-8);
+  }
+
+  .intro__title { grid-area: title; }
+  .intro__portrait { grid-area: portrait; }
+  .intro__bio { grid-area: bio; }
+
+  @media (min-width: 40rem) and (max-width: 63.99rem) {
+    .intro {
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      grid-template-areas:
+        'title title'
+        'portrait bio';
+      align-items: center;
+      column-gap: clamp(var(--space-8), 5vw, var(--space-12));
     }
 
-    .intro__title { order: 1; }
-    .intro__portrait { order: 2; }
-    .intro__bio { order: 3; }
-
-    .intro {
-      gap: var(--space-8);
+    .intro__portrait {
+      max-width: none;
     }
   }
 
-  @media (min-width: 48rem) {
+  @media (max-width: 63.99rem) and (max-height: 32rem) and (orientation: landscape) {
+    .intro {
+      grid-template-columns: auto minmax(0, 1fr);
+      grid-template-areas:
+        'title title'
+        'portrait bio';
+      align-items: start;
+    }
+
+    .intro__portrait {
+      width: calc(55svh * 0.8);
+    }
+  }
+
+  @media (min-width: 64rem) {
     .intro {
       grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+      grid-template-areas: 'portrait text';
       align-items: center;
       gap: clamp(var(--space-10), 6vw, var(--space-24));
+    }
+
+    .intro__text {
+      grid-area: text;
+      display: grid;
+      align-content: center;
+      gap: var(--space-8);
+    }
+
+    .intro__text > * {
+      grid-area: auto;
     }
 
     .intro__portrait {
@@ -245,12 +299,13 @@ import { personSchema } from '../lib/schema';
   .belief {
     display: grid;
     gap: var(--space-3);
+    /* At least 56px between rows on phones: 64px of padding each side of
+       the rule. */
     padding-block: var(--space-16);
     border-bottom: 1px solid var(--color-line);
-    /* Links from Home land on the row. The page already clears the sticky
-       header (scroll-padding-top in global.css); this keeps a little more
-       air above the rule so the hairline shows. */
-    scroll-margin-top: var(--space-2);
+    /* Links from Home land on the row: clear the sticky header and keep a
+       little air above the hairline. */
+    scroll-margin-top: calc(var(--header-height) + var(--space-4));
   }
 
   /* Small tabular figures in the accent: 01 to 07 line up in any font. */
@@ -270,7 +325,7 @@ import { personSchema } from '../lib/schema';
     font-weight: 500;
     font-optical-sizing: auto;
     line-height: 1.08;
-    letter-spacing: var(--tracking-tight);
+    letter-spacing: -0.015em;
     text-wrap: balance;
     color: var(--color-text);
   }
@@ -292,15 +347,19 @@ import { personSchema } from '../lib/schema';
     display: none;
   }
 
-  @media (min-width: 64rem) {
+  /* From 834px (tablets in portrait and up): two columns. The left holds
+     the number and, under it, the headline; the right holds the text, its
+     first line on the headline's first baseline, like a page in a book. */
+  @media (min-width: 52.125rem) {
     .belief {
-      grid-template-columns: 3.5rem minmax(0, 1fr) minmax(0, 1fr);
-      grid-template-areas: 'number headline body';
-      column-gap: clamp(var(--space-8), 5vw, var(--space-20));
-      row-gap: 0;
-      /* The number, the headline and the text share their first baseline. */
+      grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+      grid-template-areas:
+        'number .'
+        'headline body';
+      column-gap: clamp(var(--space-10), 6vw, var(--space-24));
+      row-gap: var(--space-4);
       align-items: first baseline;
-      padding-block: clamp(var(--space-20), 8vw, var(--space-32));
+      padding-block: clamp(var(--space-16), 7vw, var(--space-24));
     }
 
     .belief__number {
@@ -316,32 +375,42 @@ import { personSchema } from '../lib/schema';
       margin-top: 0;
     }
 
-    /* The emphasised row: a larger headline, and room for the echo beneath it. */
+    /* The emphasised row: a step more size and a little more measure for
+       the headline, and room beneath it for the echo. The columns stay
+       where they are, so the text column keeps one edge down the page. */
     .belief--feature {
       grid-template-areas:
-        'number headline body'
-        '. echo body';
+        'number .'
+        'headline body'
+        'echo body';
     }
 
     .belief--feature .belief__headline {
-      font-size: calc(var(--step-belief) * 1.14);
       max-width: none;
+      font-size: calc(var(--step-belief) * 1.12);
+      letter-spacing: -0.02em;
     }
+  }
 
+  @media (min-width: 64rem) {
     .belief--feature .belief__echo {
       grid-area: echo;
       align-self: start;
       display: block;
-      width: min(100%, 17rem);
+      width: min(100%, 15rem);
       /* Pulled left by the drawing's own padding, so the spiral's outer edge
          lines up with the headline above it. */
-      margin: var(--space-12) 0 0 -1.35rem;
-      opacity: 0.36;
+      margin: var(--space-10) 0 0 -1.2rem;
+      opacity: 0.35;
     }
   }
 
   /* ----- Education ----- */
   .education {
     font-size: var(--step-1);
+  }
+
+  .invite {
+    margin-top: var(--section-gap);
   }
 </style>

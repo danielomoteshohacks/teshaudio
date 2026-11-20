@@ -33,7 +33,7 @@ export const site = {
 
   // Contact. Every item renders only if set; remove a line to hide it.
   email: 'danielomotesho.work@gmail.com',
-  // Only GitHub is shown, as Tesh asked. Add others here in the same shape.
+  // Only GitHub is shown for now. Add others here in the same shape.
   socials: [
     { label: 'GitHub', handle: 'danielomoteshohacks', url: 'https://github.com/danielomoteshohacks' },
   ] as Social[],
@@ -66,6 +66,40 @@ export const copy = {
     believeTitle: 'What I believe about sound',
     educationTitle: 'Education',
   },
+} as const;
+
+/**
+ * "Work with me": the full section on Home (between the work and the closing
+ * band) and its short version at the end of About (label, heading, intro and
+ * the buttons). In Tesh's words; the email and GitHub buttons use `email`
+ * and `socials` above, so the address lives in one place.
+ */
+export const workWithMe = {
+  label: 'Work with me',
+  heading: 'Let’s make something together.',
+  intro:
+    'I’m open to collaborations and projects with artists, producers, teams and researchers who care about how things sound. If sound is part of what you’re making, I’d love to hear about it. I’m based in Lagos and happy to work with people anywhere.',
+  areas: [
+    {
+      title: 'Music production',
+      body: 'From the first idea to a finished record. I produce and compose in FL Studio and Cubase, and I care about arrangement, feel and the small details that make a song stay with people.',
+    },
+    {
+      title: 'Mixing and mastering',
+      body: 'Giving your record clarity, depth and weight, and making sure it holds up wherever it’s played: earbuds, car speakers, club systems and everything in between.',
+    },
+    {
+      title: 'Audio experience and software',
+      body: 'Designing and building products where sound is the experience: spatial audio, listening features, and interactive audio for the web and mobile.',
+    },
+    {
+      title: 'Research on sound',
+      body: 'Hearing, loudness, perception, and how people actually experience audio. I enjoy reading the science carefully, testing ideas, and explaining what I find in plain language.',
+    },
+  ],
+  closing: 'Tell me what you’re working on, where it’s at and what you need. I’ll get back to you.',
+  emailLabel: 'Email me',
+  githubLabel: 'GitHub',
 } as const;
 
 /** Primary navigation, in display order. */
