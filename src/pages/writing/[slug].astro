@@ -5,7 +5,7 @@
  * Set like a publication: a large title, the subtitle, a byline row (small
  * portrait, name, date, reading time), then the body in the reading serif
  * at a 680px measure. Figures break slightly out of the text column on
- * wide screens. From 80rem a quiet contents rail sits to the right of the
+ * wide screens. From 1180px a quiet contents rail sits to the right of the
  * text; below that there is no contents list, so a phone reader starts
  * reading immediately. It ends with a short author note.
  *
@@ -207,7 +207,7 @@ const articleSchema = {
   /* ===== Body and contents rail ============================================
    * The text column is centred on the page. Figures break out of it up to
    * --width-figure (see the rule below); on a phone the breakout is zero.
-   * From 80rem the rail sits in the right-hand margin, far enough out that
+   * From 1180px the rail sits in the right-hand margin, far enough out that
    * a breaking-out figure never runs under it.
    */
   .layout {
@@ -223,7 +223,7 @@ const articleSchema = {
     display: none;
   }
 
-  @media (min-width: 80rem) {
+  @media (min-width: 73.75rem) {
     .layout--toc {
       display: grid;
       grid-template-columns: minmax(0, 1fr) var(--width-text) minmax(0, 1fr);
@@ -241,7 +241,7 @@ const articleSchema = {
       position: sticky;
       top: calc(var(--header-height) + var(--space-12));
       align-self: start;
-      max-width: 15rem;
+      max-width: 14rem;
       margin-left: 6rem;
     }
   }

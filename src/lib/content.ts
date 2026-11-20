@@ -50,5 +50,5 @@ export const getTrack = (id: string) => getEntry('tracks', id);
 export const getComparison = (id: string) => getEntry('comparisons', id);
 export const getProject = (id: string) => getEntry('projects', id);
 
-/** True when a Markdown entry has no body yet, so pages can show a placeholder. */
+/** True when a Markdown entry has no body yet, so pages can leave that part out. */
 export const isEmptyBody = (entry: { body?: string }) => !entry.body?.trim();

@@ -128,7 +128,7 @@ const lab = defineCollection({
   schema: z.object({
     title: z.string(),
     summary: z.string(),
-    status: z.enum(['live', 'coming-soon']),
+    status: z.enum(['live']),
     relatedProject: reference('projects').optional(),
     // External place the demo runs (e.g. a Hugging Face Space), if any.
     demoUrl: z.url().optional(),

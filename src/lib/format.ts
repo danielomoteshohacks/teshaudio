@@ -68,7 +68,6 @@ export const statusLabel = {
   concept: 'In design',
   research: 'Research',
   live: 'Live',
-  'coming-soon': 'Coming soon',
 } as const;
 
 export const roleLabel = {

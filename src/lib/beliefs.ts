@@ -3,8 +3,7 @@
  * site. About sets all seven in full; Home quotes three of them by id. Both
  * read from here, so a line on Home can never drift from the text on About.
  *
- * The wording is Tesh's own and must not be edited, trimmed or reordered
- * without Tesh asking. Apostrophes are curly (U+2019), like the rest of the
+ * The wording is final: never edit, trim or reorder it. Apostrophes are curly (U+2019), like the rest of the
  * site's copy.
  */
 
