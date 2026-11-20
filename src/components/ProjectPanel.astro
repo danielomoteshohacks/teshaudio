@@ -11,6 +11,9 @@
  * belief link sits above the stretched one (z-index) so it takes its own
  * clicks.
  *
+ * An essay about the project, when there is one, gets its own "Read the
+ * story" link beside "View project", built the same way as the belief line.
+ *
  * Hover lifts the panel slightly (2px and one tonal step) with a soft
  * highlight on its border, and slides in the underline on "View project".
  * On touch screens, where hover never fires, the same happens while the
@@ -25,9 +28,11 @@ interface Props {
   headingLevel?: 'h2' | 'h3';
   /** A belief quoted under the summary, with the link to its row on About. */
   belief?: { text: string; href: string };
+  /** The essay written about the project, linked beside "View project". */
+  story?: { href: string; title: string };
 }
 
-const { project, headingLevel: Heading = 'h3', belief } = Astro.props;
+const { project, headingLevel: Heading = 'h3', belief, story } = Astro.props;
 const { title, tagline, summary, status } = project.data;
 ---
 
@@ -48,7 +53,16 @@ const { title, tagline, summary, status } = project.data;
         </p>
       )
     }
-    <span class="panel__more" aria-hidden="true"><span class="slide-link">View project</span> &rarr;</span>
+    <div class="panel__links">
+      <span class="panel__more" aria-hidden="true"><span class="slide-link">View project</span> &rarr;</span>
+      {
+        story && (
+          <a class="panel__story" href={story.href} aria-label={`Read the story: ${story.title}`}>
+            <span class="slide-link">Read the story</span> <span aria-hidden="true">&rarr;</span>
+          </a>
+        )
+      }
+    </div>
   </div>
 </article>
 
@@ -77,7 +91,7 @@ const { title, tagline, summary, status } = project.data;
       transform: translateY(-2px);
     }
 
-    .panel:hover .slide-link {
+    .panel:hover .panel__more .slide-link {
       background-size: 100% 1px;
     }
   }
@@ -168,13 +182,34 @@ const { title, tagline, summary, status } = project.data;
     text-decoration-color: currentColor;
   }
 
-  .panel__more {
+  .panel__links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-6);
     margin-top: var(--space-4);
     font-size: var(--step--1);
     font-weight: var(--weight-semibold);
   }
 
-  .panel:active .slide-link {
+  /* The story link sits above the stretched title link, like the belief
+     line, so it takes its own clicks; padded to a 44px tap target. */
+  .panel__story {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    min-height: 44px;
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .panel__story:is(:hover, :focus-visible, :active) .slide-link {
+    background-size: 100% 1px;
+  }
+
+  .panel:active .panel__more .slide-link {
     background-size: 100% 1px;
   }
 </style>

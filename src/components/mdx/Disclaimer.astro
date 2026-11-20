@@ -1,0 +1,23 @@
+---
+/**
+ * Disclaimer (MDX): a short note set apart from the essay, small and muted,
+ * in italics, after the closing line. It is not part of the argument, so it
+ * should never compete with it.
+ *
+ *   <Disclaimer>One or two plain sentences.</Disclaimer>
+ */
+---
+
+<p class="disclaimer"><em><slot /></em></p>
+
+<style>
+  .disclaimer {
+    margin-block: 2.4em 0 !important;
+    padding: var(--space-4) var(--space-5);
+    border-left: 2px solid var(--color-line-strong);
+    font-family: var(--font-sans);
+    font-size: var(--step--1);
+    line-height: var(--leading-body);
+    color: var(--color-text-3);
+  }
+</style>

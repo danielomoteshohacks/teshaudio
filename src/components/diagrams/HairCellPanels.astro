@@ -1,0 +1,131 @@
+---
+/**
+ * The two panels of HairCells.astro (healthy and damaged), drawn in a
+ * 340 x 320 box each and placed by the caller, so the wide and narrow
+ * drawings share one set of shapes.
+ */
+interface Props {
+  healthyAt: string;
+  damagedAt: string;
+}
+
+const { healthyAt, damagedAt } = Astro.props;
+
+
+const base = 238; // the basilar membrane
+const ihc = { x: 70, top: 140 };
+const ohcs = [186, 236, 286];
+
+// A hair cell's body: a flask, wider at the bottom.
+const cell = (x: number, top: number, w: number) =>
+  `M${x - w / 2 + 3} ${top} H ${x + w / 2 - 3} Q ${x + w / 2} ${top} ${x + w / 2} ${top + 4} V ${base - 22} Q ${x + w / 2} ${base - 8} ${x} ${base - 8} Q ${x - w / 2} ${base - 8} ${x - w / 2} ${base - 22} V ${top + 4} Q ${x - w / 2} ${top} ${x - w / 2 + 3} ${top} Z`;
+
+// A bundle of stereocilia in rows of rising height (the staircase).
+// splay: 0 upright; above 0 the hairs fan out and bend. broken: short stubs.
+function bundle(x: number, top: number, n: number, spacing: number, h0: number, step: number, splay = 0, broken = false) {
+  let d = '';
+  for (let i = 0; i < n; i++) {
+    const bx = x - ((n - 1) * spacing) / 2 + i * spacing;
+    const h = broken ? 5 + (i % 2) * 3 : h0 + i * step;
+    const lean = splay * (i - (n - 1) / 2) * 5 + splay * (i % 2 ? 4 : -3);
+    if (splay > 0 && !broken) {
+      d += `M${bx} ${top} Q ${bx + lean * 0.2} ${top - h * 0.6} ${bx + lean} ${top - h * 0.85}`;
+    } else {
+      d += `M${bx} ${top} V ${top - h}`;
+    }
+  }
+  return d;
+}
+
+// Nerve fibres from under the inner hair cell, down and away to the left.
+const fibres = [-8, 0, 8].map((dx, i) => `M${ihc.x + dx} ${base - 6} C ${ihc.x + dx} ${base + 22 + i * 4}, ${ihc.x - 20} ${base + 30 + i * 8}, 24 ${base + 34 + i * 8}`);
+const synapses = [-8, 0, 8].map((dx) => ({ cx: ihc.x + dx, cy: base - 6 }));
+
+---
+
+{/* Healthy */}
+<g transform={healthyAt}>
+  <text class="t t-strong" x="24" y="40">
+    Healthy
+  </text>
+  <path class="s-line" d={`M16 ${base} H 324`} stroke-width="1.25" />
+  <g class="s-ink" stroke-width="1.25" stroke-linejoin="round">
+    <path d={cell(ihc.x, ihc.top, 38)} />
+    {ohcs.map((x) => (
+      <path d={cell(x, 128, 26)} />
+    ))}
+  </g>
+  <g class="s-accent" stroke-width="1.5" stroke-linecap="round">
+    <path d={bundle(ihc.x, ihc.top, 5, 5, 10, 4)} />
+    {ohcs.map((x) => (
+      <path d={bundle(x, 128, 3, 6, 12, 5)} />
+    ))}
+  </g>
+  <g class="s-accent" stroke-width="1.25" fill="none">
+    {fibres.map((d) => (
+      <path d={d} />
+    ))}
+  </g>
+  {synapses.map((s) => (
+    <circle class="f-accent" cx={s.cx} cy={s.cy} r="2.5" />
+  ))}
+  <text class="t t-small" x={ihc.x} y="98" text-anchor="middle">
+    Inner hair cells
+  </text>
+  <text class="t t-small" x={ihc.x} y="115" text-anchor="middle">
+    (~3,500)
+  </text>
+  <text class="t t-small" x="236" y="80" text-anchor="middle">
+    Outer hair cells
+  </text>
+  <text class="t t-small" x="236" y="97" text-anchor="middle">
+    (~12,000)
+  </text>
+  <text class="t t-small" x="104" y="296">
+    Connections to the nerve
+  </text>
+</g>
+
+
+{/* Damaged */}
+<g transform={damagedAt}>
+  <text class="t t-strong t-warm" x="24" y="40">
+    Damaged
+  </text>
+  <path class="s-line" d={`M16 ${base} H 324`} stroke-width="1.25" />
+  <g class="s-ink" stroke-width="1.25" stroke-linejoin="round">
+    <path d={cell(ihc.x, ihc.top, 38)} />
+    <path d={cell(ohcs[0], 128, 26)} />
+    <path d={cell(ohcs[2], 128, 26)} />
+  </g>
+  {/* The lost outer hair cell: only its outline remains. */}
+  <path class="s-line" d={cell(ohcs[1], 128, 26)} stroke-width="1" stroke-dasharray="3 4" />
+  <g class="s-warm" stroke-width="1.5" stroke-linecap="round" fill="none">
+    <path d={bundle(ihc.x, ihc.top, 5, 5, 10, 4, 1.6)} />
+    <path d={bundle(ohcs[0], 128, 3, 6, 12, 5, 2.2)} />
+    <path d={bundle(ohcs[2], 128, 3, 6, 12, 5, 0, true)} />
+  </g>
+  {/* One fibre still connected; two lost. */}
+  <path class="s-accent" d={fibres[0]} stroke-width="1.25" fill="none" />
+  <circle class="f-accent" cx={synapses[0].cx} cy={synapses[0].cy} r="2.5" />
+  <g class="s-warm" stroke-width="1.25" fill="none" stroke-dasharray="3 4">
+    <path d={fibres[1]} />
+    <path d={fibres[2]} />
+  </g>
+  <g class="s-warm" stroke-width="1" fill="none">
+    <circle cx={synapses[1].cx} cy={synapses[1].cy} r="2.5" />
+    <circle cx={synapses[2].cx} cy={synapses[2].cy} r="2.5" />
+  </g>
+  <text class="t t-small t-warm" x={ihc.x} y="106" text-anchor="middle">
+    Splayed bundles
+  </text>
+  <text class="t t-small t-warm" x={ohcs[1]} y="98" text-anchor="middle">
+    Lost cell
+  </text>
+  <text class="t t-small t-warm" x={ohcs[2] + 4} y="116" text-anchor="middle">
+    Broken
+  </text>
+  <text class="t t-small t-warm" x="104" y="296">
+    Lost connections
+  </text>
+</g>

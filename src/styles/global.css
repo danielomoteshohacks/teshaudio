@@ -352,6 +352,14 @@ main {
 .t-small { font-size: 12.5px; fill: var(--color-text-3); }
 .t-accent { fill: var(--color-accent); }
 .t-warm { fill: var(--color-warm); }
+/* A halo in the figure's own background colour, for labels that sit on a
+   line: the line is hidden behind the letters instead of crossing them. */
+.t-halo {
+  paint-order: stroke;
+  stroke: var(--color-bg-2);
+  stroke-width: 6px;
+  stroke-linejoin: round;
+}
 
 /* ----- The serif voice -------------------------------------------------------
  * My own lines, quoted from the beliefs on Home, in the article serif:

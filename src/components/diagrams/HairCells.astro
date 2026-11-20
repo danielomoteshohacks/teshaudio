@@ -1,0 +1,36 @@
+---
+/**
+ * Diagram: healthy vs damaged hair cells. A schematic cross-section of the
+ * organ of Corti, as in a textbook: one inner hair cell and three outer hair
+ * cells (one from each row) standing on the basilar membrane, each topped
+ * with its bundle of stereocilia, and the nerve fibres connected under the
+ * inner hair cell.
+ *
+ * Healthy: neat, upright bundles in their staircase, every fibre connected.
+ * Damaged (amber where harm is shown): splayed and broken bundles, one outer
+ * hair cell lost, and two of the three nerve connections gone (dashed),
+ * which is the "hidden" damage the essay describes later.
+ *
+ * Each panel is drawn once in a 340 x 320 box. Wide: side by side. Narrow:
+ * stacked, at the same size, so labels never shrink.
+ */
+import Diagram from './Diagram.astro';
+import HairCellPanels from './HairCellPanels.astro';
+
+const desc =
+  'Two cross-sections of the hearing organ. Healthy: one inner hair cell and three outer hair cells stand on the basilar membrane, each topped with a neat, upright bundle of stereocilia, and three nerve fibres connect under the inner hair cell. Damaged: the bundles are splayed or broken, one outer hair cell is missing, and two of the three nerve connections are gone.';
+---
+<Diagram caption="In humans, hair cells don’t grow back.">
+  <svg viewBox="0 0 720 330" width="720" height="330" role="img" aria-labelledby="hair-w-t hair-w-d">
+    <title id="hair-w-t">Healthy vs damaged hair cells</title>
+    <desc id="hair-w-d">{desc}</desc>
+    <line class="s-line" x1="360" y1="20" x2="360" y2="310" stroke-width="1"></line>
+    <HairCellPanels healthyAt="translate(4 0)" damagedAt="translate(376 0)" />
+  </svg>
+  <svg slot="narrow" viewBox="0 0 340 660" width="340" height="660" role="img" aria-labelledby="hair-n-t hair-n-d">
+    <title id="hair-n-t">Healthy vs damaged hair cells</title>
+    <desc id="hair-n-d">{desc}</desc>
+    <line class="s-line" x1="16" y1="330" x2="324" y2="330" stroke-width="1"></line>
+    <HairCellPanels healthyAt="translate(0 0)" damagedAt="translate(0 330)" />
+  </svg>
+</Diagram>

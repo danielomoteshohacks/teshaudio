@@ -1,0 +1,148 @@
+---
+/**
+ * Diagram: same number, different ear. How much a typical open ear canal
+ * (with the outer ear) raises sound by the time it reaches the eardrum,
+ * across 100 Hz to 10 kHz on a log axis. The curve is a smooth
+ * illustration of the well-known shape (little change in the lows, a broad
+ * resonance peaking around 2.5 to 4 kHz at about +15 to +20 dB, tapering
+ * above), not a measurement of any one ear, and the drawing says so.
+ *
+ * The 3 to 6 kHz region is shaded amber: the energy there reaches the
+ * cochlea stronger than a room meter suggests.
+ */
+import Diagram from './Diagram.astro';
+
+// Typical gain at the eardrum, dB, by frequency (Hz). Rounded values that
+// follow the published average shape; smoothed below.
+const points: [number, number][] = [
+  [100, 0],
+  [200, 0.3],
+  [300, 0.6],
+  [500, 1.2],
+  [700, 2],
+  [1000, 3],
+  [1500, 6],
+  [2000, 11],
+  [2500, 15.5],
+  [3000, 17],
+  [3500, 16.5],
+  [4000, 14.5],
+  [5000, 10],
+  [6000, 6.5],
+  [7000, 4.5],
+  [8000, 3.5],
+  [10000, 2.5],
+];
+
+function chart(o: { x0: number; x1: number; y0: number; y1: number }) {
+  // x: log frequency from 100 Hz to 10 kHz; y: 0 dB at y0, +20 dB at y1.
+  const x = (f: number) => o.x0 + (Math.log10(f / 100) / 2) * (o.x1 - o.x0);
+  const y = (db: number) => o.y0 - (db / 20) * (o.y0 - o.y1);
+  const p = points.map(([f, db]) => [x(f), y(db)] as const);
+  // Catmull-Rom through the points, as cubic Beziers: a smooth curve that
+  // passes exactly through every value.
+  let d = `M${p[0][0].toFixed(1)} ${p[0][1].toFixed(1)}`;
+  for (let i = 0; i < p.length - 1; i++) {
+    const [a, b, c, e] = [p[i - 1] ?? p[i], p[i], p[i + 1], p[i + 2] ?? p[i + 1]];
+    const c1 = [b[0] + (c[0] - a[0]) / 6, b[1] + (c[1] - a[1]) / 6];
+    const c2 = [c[0] - (e[0] - b[0]) / 6, c[1] - (e[1] - b[1]) / 6];
+    d += `C${c1[0].toFixed(1)} ${c1[1].toFixed(1)},${c2[0].toFixed(1)} ${c2[1].toFixed(1)},${c[0].toFixed(1)} ${c[1].toFixed(1)}`;
+  }
+  const area = `${d}L${o.x1} ${o.y0}L${o.x0} ${o.y0}Z`;
+  return { ...o, x, y, d, area };
+}
+
+const W = chart({ x0: 92, x1: 680, y0: 288, y1: 108 });
+const N = chart({ x0: 56, x1: 322, y0: 330, y1: 166 });
+
+const gridF = [100, 200, 500, 1000, 2000, 5000, 10000];
+const labelF: Record<number, string> = { 100: '100 Hz', 1000: '1 kHz', 10000: '10 kHz' };
+const labelFWide: Record<number, string> = { 100: '100 Hz', 200: '200', 500: '500', 1000: '1 kHz', 2000: '2k', 5000: '5k', 10000: '10 kHz' };
+
+const desc =
+  'An illustrative chart, not a measurement, of how much a typical ear canal boosts sound by the time it reaches the eardrum, from 100 Hz to 10 kHz. The boost is near zero below 500 Hz, rises through 1 and 2 kHz, peaks at about plus 17 dB around 3 kHz and stays high to about 4 kHz, then tapers off toward 10 kHz. The region from 3 to 6 kHz is shaded: energy there reaches the cochlea stronger than a meter suggests.';
+---
+
+<Diagram caption="Your ear canal turns up the upper mids before the sound reaches the cochlea.">
+  <svg viewBox="0 0 720 340" width="720" height="340" role="img" aria-labelledby="canal-w-t canal-w-d">
+    <title id="canal-w-t">Same number, different ear</title>
+    <desc id="canal-w-d">{desc}</desc>
+
+    <text class="t t-small" x={W.x0} y="28">Illustration of a typical ear, not a measurement</text>
+
+    {/* The 3 to 6 kHz region. */}
+    <rect class="f-warm" x={W.x(3000)} y={W.y1 - 8} width={W.x(6000) - W.x(3000)} height={W.y0 - W.y1 + 8} opacity="0.14"></rect>
+    <text class="t t-warm t-strong" x={(W.x(3000) + W.x(6000)) / 2} y={W.y1 + 10} text-anchor="middle">3–6 kHz</text>
+    <text class="t t-warm" x={(W.x(3000) + W.x(6000)) / 2} y="56" text-anchor="middle">Energy here reaches the cochlea</text>
+    <text class="t t-warm" x={(W.x(3000) + W.x(6000)) / 2} y="75" text-anchor="middle">stronger than a meter suggests</text>
+    <path class="s-warm" d={`M${(W.x(3000) + W.x(6000)) / 2} 84 V ${W.y1 - 12}`} stroke-width="1"></path>
+
+    {/* Grid. */}
+    {
+      [0, 5, 10, 15, 20].map((db) => (
+        <g>
+          <path class="s-line" d={`M${W.x0} ${W.y(db)} H ${W.x1}`} stroke-width="1" stroke-dasharray={db === 0 ? undefined : '2 4'} />
+          <text class="t t-small" x={W.x0 - 10} y={W.y(db) + 4} text-anchor="end">
+            {db === 0 ? '0 dB' : `+${db}`}
+          </text>
+        </g>
+      ))
+    }
+    {
+      gridF.map((f) => (
+        <g>
+          <path class="s-line" d={`M${W.x(f)} ${W.y0} V ${W.y0 + 6}`} stroke-width="1" />
+          <text class="t t-small" x={W.x(f)} y={W.y0 + 24} text-anchor="middle">
+            {labelFWide[f]}
+          </text>
+        </g>
+      ))
+    }
+    <text class="t t-small" x={(W.x0 + W.x1) / 2} y="334" text-anchor="middle">Frequency (log scale)</text>
+
+    {/* The curve. */}
+    <path class="f-accent" d={W.area} opacity="0.12"></path>
+    <path class="s-accent" d={W.d} stroke-width="2" stroke-linecap="round"></path>
+    <text class="t t-accent" x={W.x(1200)} y={W.y(9)} text-anchor="end">Boost at the eardrum</text>
+  </svg>
+
+  <svg slot="narrow" viewBox="0 0 340 380" width="340" height="380" role="img" aria-labelledby="canal-n-t canal-n-d">
+    <title id="canal-n-t">Same number, different ear</title>
+    <desc id="canal-n-d">{desc}</desc>
+
+    <text class="t t-small" x="16" y="24">Illustration of a typical ear,</text>
+    <text class="t t-small" x="16" y="41">not a measurement</text>
+
+    <rect class="f-warm" x={N.x(3000)} y={N.y1 - 8} width={N.x(6000) - N.x(3000)} height={N.y0 - N.y1 + 8} opacity="0.14"></rect>
+    <text class="t t-warm t-strong" x="324" y="84" text-anchor="end">3–6 kHz</text>
+    <text class="t t-small t-warm" x="324" y="104" text-anchor="end">Energy here reaches the cochlea</text>
+    <text class="t t-small t-warm" x="324" y="121" text-anchor="end">stronger than a meter suggests</text>
+    <path class="s-warm" d={`M${(N.x(3000) + N.x(6000)) / 2} 130 V ${N.y1 - 12}`} stroke-width="1"></path>
+
+    {
+      [0, 10, 20].map((db) => (
+        <g>
+          <path class="s-line" d={`M${N.x0} ${N.y(db)} H ${N.x1}`} stroke-width="1" stroke-dasharray={db === 0 ? undefined : '2 4'} />
+          <text class="t t-small" x={N.x0 - 8} y={N.y(db) + 4} text-anchor="end">
+            {db === 0 ? '0 dB' : `+${db}`}
+          </text>
+        </g>
+      ))
+    }
+    {
+      gridF.map((f) => (
+        <g>
+          <path class="s-line" d={`M${N.x(f)} ${N.y0} V ${N.y0 + 5}`} stroke-width="1" />
+          {labelF[f] && (
+            <text class="t t-small" x={N.x(f)} y={N.y0 + 22} text-anchor={f === 100 ? 'start' : f === 10000 ? 'end' : 'middle'}>
+              {labelF[f]}
+            </text>
+          )}
+        </g>
+      ))
+    }
+    <path class="f-accent" d={N.area} opacity="0.12"></path>
+    <path class="s-accent" d={N.d} stroke-width="2" stroke-linecap="round"></path>
+    <text class="t t-small t-accent" x={N.x(1100)} y={N.y(10)} text-anchor="end">Boost at the eardrum</text>
+  </svg>
+</Diagram>
